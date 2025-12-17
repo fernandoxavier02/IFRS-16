@@ -1,0 +1,365 @@
+"""
+Modelos SQLAlchemy para o banco de dados
+"""
+
+import uuid
+import enum
+from datetime import datetime
+from typing import Optional
+
+from sqlalchemy import (
+    Column, String, Boolean, DateTime, Integer, 
+    Enum as SQLEnum, ForeignKey, Text, Index
+)
+from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.orm import relationship
+
+from .database import Base
+
+
+# =============================================================================
+# ENUMS
+# =============================================================================
+
+class LicenseStatus(str, enum.Enum):
+    """Status possíveis de uma licença"""
+    ACTIVE = "active"
+    SUSPENDED = "suspended"
+    EXPIRED = "expired"
+    CANCELLED = "cancelled"
+
+
+class LicenseType(str, enum.Enum):
+    """Tipos de licença disponíveis"""
+    TRIAL = "trial"
+    BASIC = "basic"
+    PRO = "pro"
+    ENTERPRISE = "enterprise"
+
+
+class AdminRole(str, enum.Enum):
+    """Roles de administradores"""
+    SUPERADMIN = "superadmin"
+    ADMIN = "admin"
+
+
+class SubscriptionStatus(str, enum.Enum):
+    """Status de assinatura"""
+    ACTIVE = "active"
+    PAST_DUE = "past_due"
+    CANCELLED = "cancelled"
+    INCOMPLETE = "incomplete"
+    TRIALING = "trialing"
+
+
+class PlanType(str, enum.Enum):
+    """Tipos de plano"""
+    MONTHLY = "monthly"
+    YEARLY = "yearly"
+    LIFETIME = "lifetime"
+
+
+# =============================================================================
+# ADMIN USERS
+# =============================================================================
+
+class AdminUser(Base):
+    """
+    Modelo de Usuário Administrador
+    Gerencia acesso ao painel administrativo
+    """
+    __tablename__ = "admin_users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    
+    # Role e status
+    role = Column(
+        SQLEnum(AdminRole),
+        default=AdminRole.ADMIN,
+        nullable=False
+    )
+    is_active = Column(Boolean, default=True, nullable=False)
+    
+    # Datas
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_login = Column(DateTime, nullable=True)
+    
+    def __repr__(self):
+        return f"<AdminUser(username='{self.username}', role='{self.role}')>"
+
+
+# =============================================================================
+# USERS (CLIENTES)
+# =============================================================================
+
+class User(Base):
+    """
+    Modelo de Usuário Cliente
+    Usuários que compram licenças
+    """
+    __tablename__ = "users"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    email = Column(String(255), unique=True, nullable=False, index=True)
+    name = Column(String(255), nullable=False)
+    password_hash = Column(String(255), nullable=False)
+    
+    # Stripe
+    stripe_customer_id = Column(String(100), unique=True, nullable=True)
+    
+    # Status
+    is_active = Column(Boolean, default=True, nullable=False)
+    email_verified = Column(Boolean, default=False, nullable=False)
+    
+    # Datas
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    last_login = Column(DateTime, nullable=True)
+    
+    # Relacionamentos
+    subscriptions = relationship(
+        "Subscription",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+    licenses = relationship(
+        "License",
+        back_populates="user",
+        foreign_keys="License.user_id"
+    )
+    
+    def __repr__(self):
+        return f"<User(email='{self.email}', name='{self.name}')>"
+
+
+# =============================================================================
+# SUBSCRIPTIONS
+# =============================================================================
+
+class Subscription(Base):
+    """
+    Modelo de Assinatura
+    Vincula usuário a uma licença via Stripe
+    """
+    __tablename__ = "subscriptions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # Relacionamentos
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    license_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("licenses.id", ondelete="SET NULL"),
+        nullable=True
+    )
+    
+    # Stripe
+    stripe_subscription_id = Column(String(100), unique=True, nullable=True)
+    stripe_price_id = Column(String(100), nullable=True)
+    
+    # Tipo e status
+    plan_type = Column(
+        SQLEnum(PlanType),
+        nullable=False
+    )
+    status = Column(
+        SQLEnum(SubscriptionStatus),
+        default=SubscriptionStatus.INCOMPLETE,
+        nullable=False
+    )
+    
+    # Período
+    current_period_start = Column(DateTime, nullable=True)
+    current_period_end = Column(DateTime, nullable=True)
+    cancel_at_period_end = Column(Boolean, default=False, nullable=False)
+    
+    # Datas
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    cancelled_at = Column(DateTime, nullable=True)
+    
+    # Relacionamentos
+    user = relationship("User", back_populates="subscriptions")
+    license = relationship("License", back_populates="subscription")
+    
+    __table_args__ = (
+        Index('idx_subscription_status', 'status'),
+        Index('idx_subscription_user_status', 'user_id', 'status'),
+    )
+    
+    def __repr__(self):
+        return f"<Subscription(user_id='{self.user_id}', plan='{self.plan_type}', status='{self.status}')>"
+
+
+# =============================================================================
+# LICENSES
+# =============================================================================
+
+class License(Base):
+    """
+    Modelo de Licença
+    Armazena informações sobre licenças dos usuários
+    """
+    __tablename__ = "licenses"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    key = Column(String(50), unique=True, nullable=False, index=True)
+    
+    # Relacionamento com usuário (opcional - pode ser licença manual)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True
+    )
+    
+    # Dados do cliente
+    customer_name = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False)
+    
+    # Status e tipo
+    status = Column(
+        SQLEnum(LicenseStatus), 
+        default=LicenseStatus.ACTIVE, 
+        nullable=False
+    )
+    license_type = Column(
+        SQLEnum(LicenseType), 
+        default=LicenseType.TRIAL, 
+        nullable=False
+    )
+    
+    # Datas
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    expires_at = Column(DateTime, nullable=True)  # NULL = sem expiração
+    
+    # Revogação
+    revoked = Column(Boolean, default=False, nullable=False)
+    revoked_at = Column(DateTime, nullable=True)
+    revoke_reason = Column(Text, nullable=True)
+    
+    # Controle de ativações
+    machine_id = Column(String(64), nullable=True)
+    max_activations = Column(Integer, default=1, nullable=False)
+    current_activations = Column(Integer, default=0, nullable=False)
+    
+    # Última validação
+    last_validation = Column(DateTime, nullable=True)
+    last_validation_ip = Column(String(45), nullable=True)
+    
+    # Relacionamentos
+    validation_logs = relationship(
+        "ValidationLog", 
+        back_populates="license",
+        cascade="all, delete-orphan"
+    )
+    user = relationship(
+        "User",
+        back_populates="licenses",
+        foreign_keys=[user_id]
+    )
+    subscription = relationship(
+        "Subscription",
+        back_populates="license",
+        uselist=False
+    )
+
+    # Índices compostos
+    __table_args__ = (
+        Index('idx_license_status_type', 'status', 'license_type'),
+        Index('idx_license_email', 'email'),
+    )
+
+    def __repr__(self):
+        return f"<License(key='{self.key}', customer='{self.customer_name}', status='{self.status}')>"
+    
+    @property
+    def is_valid(self) -> bool:
+        """Verifica se a licença está válida"""
+        if self.revoked:
+            return False
+        if self.status != LicenseStatus.ACTIVE:
+            return False
+        if self.expires_at and datetime.utcnow() > self.expires_at:
+            return False
+        return True
+    
+    @property
+    def features(self) -> dict:
+        """Retorna features baseadas no tipo de licença"""
+        features_map = {
+            LicenseType.TRIAL: {
+                "max_contracts": 1,  # Apenas 1 contrato para teste
+                "export_excel": False,
+                "export_csv": True,
+                "support": False,
+                "multi_user": False,
+            },
+            LicenseType.BASIC: {
+                "max_contracts": 3,  # Até 3 contratos por CNPJ - R$ 299/mês
+                "export_excel": True,
+                "export_csv": True,
+                "support": True,  # Suporte por email
+                "multi_user": False,
+            },
+            LicenseType.PRO: {
+                "max_contracts": 20,  # Até 20 contratos por CNPJ - R$ 499/mês
+                "export_excel": True,
+                "export_csv": True,
+                "support": True,  # Suporte prioritário
+                "multi_user": True,  # Até 5 usuários
+            },
+            LicenseType.ENTERPRISE: {
+                "max_contracts": -1,  # Ilimitado - R$ 999/mês
+                "export_excel": True,
+                "export_csv": True,
+                "support": True,  # Suporte dedicado
+                "multi_user": True,  # Usuários ilimitados
+            },
+        }
+        return features_map.get(self.license_type, features_map[LicenseType.TRIAL])
+
+
+class ValidationLog(Base):
+    """
+    Log de validações de licença
+    Registra todas as tentativas de validação
+    """
+    __tablename__ = "validation_logs"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    license_key = Column(
+        String(50), 
+        ForeignKey("licenses.key", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    
+    # Dados da validação
+    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
+    success = Column(Boolean, nullable=False)
+    message = Column(String(255), nullable=True)
+    
+    # Informações do cliente
+    machine_id = Column(String(64), nullable=True)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    app_version = Column(String(20), nullable=True)
+    
+    # Relacionamento
+    license = relationship("License", back_populates="validation_logs")
+
+    # Índice para consultas por período
+    __table_args__ = (
+        Index('idx_validation_timestamp', 'timestamp'),
+    )
+
+    def __repr__(self):
+        return f"<ValidationLog(key='{self.license_key}', success={self.success}, time='{self.timestamp}')>"
+

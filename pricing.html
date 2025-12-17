@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planos e Preços | Repositório IFRS 16</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        primary: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
+                        dark: { 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pricing-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s ease;
+        }
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+        .pricing-card.featured {
+            border-color: #22c55e;
+            box-shadow: 0 0 40px rgba(34, 197, 94, 0.2);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        /* Estilização da tabela de preços do Stripe */
+        stripe-pricing-table {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto p-6">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-12">
+            <div class="flex items-center gap-4">
+                <img src="assets/logo.png" alt="IFRS 16" class="h-12 w-auto">
+                <div>
+                    <h1 class="text-xl font-bold text-white">Repositório IFRS 16</h1>
+                    <p class="text-gray-400 text-sm">Escolha o plano ideal para sua empresa</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="login.html" id="loginBtn" class="btn-secondary text-gray-300 px-4 py-2 rounded-lg text-sm">
+                    Entrar
+                </a>
+                <a href="dashboard.html" id="dashboardBtn" class="btn-primary text-white px-4 py-2 rounded-lg text-sm hidden">
+                    Minha Conta
+                </a>
+            </div>
+        </header>
+
+        <!-- Hero -->
+        <div class="text-center mb-8">
+            <h2 class="text-4xl font-bold text-white mb-4">Planos por CNPJ</h2>
+            <p class="text-gray-400 text-lg max-w-2xl mx-auto">
+                Calculadora profissional para contratos de arrendamento conforme IFRS 16 / CPC 06 (R2).
+            </p>
+        </div>
+
+        <!-- Stripe Pricing Table -->
+        <div class="mb-12">
+            <stripe-pricing-table 
+                pricing-table-id="prctbl_1SbsBzGEyVmwHCe67gq4hqL6"
+                publishable-key="pk_live_51SbrHyGEyVmwHCe6H4ZQU7jIe2ehaxo2SXmonoZZwZzIpoOslJ8RWCgcYWbz3Fc7Jn0eOb4U5EEafnjAK5kDS51500YPiJvR9x">
+            </stripe-pricing-table>
+        </div>
+
+        <!-- Comparativo -->
+        <div class="glass-card rounded-2xl p-8 mb-12 overflow-x-auto">
+            <h3 class="text-xl font-bold text-white mb-6 text-center">Comparativo de Planos</h3>
+            <table class="w-full min-w-[600px]">
+                <thead>
+                    <tr class="border-b border-gray-700">
+                        <th class="text-left text-gray-400 font-medium py-3">Recurso</th>
+                        <th class="text-center text-blue-400 font-medium py-3">Básico</th>
+                        <th class="text-center text-primary-400 font-medium py-3">Pro</th>
+                        <th class="text-center text-purple-400 font-medium py-3">Enterprise</th>
+                    </tr>
+                </thead>
+                <tbody class="text-sm">
+                    <tr class="border-b border-gray-800">
+                        <td class="text-gray-300 py-3">Contratos por CNPJ</td>
+                        <td class="text-center text-white py-3">Até 3</td>
+                        <td class="text-center text-white py-3">Até 20</td>
+                        <td class="text-center text-white py-3">Ilimitado</td>
+                    </tr>
+                    <tr class="border-b border-gray-800">
+                        <td class="text-gray-300 py-3">Exportação Excel/CSV</td>
+                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                    </tr>
+                    <tr class="border-b border-gray-800">
+                        <td class="text-gray-300 py-3">Suporte</td>
+                        <td class="text-center text-gray-400 py-3">Email</td>
+                        <td class="text-center text-white py-3">Prioritário</td>
+                        <td class="text-center text-white py-3">Dedicado + SLA</td>
+                    </tr>
+                    <tr class="border-b border-gray-800">
+                        <td class="text-gray-300 py-3">Multi-usuário</td>
+                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
+                        <td class="text-center text-white py-3">Até 5</td>
+                        <td class="text-center text-white py-3">Ilimitado</td>
+                    </tr>
+                    <tr class="border-b border-gray-800">
+                        <td class="text-gray-300 py-3">API de integração</td>
+                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
+                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-gray-300 py-3">Treinamento</td>
+                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
+                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
+                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- FAQ -->
+        <div class="glass-card rounded-2xl p-8 mb-12">
+            <h3 class="text-xl font-bold text-white mb-6 text-center">Perguntas Frequentes</h3>
+            <div class="grid md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-white font-semibold mb-2">Como funciona a licença por CNPJ?</h4>
+                    <p class="text-gray-400 text-sm">Cada licença é vinculada a um CNPJ específico. Se sua empresa tem múltiplos CNPJs, será necessária uma licença para cada.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-2">Posso fazer upgrade do plano?</h4>
+                    <p class="text-gray-400 text-sm">Sim! Você pode fazer upgrade a qualquer momento. O valor já pago é proporcionalizado para o novo plano.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-2">Quais formas de pagamento são aceitas?</h4>
+                    <p class="text-gray-400 text-sm">Aceitamos cartões de crédito (Visa, Mastercard, Amex), débito e PIX através do Stripe.</p>
+                </div>
+                <div>
+                    <h4 class="text-white font-semibold mb-2">Tem período de teste gratuito?</h4>
+                    <p class="text-gray-400 text-sm">Oferecemos 7 dias de teste gratuito para novos usuários conhecerem a plataforma.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="text-center text-gray-500 text-sm">
+            <p>© 2025 Fernando Xavier - Todos os direitos reservados</p>
+            <p class="mt-2">
+                <a href="Calculadora_IFRS16_Deploy.html" class="text-primary-500 hover:text-primary-400">Calculadora</a>
+                <span class="mx-2">•</span>
+                <a href="login.html" class="text-primary-500 hover:text-primary-400">Login</a>
+                <span class="mx-2">•</span>
+                <a href="register.html" class="text-primary-500 hover:text-primary-400">Cadastro</a>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // Verificar se está logado e atualizar header
+        window.onload = function() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            if (token) {
+                document.getElementById('loginBtn').classList.add('hidden');
+                document.getElementById('dashboardBtn').classList.remove('hidden');
+            }
+        };
+    </script>
+</body>
+</html>

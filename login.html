@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Repositório IFRS 16</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        primary: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
+                        dark: { 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .input-dark {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+        }
+        .input-dark:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+            outline: none;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center p-4">
+    <div class="w-full max-w-md">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <img src="assets/logo.png" alt="IFRS 16" class="h-20 w-auto mx-auto mb-4">
+            <h1 class="text-2xl font-bold text-white">Repositório IFRS 16</h1>
+            <p class="text-gray-400 text-sm mt-1">Acesse sua conta</p>
+        </div>
+
+        <!-- Card de Login -->
+        <div class="glass-card rounded-2xl p-8">
+            <!-- Tabs -->
+            <div class="flex mb-6 bg-dark-900/50 rounded-lg p-1">
+                <button id="tabUser" onclick="switchTab('user')" 
+                    class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-white bg-primary-600">
+                    Usuário
+                </button>
+                <button id="tabAdmin" onclick="switchTab('admin')"
+                    class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white">
+                    Administrador
+                </button>
+            </div>
+
+            <!-- Formulário -->
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
+                        <input type="email" id="email" required
+                            class="w-full input-dark rounded-lg px-4 py-3"
+                            placeholder="seu@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-300 mb-2">Senha</label>
+                        <input type="password" id="password" required
+                            class="w-full input-dark rounded-lg px-4 py-3"
+                            placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div id="errorMsg" class="hidden mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm"></div>
+
+                <button type="submit" id="btnSubmit"
+                    class="w-full btn-primary text-white py-3 rounded-lg font-semibold mt-6 transition-all flex items-center justify-center gap-2">
+                    <span>Entrar</span>
+                    <svg id="spinner" class="w-5 h-5 animate-spin hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </form>
+
+            <!-- Links -->
+            <div class="mt-6 text-center space-y-2">
+                <a href="#" onclick="forgotPassword()" class="text-primary-500 hover:text-primary-400 text-sm">
+                    Esqueceu a senha?
+                </a>
+                <p class="text-gray-500 text-sm" id="registerLink">
+                    Não tem conta? <a href="register.html" class="text-primary-500 hover:text-primary-400">Cadastre-se</a>
+                </p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-6 text-gray-500 text-sm">
+            <p>© 2025 Fernando Xavier - Todos os direitos reservados</p>
+            <p class="text-xs text-gray-400 mt-1">v1.0.0 • Build 2025.12.11</p>
+        </div>
+    </div>
+
+    <script>
+        // Detecta automaticamente a URL da API baseado no ambiente
+        const getApiUrl = () => {
+            const hostname = window.location.hostname;
+            
+            // Firebase Hosting (produção) - Backend no Cloud Run
+            if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
+                return 'https://ifrs16-backend-1051753255664.us-central1.run.app';
+            }
+            
+            // Desenvolvimento local
+            return 'http://localhost:8000';
+        };
+        
+        const API_URL = getApiUrl();
+        let currentTab = 'user';
+
+        function switchTab(tab) {
+            currentTab = tab;
+            const tabUser = document.getElementById('tabUser');
+            const tabAdmin = document.getElementById('tabAdmin');
+            const registerLink = document.getElementById('registerLink');
+
+            if (tab === 'user') {
+                tabUser.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-white bg-primary-600';
+                tabAdmin.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white';
+                registerLink.classList.remove('hidden');
+            } else {
+                tabAdmin.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-white bg-primary-600';
+                tabUser.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white';
+                registerLink.classList.add('hidden');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('errorMsg');
+            const spinner = document.getElementById('spinner');
+            const btnSubmit = document.getElementById('btnSubmit');
+
+            errorMsg.classList.add('hidden');
+            spinner.classList.remove('hidden');
+            btnSubmit.disabled = true;
+
+            try {
+                const endpoint = currentTab === 'admin' 
+                    ? '/api/auth/admin/login' 
+                    : '/api/auth/login';
+
+                const url = `${API_URL}${endpoint}`;
+                const body = JSON.stringify({ email, password });
+                
+                console.log('🔍 DEBUG LOGIN:', {
+                    url,
+                    endpoint,
+                    email,
+                    passwordLength: password.length,
+                    currentTab
+                });
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: body
+                });
+
+                const data = await response.json();
+                
+                console.log('📥 RESPOSTA:', {
+                    status: response.status,
+                    ok: response.ok,
+                    detail: data.detail
+                });
+
+                if (response.ok) {
+                    // Salvar token
+                    localStorage.setItem('ifrs16_auth_token', data.access_token);
+                    localStorage.setItem('ifrs16_user_token', data.access_token);
+                    localStorage.setItem('ifrs16_user_type', data.user_type);
+
+                    // Redirecionar
+                    if (data.user_type === 'admin') {
+                        // Admin pode escolher: ir para admin.html ou calculadora
+                        // Por padrão, vai para calculadora (que agora aceita admin)
+                        window.location.href = 'Calculadora_IFRS16_Deploy.html';
+                    } else {
+                        // Redirecionar para a calculadora principal
+                        window.location.href = 'Calculadora_IFRS16_Deploy.html';
+                    }
+                } else {
+                    errorMsg.textContent = data.detail || 'Erro ao fazer login';
+                    errorMsg.classList.remove('hidden');
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Erro de conexão. Verifique se o servidor está rodando.';
+                errorMsg.classList.remove('hidden');
+            }
+
+            spinner.classList.add('hidden');
+            btnSubmit.disabled = false;
+        }
+
+        function forgotPassword() {
+            const email = document.getElementById('email').value;
+            if (!email) {
+                alert('Digite seu email primeiro');
+                return;
+            }
+            
+            fetch(`${API_URL}/api/auth/forgot-password`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })
+            }).then(() => {
+                alert('Se o email existir, você receberá instruções de recuperação.');
+            });
+        }
+
+        // Verificar se já está logado
+        window.onload = function() {
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            const userType = localStorage.getItem('ifrs16_user_type');
+            
+            if (token) {
+                // Tanto admin quanto usuário vão para a calculadora
+                // Admin pode acessar admin.html pelo botão no header
+                window.location.href = 'Calculadora_IFRS16_Deploy.html';
+            }
+        };
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | Repositório IFRS 16</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { 
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    },
+                    colors: {
+                        primary: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
+                        dark: { 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .value-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+        .value-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-accent);
+        }
+        .value-card.emerald { --card-accent: linear-gradient(90deg, #10b981, #34d399); }
+        .value-card.blue { --card-accent: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .value-card.amber { --card-accent: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .license-key {
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: 0.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-6xl mx-auto p-6">
+        <!-- Header -->
+        <header class="flex items-center justify-between mb-8">
+            <div class="flex items-center gap-4">
+                <img src="assets/logo.png" alt="IFRS 16" class="h-12 w-auto">
+                <div>
+                    <h1 class="text-xl font-bold text-white">Minha Conta</h1>
+                    <p class="text-gray-400 text-sm">Gerencie sua assinatura e licença</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="Calculadora_IFRS16_Deploy.html" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium">
+                    Abrir Calculadora
+                </a>
+                <button onclick="logout()" class="btn-secondary text-gray-300 px-4 py-2 rounded-lg text-sm">
+                    Sair
+                </button>
+            </div>
+        </header>
+
+        <!-- Loading -->
+        <div id="loading" class="text-center py-20">
+            <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-400">Carregando...</p>
+        </div>
+
+        <!-- Content -->
+        <div id="content" class="hidden space-y-6">
+            <!-- User Info -->
+            <div class="glass-card rounded-2xl p-6">
+                <h2 class="text-lg font-semibold text-white mb-4">Informações da Conta</h2>
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-400 text-sm">Nome</p>
+                        <p id="userName" class="text-white font-medium">-</p>
+                    </div>
+                    <div>
+                        <p class="text-gray-400 text-sm">Email</p>
+                        <p id="userEmail" class="text-white font-medium">-</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Card -->
+            <div class="grid md:grid-cols-3 gap-6">
+                <div class="value-card emerald rounded-2xl p-6">
+                    <p class="text-gray-400 text-sm mb-1">Status da Assinatura</p>
+                    <p id="subStatus" class="text-2xl font-bold text-emerald-400">-</p>
+                    <p id="subPlan" class="text-gray-500 text-sm mt-2">-</p>
+                </div>
+                <div class="value-card blue rounded-2xl p-6">
+                    <p class="text-gray-400 text-sm mb-1">Próxima Renovação</p>
+                    <p id="subRenewal" class="text-2xl font-bold text-blue-400">-</p>
+                    <p id="subCancelNote" class="text-gray-500 text-sm mt-2 hidden">Será cancelada ao fim do período</p>
+                </div>
+                <div class="value-card amber rounded-2xl p-6">
+                    <p class="text-gray-400 text-sm mb-1">Total de Validações</p>
+                    <p id="totalValidations" class="text-2xl font-bold text-amber-400">0</p>
+                    <p class="text-gray-500 text-sm mt-2">Usos da calculadora</p>
+                </div>
+            </div>
+
+            <!-- License Card -->
+            <div class="glass-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-lg font-semibold text-white">Sua Chave de Licença</h2>
+                    <button onclick="copyLicenseKey()" id="copyBtn" class="btn-secondary text-gray-300 px-3 py-1 rounded text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                        </svg>
+                        Copiar
+                    </button>
+                </div>
+                
+                <div id="licenseArea" class="bg-dark-900/50 rounded-lg p-4 text-center">
+                    <p id="licenseKey" class="license-key text-xl text-primary-400">-</p>
+                    <p id="licenseType" class="text-gray-500 text-sm mt-2">-</p>
+                    <p id="licenseExpires" class="text-gray-600 text-xs mt-1">-</p>
+                </div>
+
+                <div id="noLicense" class="hidden text-center py-8">
+                    <p class="text-gray-400 mb-4">Você ainda não tem uma licença ativa.</p>
+                    <a href="pricing.html" class="btn-primary text-white px-6 py-3 rounded-lg font-medium inline-block">
+                        Ver Planos
+                    </a>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="glass-card rounded-2xl p-6">
+                <h2 class="text-lg font-semibold text-white mb-4">Gerenciar Assinatura</h2>
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="openPortal()" id="portalBtn" class="btn-secondary text-gray-300 px-4 py-2 rounded-lg text-sm">
+                        Gerenciar Pagamento
+                    </button>
+                    <button onclick="cancelSubscription()" id="cancelBtn" class="btn-secondary text-red-400 border-red-500/30 px-4 py-2 rounded-lg text-sm hidden">
+                        Cancelar Assinatura
+                    </button>
+                    <button onclick="reactivateSubscription()" id="reactivateBtn" class="btn-primary text-white px-4 py-2 rounded-lg text-sm hidden">
+                        Manter Assinatura Ativa
+                    </button>
+                    <a href="pricing.html" id="upgradeBtn" class="btn-primary text-white px-4 py-2 rounded-lg text-sm hidden">
+                        Fazer Upgrade
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let dashboardData = null;
+
+        async function loadDashboard() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            
+            if (!token) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_URL}/api/user/dashboard-summary`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('ifrs16_auth_token');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                dashboardData = await response.json();
+                renderDashboard();
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('loading').innerHTML = `
+                    <p class="text-red-400">Erro ao carregar dados. <button onclick="loadDashboard()" class="text-primary-500 underline">Tentar novamente</button></p>
+                `;
+            }
+        }
+
+        function renderDashboard() {
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('content').classList.remove('hidden');
+
+            // User info
+            document.getElementById('userName').textContent = dashboardData.user.name;
+            document.getElementById('userEmail').textContent = dashboardData.user.email;
+
+            // Stats
+            document.getElementById('totalValidations').textContent = dashboardData.stats.total_validations;
+
+            // Subscription
+            if (dashboardData.subscription && dashboardData.subscription.active) {
+                const sub = dashboardData.subscription;
+                document.getElementById('subStatus').textContent = 'Ativa';
+                document.getElementById('subPlan').textContent = `Plano ${sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1)}`;
+                
+                if (sub.period_end) {
+                    const endDate = new Date(sub.period_end);
+                    document.getElementById('subRenewal').textContent = endDate.toLocaleDateString('pt-BR');
+                } else {
+                    document.getElementById('subRenewal').textContent = 'Vitalício';
+                }
+
+                if (sub.cancel_at_period_end) {
+                    document.getElementById('subCancelNote').classList.remove('hidden');
+                    document.getElementById('reactivateBtn').classList.remove('hidden');
+                } else {
+                    document.getElementById('cancelBtn').classList.remove('hidden');
+                }
+
+                document.getElementById('portalBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('subStatus').textContent = 'Inativa';
+                document.getElementById('subPlan').textContent = 'Sem assinatura';
+                document.getElementById('subRenewal').textContent = '-';
+                document.getElementById('upgradeBtn').classList.remove('hidden');
+                document.getElementById('portalBtn').classList.add('hidden');
+            }
+
+            // License
+            if (dashboardData.license) {
+                const lic = dashboardData.license;
+                document.getElementById('licenseKey').textContent = lic.key;
+                document.getElementById('licenseType').textContent = `Licença ${lic.type.toUpperCase()}`;
+                
+                if (lic.expires_at) {
+                    const expDate = new Date(lic.expires_at);
+                    document.getElementById('licenseExpires').textContent = `Válida até ${expDate.toLocaleDateString('pt-BR')}`;
+                } else {
+                    document.getElementById('licenseExpires').textContent = 'Licença vitalícia';
+                }
+
+                document.getElementById('licenseArea').classList.remove('hidden');
+                document.getElementById('noLicense').classList.add('hidden');
+            } else {
+                document.getElementById('licenseArea').classList.add('hidden');
+                document.getElementById('noLicense').classList.remove('hidden');
+            }
+        }
+
+        function copyLicenseKey() {
+            const key = document.getElementById('licenseKey').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Copiado!';
+                setTimeout(() => {
+                    btn.innerHTML = '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg> Copiar';
+                }, 2000);
+            });
+        }
+
+        async function openPortal() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/payments/portal`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    window.open(data.portal_url, '_blank');
+                } else {
+                    alert('Erro ao abrir portal de pagamento');
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+            }
+        }
+
+        async function cancelSubscription() {
+            if (!confirm('Tem certeza que deseja cancelar sua assinatura? Ela permanecerá ativa até o fim do período pago.')) {
+                return;
+            }
+
+            const token = localStorage.getItem('ifrs16_auth_token');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/user/cancel-subscription`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    alert('Assinatura marcada para cancelamento');
+                    loadDashboard();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Erro ao cancelar');
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+            }
+        }
+
+        async function reactivateSubscription() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/user/reactivate-subscription`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    alert('Assinatura reativada com sucesso!');
+                    loadDashboard();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Erro ao reativar');
+                }
+            } catch (error) {
+                alert('Erro de conexão');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('ifrs16_auth_token');
+            localStorage.removeItem('ifrs16_user_type');
+            window.location.href = 'login.html';
+        }
+
+        // Inicializar
+        window.onload = loadDashboard;
+    </script>
+</body>
+</html>
+

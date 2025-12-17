@@ -1,0 +1,58 @@
+{
+  "hosting": {
+    "public": ".",
+    "ignore": [
+      "backend/**",
+      "node_modules/**",
+      ".git/**",
+      "*.md",
+      "firebase.json",
+      "firebase-debug.log",
+      "*.ps1",
+      "*.py",
+      "*.json",
+      "tests/**",
+      "alembic/**",
+      ".github/**",
+      "*.dockerfile",
+      ".dockerignore",
+      "railway.json",
+      "env_vars.json",
+      "service_info.json"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
+    "headers": [
+      {
+        "source": "**/*.@(html|js|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=3600"
+          }
+        ]
+      },
+      {
+        "source": "**",
+        "headers": [
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          },
+          {
+            "key": "X-Frame-Options",
+            "value": "DENY"
+          },
+          {
+            "key": "X-XSS-Protection",
+            "value": "1; mode=block"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+# Arquivos e diretórios a ignorar no deploy Render
+
+# Ambiente virtual
+venv/
+env/
+.venv/
+
+# Banco de dados local
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Testes
+tests/
+htmlcov/
+.pytest_cache/
+.coverage
+
+# Logs
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Arquivos temporários
+*.tmp
+*.bak
+

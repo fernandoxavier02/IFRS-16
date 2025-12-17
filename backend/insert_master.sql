@@ -1,0 +1,1 @@
+﻿INSERT INTO admin_users (username, email, password_hash, role, is_active) VALUES ('master', 'fernandocostaxavier@gmail.com', '', 'superadmin', true) ON CONFLICT (username) DO UPDATE SET password_hash = EXCLUDED.password_hash, email = EXCLUDED.email, role = EXCLUDED.role, is_active = true;

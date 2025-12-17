@@ -1,0 +1,13 @@
+{
+  "name": "ifrs16-frontend",
+  "type": "static_site",
+  "ownerId": "tea-d2h49cogjchc73bq9ffg",
+  "autoDeploy": "yes",
+  "repo": "https://github.com/fernandoxavier02/IFRS-16",
+  "branch": "main",
+  "serviceDetails": {
+    "buildCommand": "",
+    "publishPath": "./"
+  }
+}
+

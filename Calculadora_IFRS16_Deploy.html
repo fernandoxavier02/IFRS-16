@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Repositório IFRS 16 | Fernando Xavier</title>
+    <meta name="description" content="Calculadora profissional para contratos de arrendamento conforme IFRS 16 / CPC 06 (R2)">
+    <meta name="author" content="Fernando Xavier">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            200: '#bbf7d0',
+                            300: '#86efac',
+                            400: '#4ade80',
+                            500: '#22c55e',
+                            600: '#16a34a',
+                            700: '#15803d',
+                            800: '#166534',
+                            900: '#14532d',
+                        },
+                        dark: {
+                            50: '#f8fafc',
+                            100: '#f1f5f9',
+                            200: '#e2e8f0',
+                            300: '#cbd5e1',
+                            400: '#94a3b8',
+                            500: '#64748b',
+                            600: '#475569',
+                            700: '#334155',
+                            800: '#1e293b',
+                            900: '#0f172a',
+                            950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Fundo animado com gradiente */
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        
+        /* Overlay pattern sutil */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Cards com glassmorphism */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .glass-card-light {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        /* Cards de valores com glow */
+        .value-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .value-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-accent);
+            opacity: 0.8;
+        }
+        
+        .value-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .value-card.emerald { --card-accent: linear-gradient(90deg, #10b981, #34d399); }
+        .value-card.blue { --card-accent: linear-gradient(90deg, #3b82f6, #60a5fa); }
+        .value-card.amber { --card-accent: linear-gradient(90deg, #f59e0b, #fbbf24); }
+        .value-card.purple { --card-accent: linear-gradient(90deg, #8b5cf6, #a78bfa); }
+        .value-card.rose { --card-accent: linear-gradient(90deg, #f43f5e, #fb7185); }
+        .value-card.cyan { --card-accent: linear-gradient(90deg, #06b6d4, #22d3ee); }
+        
+        /* Inputs estilizados */
+        .input-dark {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+            transition: all 0.2s ease;
+        }
+        
+        .input-dark:focus {
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+            outline: none;
+        }
+        
+        .input-dark::placeholder {
+            color: #64748b;
+        }
+        
+        /* Botões modernos */
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Tabs estilizadas */
+        .tab-btn {
+            position: relative;
+            color: #94a3b8;
+            transition: all 0.2s ease;
+        }
+        
+        .tab-btn:hover {
+            color: #e2e8f0;
+        }
+        
+        .tab-btn.active {
+            color: #22c55e;
+        }
+        
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #22c55e, #4ade80);
+            border-radius: 2px 2px 0 0;
+        }
+        
+        /* Tabelas elegantes */
+        .table-dark {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .table-dark thead th {
+            background: rgba(15, 23, 42, 0.8);
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.05em;
+            padding: 12px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        
+        .table-dark tbody td {
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: #cbd5e1;
+        }
+        
+        .table-dark tbody tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(34, 197, 94, 0.5); }
+        }
+        
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .animate-fade-in-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-fade-in-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-fade-in-delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .animate-fade-in-delay-4 { animation-delay: 0.4s; opacity: 0; }
+        
+        /* Spinner */
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* Overlay de licença */
+        .locked-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+        
+        /* Scrollbar customizada */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.5);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 116, 139, 0.7);
+        }
+        
+        @media print { .no-print { display: none; } }
+        
+        input[type="number"]::-webkit-inner-spin-button { opacity: 1; }
+    </style>
+</head>
+<body class="min-h-screen relative">
+    <!-- Tela de Login (Padrão) -->
+    <div id="loginOverlay" class="locked-overlay">
+        <div class="glass-card rounded-2xl p-10 max-w-md w-full mx-4 animate-fade-in">
+            <div class="text-center mb-8">
+                <img src="assets/logo.png" alt="IFRS 16 Logo" class="h-24 w-auto mx-auto mb-6 shadow-2xl ring-4 ring-primary-500/30 rounded-lg" style="animation: pulse-glow 2s ease-in-out infinite;">
+                <h2 class="text-3xl font-bold text-white mb-2">Repositório IFRS 16</h2>
+                <p class="text-dark-400">Entre com sua conta</p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-dark-300 mb-2">Email</label>
+                <input type="email" id="loginEmail" placeholder="seu@email.com"
+                    class="w-full input-dark rounded-xl px-5 py-4">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-dark-300 mb-2">Senha</label>
+                <input type="password" id="loginPassword" placeholder="Digite sua senha"
+                    class="w-full input-dark rounded-xl px-5 py-4">
+                <p id="loginError" class="text-rose-400 text-sm mt-3 hidden text-center"></p>
+            </div>
+            
+            <button onclick="fazerLogin()" id="btnLogin"
+                class="w-full btn-primary text-white py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3">
+                <span id="btnLoginText">Entrar</span>
+                <svg id="btnLoginSpinner" class="w-5 h-5 spinner hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+
+            <div class="mt-6 text-center space-y-3">
+                <a href="#" onclick="mostrarTelaLicenca()" class="block text-primary-400 hover:text-primary-300 text-sm transition-colors">
+                    Primeira vez? Ative sua chave de licença →
+                </a>
+                <a href="#" onclick="abrirCompra()" class="block text-dark-400 hover:text-dark-300 text-sm transition-colors">
+                    Não tem uma licença? Adquira aqui
+                </a>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-dark-700 text-center">
+                <p class="text-dark-500 text-sm">© 2025 Fernando Xavier</p>
+                <p class="text-dark-600 text-xs mt-1">Todos os direitos reservados</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tela de Ativação de Licença (Secundária) -->
+    <div id="licenseOverlay" class="locked-overlay hidden">
+        <div class="glass-card rounded-2xl p-10 max-w-md w-full mx-4 animate-fade-in">
+            <div class="text-center mb-8">
+                <img src="assets/logo.png" alt="IFRS 16 Logo" class="h-24 w-auto mx-auto mb-6 shadow-2xl ring-4 ring-primary-500/30 rounded-lg" style="animation: pulse-glow 2s ease-in-out infinite;">
+                <h2 class="text-3xl font-bold text-white mb-2">Ativar Licença</h2>
+                <p class="text-dark-400">Digite a chave recebida por email</p>
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-dark-300 mb-2">Chave de Licença</label>
+                <input type="text" id="licenseInput" placeholder="Digite sua chave de licença"
+                    class="w-full input-dark rounded-xl px-5 py-4 text-center text-lg tracking-widest uppercase font-mono"
+                    maxlength="30">
+                <p id="licenseError" class="text-rose-400 text-sm mt-3 hidden text-center"></p>
+            </div>
+            
+            <button onclick="validarLicenca()" id="btnValidar"
+                class="w-full btn-primary text-white py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3">
+                <span id="btnValidarText">Ativar Licença</span>
+                <svg id="btnValidarSpinner" class="w-5 h-5 spinner hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+            </button>
+
+            <div class="mt-6 text-center space-y-3">
+                <a href="#" onclick="mostrarTelaLogin()" class="block text-primary-400 hover:text-primary-300 text-sm transition-colors">
+                    ← Já tenho conta? Fazer login
+                </a>
+                <a href="#" onclick="abrirCompra()" class="block text-dark-400 hover:text-dark-300 text-sm transition-colors">
+                    Não tem uma licença? Adquira aqui
+                </a>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-dark-700 text-center">
+                <p class="text-dark-500 text-sm">© 2025 Fernando Xavier</p>
+                <p class="text-dark-600 text-xs mt-1">Todos os direitos reservados</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Conteúdo Principal -->
+    <div id="mainContent" class="hidden relative z-10">
+        <div class="max-w-7xl mx-auto p-6">
+            
+            <!-- Header Premium -->
+            <header class="glass-card rounded-2xl p-6 mb-8 no-print animate-fade-in">
+                <div class="flex items-center justify-between flex-wrap gap-6">
+                    <div class="flex items-center gap-5">
+                        <img src="assets/logo.png" alt="IFRS 16 Logo" class="h-14 w-auto rounded-full shadow-lg ring-2 ring-primary-500/30">
+                        <div>
+                            <h1 class="text-2xl font-bold text-white">Repositório IFRS 16</h1>
+                            <p class="text-dark-400 text-sm">Todos os Direitos Reservados a Fernando Xavier</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <div class="text-right">
+                            <p class="text-dark-500 text-xs uppercase tracking-wider mb-1">Licenciado para</p>
+                            <p id="licensedTo" class="text-white font-semibold">Usuário Autorizado</p>
+                            <p id="licenseExpiry" class="text-primary-400 text-xs mt-1"></p>
+                        </div>
+                        <div class="flex items-center gap-2 ml-4 pl-4 border-l border-dark-700">
+                            <!-- Botão Admin (apenas para admins) -->
+                            <a id="adminPanelLink" href="admin.html" class="hidden bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors" title="Painel Administrativo">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                </svg>
+                                Admin
+                            </a>
+                            <!-- Botão Configurações -->
+                            <button onclick="abrirConfiguracoes()" title="Configurações"
+                                class="p-2 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                            </button>
+                            <!-- Botão Logout -->
+                            <button onclick="fazerLogout()" title="Sair"
+                                class="p-2 rounded-lg hover:bg-rose-500/20 transition-colors text-dark-400 hover:text-rose-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Seção de Gerenciamento de Contratos -->
+            <div class="glass-card rounded-2xl p-6 mb-6 no-print animate-fade-in animate-fade-in-delay-1">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 class="text-lg font-semibold text-white">Meus Contratos</h2>
+                        <p id="contractsCount" class="text-dark-400 text-sm mt-1">Carregando...</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="toggleFilters()" class="btn-secondary text-dark-200 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                            </svg>
+                            Filtros
+                        </button>
+                        <button onclick="openContractModal()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                            </svg>
+                            Novo Contrato
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filtros de Busca -->
+                <div id="filtersPanel" class="hidden glass-card-light rounded-xl p-4 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                        <div>
+                            <label class="block text-xs text-dark-400 mb-1">Nome do Contrato</label>
+                            <input type="text" id="filterName" placeholder="Buscar por nome..." class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-dark-400 mb-1">Código</label>
+                            <input type="text" id="filterCode" placeholder="Buscar por código..." class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-dark-400 mb-1">Data Inicial</label>
+                            <input type="date" id="filterStartDate" class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-dark-400 mb-1">Data Final</label>
+                            <input type="date" id="filterEndDate" class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
+                        </div>
+                    </div>
+                    <div class="flex gap-2 mt-3">
+                        <button onclick="applyFilters()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm">
+                            Aplicar Filtros
+                        </button>
+                        <button onclick="clearFilters()" class="btn-secondary text-dark-200 px-4 py-2 rounded-lg text-sm">
+                            Limpar
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="contractsList" class="space-y-3 mb-4">
+                    <div class="text-center py-4 text-dark-400">
+                        <div class="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <p class="text-sm">Carregando contratos...</p>
+                    </div>
+                </div>
+
+                <!-- Seletor de Contrato Ativo -->
+                <div id="contractSelector" class="hidden glass-card-light rounded-xl p-4">
+                    <label class="block text-sm font-medium text-dark-300 mb-2">Contrato Ativo</label>
+                    <select id="selectedContract" onchange="loadContractData()" class="w-full input-dark rounded-lg px-4 py-3">
+                        <option value="">Selecione um contrato para carregar dados...</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Formulário de Premissas -->
+            <div class="glass-card rounded-2xl p-8 mb-8 no-print animate-fade-in animate-fade-in-delay-1">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h2 class="text-xl font-bold text-white mb-1">Premissas do Contrato</h2>
+                        <p class="text-dark-400 text-sm">Configure os parâmetros do arrendamento</p>
+                    </div>
+                    <button onclick="toggleAjuda()" class="btn-secondary px-4 py-2 rounded-lg text-dark-300 text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span id="btnAjudaText">Ajuda</span>
+                    </button>
+                </div>
+
+                <div id="ajudaBox" class="hidden glass-card-light rounded-xl p-5 mb-6 text-sm">
+                    <p class="font-semibold text-primary-400 mb-3 flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                        Glossário IFRS 16
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-3 text-dark-300">
+                        <div class="p-3 bg-dark-900/30 rounded-lg">
+                            <span class="text-primary-400 font-medium">IFRS 16 / CPC 06 (R2)</span>
+                            <p class="text-xs mt-1">Norma contábil para reconhecer arrendamentos no balanço</p>
+                        </div>
+                        <div class="p-3 bg-dark-900/30 rounded-lg">
+                            <span class="text-primary-400 font-medium">AVP</span>
+                            <p class="text-xs mt-1">Ajuste a Valor Presente - traz fluxos futuros para valor de hoje</p>
+                        </div>
+                        <div class="p-3 bg-dark-900/30 rounded-lg">
+                            <span class="text-primary-400 font-medium">DDU</span>
+                            <p class="text-xs mt-1">Direito de Uso (Right-of-Use Asset)</p>
+                        </div>
+                        <div class="p-3 bg-dark-900/30 rounded-lg">
+                            <span class="text-primary-400 font-medium">CP / LP</span>
+                            <p class="text-xs mt-1">Curto Prazo (≤12 meses) / Longo Prazo (>12 meses)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Data de Início</label>
+                        <input type="date" id="dataInicio" value="2025-08-01" onchange="calcular()" 
+                            class="w-full input-dark rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Prazo Total (meses)</label>
+                        <input type="number" id="prazoMeses" value="60" min="1" max="360" onchange="calcular()"
+                            class="w-full input-dark rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Carência (meses)</label>
+                        <input type="number" id="carenciaMeses" value="3" min="0" onchange="calcular()"
+                            class="w-full input-dark rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Parcela Inicial (R$)</label>
+                        <input type="number" id="parcelaInicial" value="372000" min="0" step="100" onchange="calcular()"
+                            class="w-full input-dark rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Taxa de Desconto (% a.a.)</label>
+                        <input type="number" id="taxaAnual" value="4.81" min="0" max="100" step="0.01" onchange="calcular()"
+                            class="w-full input-dark rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Tipo de Reajuste</label>
+                        <select id="reajusteTipo" onchange="handleReajusteChange()" class="w-full input-dark rounded-lg px-4 py-3">
+                            <option value="manual">Manual</option>
+                            <option value="selic">SELIC (Banco Central)</option>
+                            <option value="igpm">IGPM (Banco Central)</option>
+                            <option value="ipca">IPCA (Banco Central)</option>
+                            <option value="cdi">CDI (Banco Central)</option>
+                            <option value="inpc">INPC (Banco Central)</option>
+                            <option value="tr">TR (Banco Central)</option>
+                        </select>
+                    </div>
+                    <div id="reajusteManualContainer">
+                        <label class="block text-sm font-medium text-dark-300 mb-2">
+                            Reajuste Anual (%)
+                            <span id="reajusteIndicadorInfo" class="text-xs text-dark-400 ml-2"></span>
+                        </label>
+                        <input type="number" id="reajusteAnual" value="5" min="0" max="100" step="0.1" onchange="calcular()"
+                            class="w-full input-dark rounded-lg px-4 py-3">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Mês do Reajuste</label>
+                        <select id="mesReajuste" onchange="calcular()"
+                            class="w-full input-dark rounded-lg px-4 py-3">
+                            <option value="1">Janeiro</option><option value="2">Fevereiro</option><option value="3">Março</option>
+                            <option value="4">Abril</option><option value="5">Maio</option><option value="6">Junho</option>
+                            <option value="7">Julho</option><option value="8" selected>Agosto</option><option value="9">Setembro</option>
+                            <option value="10">Outubro</option><option value="11">Novembro</option><option value="12">Dezembro</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Taxa Mensal Equiv.</label>
+                        <div class="glass-card-light rounded-lg px-4 py-3">
+                            <p id="taxaMensal" class="text-primary-400 font-semibold font-mono">0,3919%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-6 flex flex-wrap gap-3">
+                    <button onclick="exportarExcel()" class="btn-primary px-5 py-3 rounded-lg text-white font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Exportar Excel
+                    </button>
+                    <button onclick="exportarCSV()" class="btn-secondary px-5 py-3 rounded-lg text-dark-200 font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        Exportar CSV
+                    </button>
+                    <button onclick="window.print()" class="btn-secondary px-5 py-3 rounded-lg text-dark-200 font-medium flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Imprimir
+                    </button>
+                    <button id="btnProcessarContrato" onclick="processarContrato()" class="btn-primary px-5 py-3 rounded-lg text-white font-medium flex items-center gap-2 hidden">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Processar Contrato
+                    </button>
+                    <button id="btnArquivarVersao" onclick="arquivarVersao()" class="btn-secondary px-5 py-3 rounded-lg text-dark-200 font-medium flex items-center gap-2 hidden">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path></svg>
+                        Arquivar Versão
+                    </button>
+                </div>
+            </div>
+
+            <!-- Cards de Resumo Premium -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-6 animate-fade-in animate-fade-in-delay-2">
+                <div class="value-card blue rounded-2xl p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 14l6-6m-5.5.5h.01m4.99 5h.01M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16l3.5-2 3.5 2 3.5-2 3.5 2z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-dark-400 text-sm mb-1">Passivo de Arrendamento</p>
+                    <p id="cardPassivo" class="text-2xl font-bold text-white font-mono">R$ 0,00</p>
+                    <p class="text-blue-400 text-xs mt-2">Valor Presente</p>
+                </div>
+                
+                <div class="value-card emerald rounded-2xl p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-dark-400 text-sm mb-1">Ativo Direito de Uso</p>
+                    <p id="cardAtivo" class="text-2xl font-bold text-white font-mono">R$ 0,00</p>
+                    <p class="text-emerald-400 text-xs mt-2">DDU (Right-of-Use)</p>
+                </div>
+                
+                <div class="value-card amber rounded-2xl p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-dark-400 text-sm mb-1">Total Nominal</p>
+                    <p id="cardNominal" class="text-2xl font-bold text-white font-mono">R$ 0,00</p>
+                    <p class="text-amber-400 text-xs mt-2">Soma das Parcelas</p>
+                </div>
+                
+                <div class="value-card purple rounded-2xl p-6">
+                    <div class="flex items-start justify-between mb-3">
+                        <div class="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-dark-400 text-sm mb-1">AVP (Desconto)</p>
+                    <p id="cardAVP" class="text-2xl font-bold text-white font-mono">R$ 0,00</p>
+                    <p class="text-purple-400 text-xs mt-2">Ajuste a Valor Presente</p>
+                </div>
+            </div>
+
+            <!-- Cards CP/LP -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8 animate-fade-in animate-fade-in-delay-3">
+                <div class="value-card cyan rounded-2xl p-6">
+                    <p class="text-dark-400 text-sm mb-1">Passivo Total Inicial</p>
+                    <p id="cardTotal" class="text-2xl font-bold text-white font-mono">R$ 0,00</p>
+                </div>
+                <div class="value-card rose rounded-2xl p-6">
+                    <p class="text-dark-400 text-sm mb-1">Curto Prazo (≤12 meses)</p>
+                    <p id="cardCP" class="text-2xl font-bold text-rose-400 font-mono">R$ 0,00</p>
+                </div>
+                <div class="value-card purple rounded-2xl p-6">
+                    <p class="text-dark-400 text-sm mb-1">Longo Prazo (>12 meses)</p>
+                    <p id="cardLP" class="text-2xl font-bold text-purple-400 font-mono">R$ 0,00</p>
+                </div>
+            </div>
+
+            <!-- Abas de Conteúdo -->
+            <div class="glass-card rounded-2xl overflow-hidden mb-8 animate-fade-in animate-fade-in-delay-4">
+                <div class="flex border-b border-dark-700 overflow-x-auto no-print">
+                    <button onclick="mudarAba('resumo')" id="aba-resumo" class="tab-btn active px-6 py-4 font-medium text-sm whitespace-nowrap">Resumo</button>
+                    <button onclick="mudarAba('fluxo')" id="aba-fluxo" class="tab-btn px-6 py-4 font-medium text-sm whitespace-nowrap">Fluxo de Caixa</button>
+                    <button onclick="mudarAba('contabil')" id="aba-contabil" class="tab-btn px-6 py-4 font-medium text-sm whitespace-nowrap">Contabilização</button>
+                    <button onclick="mudarAba('cplp')" id="aba-cplp" class="tab-btn px-6 py-4 font-medium text-sm whitespace-nowrap">CP vs LP</button>
+                    <button onclick="mudarAba('lancamentos')" id="aba-lancamentos" class="tab-btn px-6 py-4 font-medium text-sm whitespace-nowrap">Lançamentos</button>
+                </div>
+                <div class="p-6 overflow-x-auto">
+                    <div id="conteudo-resumo"></div>
+                    <div id="conteudo-fluxo" class="hidden"></div>
+                    <div id="conteudo-contabil" class="hidden"></div>
+                    <div id="conteudo-cplp" class="hidden"></div>
+                    <div id="conteudo-lancamentos" class="hidden"></div>
+                </div>
+            </div>
+
+            <!-- Footer Premium -->
+            <footer class="text-center py-8 border-t border-dark-800">
+                <div class="flex items-center justify-center gap-3 mb-4">
+                    <img src="assets/logo.png" alt="IFRS 16" class="h-10 w-auto rounded-full">
+                    <span class="text-white font-semibold">Repositório IFRS 16</span>
+                    <span class="px-2 py-1 bg-primary-500/20 text-primary-400 text-xs font-mono rounded-full">v1.0.0</span>
+                </div>
+                <p class="text-dark-400 text-sm">© 2025 Fernando Xavier - Todos os direitos reservados</p>
+                <p class="text-dark-500 text-xs mt-2">Calculadora baseada no CPC 06 (R2) / IFRS 16 - Arrendamentos</p>
+                <p class="text-dark-600 text-xs mt-1">Os cálculos são aproximados e devem ser validados por profissional contábil</p>
+                <p class="text-dark-600 text-xs mt-2">Licença: <span id="footerLicense" class="text-primary-500">-</span></p>
+                <p class="text-dark-700 text-xs mt-4">Versão <span id="appVersion">1.0.0</span> • Build 2025.12.11</p>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Modal de Configurações -->
+    <div id="settingsModal" class="fixed inset-0 bg-dark-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-2xl p-8 max-w-lg w-full animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-white">Configurações</h2>
+                <button onclick="fecharConfiguracoes()" class="p-2 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Dados do Usuário -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                    </svg>
+                    Dados da Conta
+                </h3>
+                <div class="glass-card-light rounded-xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-dark-400 text-sm">Nome</span>
+                        <span id="settingsUserName" class="text-white font-medium">-</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-dark-400 text-sm">Email</span>
+                        <span id="settingsUserEmail" class="text-white font-medium">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dados da Licença -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                    Licença
+                </h3>
+                <div class="glass-card-light rounded-xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-dark-400 text-sm">Chave</span>
+                        <span id="settingsLicenseKey" class="text-primary-400 font-mono text-sm">-</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-dark-400 text-sm">Tipo</span>
+                        <span id="settingsLicenseType" class="text-white font-medium">-</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-dark-400 text-sm">Status</span>
+                        <span id="settingsLicenseStatus" class="text-emerald-400 font-medium">-</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-dark-400 text-sm">Válido até</span>
+                        <span id="settingsLicenseExpiry" class="text-white font-medium">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alterar Senha -->
+            <div class="mb-6">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    Alterar Senha
+                </h3>
+                <div class="glass-card-light rounded-xl p-4 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Senha Atual</label>
+                        <input type="password" id="currentPassword" placeholder="Digite sua senha atual"
+                            class="w-full input-dark rounded-lg px-4 py-3 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Nova Senha</label>
+                        <input type="password" id="newPassword" placeholder="Digite a nova senha"
+                            class="w-full input-dark rounded-lg px-4 py-3 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-dark-300 mb-2">Confirmar Nova Senha</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirme a nova senha"
+                            class="w-full input-dark rounded-lg px-4 py-3 text-sm">
+                    </div>
+                    <p id="passwordError" class="text-rose-400 text-sm hidden"></p>
+                    <p id="passwordSuccess" class="text-emerald-400 text-sm hidden"></p>
+                    <button onclick="alterarSenha()" class="w-full btn-secondary py-3 rounded-lg text-white font-medium">
+                        Alterar Senha
+                    </button>
+                </div>
+            </div>
+
+            <!-- Botão Sair -->
+            <button onclick="fazerLogout()" 
+                class="w-full py-3 rounded-xl font-medium text-rose-400 border border-rose-500/30 hover:bg-rose-500/10 transition-colors flex items-center justify-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                </svg>
+                Sair da Conta
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts Modulares -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/ui.js"></script>
+    <script src="assets/js/auth.js"></script>
+    <script src="assets/js/calculator.js"></script>
+    <script src="assets/js/export.js"></script>
+    <script src="assets/js/contracts.js"></script>
+    
+    <script>
+        // Inicialização principal
+        window.onload = async function() { 
+            // Verificar se há sessão salva (usuário ou licença)
+            if (typeof checkingSession === 'undefined') {
+                 // Pequeno delay para garantir que tudo carregou
+                 setTimeout(async () => {
+                     const sessaoValida = await verificarSessaoSalva();
+                     if (!sessaoValida) {
+                         mostrarTelaLogin();
+                     }
+                 }, 100);
+            }
+        };
+    </script>
+
+    <!-- Modal de Contratos -->
+    <div id="contractModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="glass-card rounded-2xl p-6 max-w-md w-full max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-4">
+                <h3 id="modalTitle" class="text-lg font-semibold text-white">Novo Contrato</h3>
+                <button onclick="closeContractModal()" class="text-dark-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="contractForm" onsubmit="saveContract(event)" class="space-y-4">
+                <input type="hidden" id="contractId">
+                
+                <div>
+                    <label class="block text-sm text-dark-300 mb-2">Nome do Contrato *</label>
+                    <input type="text" id="contractName" required class="w-full input-dark rounded-lg px-4 py-3" placeholder="Ex: Contrato de Locação XYZ">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-dark-300 mb-2">Descrição</label>
+                    <textarea id="contractDescription" rows="3" class="w-full input-dark rounded-lg px-4 py-3" placeholder="Descrição do contrato..."></textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-dark-300 mb-2">Código Interno</label>
+                    <input type="text" id="contractCode" class="w-full input-dark rounded-lg px-4 py-3" placeholder="Código interno (opcional)">
+                </div>
+                
+                <div>
+                    <label class="block text-sm text-dark-300 mb-2">Status</label>
+                    <select id="contractStatus" class="w-full input-dark rounded-lg px-4 py-3">
+                        <option value="draft">Rascunho</option>
+                        <option value="active">Ativo</option>
+                        <option value="terminated">Encerrado</option>
+                    </select>
+                </div>
+                
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 btn-primary text-white px-4 py-2 rounded-lg font-medium">
+                        Salvar
+                    </button>
+                    <button type="button" onclick="closeContractModal()" class="flex-1 btn-secondary text-dark-200 px-4 py-2 rounded-lg">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Variáveis globais para contratos
+        let contractsData = [];
+        let currentContractId = null;
+        let economicIndexes = {};
+        let currentFilters = {
+            name: '',
+            code: '',
+            startDate: '',
+            endDate: ''
+        };
+
+        // Carregar contratos ao inicializar
+        async function loadContracts() {
+            // Verificar se CONFIG está definido
+            if (typeof CONFIG === 'undefined' || !CONFIG.API_URL) {
+                console.warn('CONFIG não está definido ainda, aguardando...');
+                setTimeout(loadContracts, 500);
+                return;
+            }
+
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) {
+                console.log('Nenhum token encontrado, não carregando contratos');
+                return;
+            }
+
+            // Verificar se os elementos existem
+            const container = document.getElementById('contractsList');
+            if (!container) {
+                console.warn('Elemento contractsList não encontrado ainda');
+                return;
+            }
+
+            try {
+                // Construir URL com filtros
+                let url = `${CONFIG.API_URL}/api/contracts?`;
+                if (currentFilters.name) url += `search_name=${encodeURIComponent(currentFilters.name)}&`;
+                if (currentFilters.code) url += `search_code=${encodeURIComponent(currentFilters.code)}&`;
+                if (currentFilters.startDate) url += `start_date=${currentFilters.startDate}&`;
+                if (currentFilters.endDate) url += `end_date=${currentFilters.endDate}&`;
+                
+                const response = await fetch(url, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    contractsData = data.contracts || [];
+                    renderContracts();
+                } else if (response.status === 401) {
+                    console.log('Token inválido, fazendo logout...');
+                    if (typeof fazerLogout === 'function') {
+                        fazerLogout();
+                    }
+                } else if (response.status === 403) {
+                    // Usuário não tem licença ativa ou não tem permissão
+                    console.log('Usuário não tem licença ativa para gerenciar contratos');
+                    const container = document.getElementById('contractsList');
+                    const countEl = document.getElementById('contractsCount');
+                    const selectorDiv = document.getElementById('contractSelector');
+                    
+                    if (container) {
+                        container.innerHTML = `
+                            <div class="text-center py-4 text-dark-400">
+                                <p class="mb-2">Você precisa de uma licença ativa para gerenciar contratos.</p>
+                                <p class="text-xs text-dark-500">Adquira uma licença para começar a usar esta funcionalidade.</p>
+                            </div>
+                        `;
+                    }
+                    if (countEl) {
+                        countEl.textContent = 'Licença necessária';
+                    }
+                    if (selectorDiv) {
+                        selectorDiv.classList.add('hidden');
+                    }
+                } else {
+                    console.warn('Erro ao carregar contratos:', response.status, response.statusText);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar contratos:', error);
+                // Não mostrar erro ao usuário se for apenas um problema de conexão
+            }
+        }
+
+        function renderContracts() {
+            const container = document.getElementById('contractsList');
+            const countEl = document.getElementById('contractsCount');
+            const selector = document.getElementById('selectedContract');
+            const selectorDiv = document.getElementById('contractSelector');
+            
+            // Verificar se os elementos existem
+            if (!container || !countEl) {
+                console.warn('Elementos de contratos não encontrados');
+                return;
+            }
+            
+            if (contractsData.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-dark-400">
+                        <p class="mb-3">Você ainda não tem contratos cadastrados.</p>
+                        <button onclick="openContractModal()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm">
+                            Criar Primeiro Contrato
+                        </button>
+                    </div>
+                `;
+                countEl.textContent = 'Nenhum contrato cadastrado';
+                selectorDiv.classList.add('hidden');
+                return;
+            }
+
+            countEl.textContent = `${contractsData.length} contrato(s) cadastrado(s)`;
+            
+            if (selectorDiv) {
+                selectorDiv.classList.remove('hidden');
+            }
+
+            // Limpar e preencher seletor
+            if (selector) {
+                selector.innerHTML = '<option value="">Selecione um contrato para carregar dados...</option>';
+                contractsData.forEach(contract => {
+                    const option = document.createElement('option');
+                    option.value = contract.id;
+                    option.textContent = contract.name;
+                    if (contract.id === currentContractId) option.selected = true;
+                    selector.appendChild(option);
+                });
+            }
+
+            // Renderizar lista
+            container.innerHTML = contractsData.map(contract => {
+                const statusColors = {
+                    'draft': 'bg-dark-500/20 text-dark-300 border-dark-500/30',
+                    'active': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+                    'terminated': 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                };
+                const statusLabels = {
+                    'draft': 'Rascunho',
+                    'active': 'Ativo',
+                    'terminated': 'Encerrado'
+                };
+                const createdDate = new Date(contract.created_at).toLocaleDateString('pt-BR');
+                
+                return `
+                    <div class="bg-dark-900/50 border border-dark-700 rounded-lg p-3 hover:border-primary-500/50 transition-colors">
+                        <div class="flex items-start justify-between">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    <h3 class="text-white font-medium text-sm">${contract.name}</h3>
+                                    <span class="px-2 py-0.5 rounded text-xs border ${statusColors[contract.status]}">
+                                        ${statusLabels[contract.status]}
+                                    </span>
+                                </div>
+                                ${contract.description ? `<p class="text-dark-400 text-xs mb-1">${contract.description}</p>` : ''}
+                                ${contract.contract_code ? `<p class="text-dark-500 text-xs">Código: ${contract.contract_code}</p>` : ''}
+                                <p class="text-dark-500 text-xs mt-1">Criado em ${createdDate}</p>
+                            </div>
+                            <div class="flex gap-1 ml-3">
+                                <button onclick="verHistoricoVersoes('${contract.id}')" class="text-amber-400 hover:text-amber-300 p-1.5" title="Histórico de Versões">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="editContract('${contract.id}')" class="text-primary-400 hover:text-primary-300 p-1.5" title="Editar">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                    </svg>
+                                </button>
+                                <button onclick="deleteContract('${contract.id}')" class="text-rose-400 hover:text-rose-300 p-1.5" title="Excluir">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openContractModal(contractId = null) {
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) {
+                alert('Você precisa estar logado para gerenciar contratos');
+                return;
+            }
+
+            const modal = document.getElementById('contractModal');
+            const form = document.getElementById('contractForm');
+            const title = document.getElementById('modalTitle');
+            
+            if (!modal || !form || !title) {
+                console.error('Elementos do modal não encontrados');
+                return;
+            }
+            
+            form.reset();
+            const contractIdInput = document.getElementById('contractId');
+            if (contractIdInput) {
+                contractIdInput.value = '';
+            }
+            
+            if (contractId) {
+                const contract = contractsData.find(c => c.id === contractId);
+                if (contract) {
+                    title.textContent = 'Editar Contrato';
+                    if (contractIdInput) contractIdInput.value = contract.id;
+                    const nameInput = document.getElementById('contractName');
+                    const descInput = document.getElementById('contractDescription');
+                    const codeInput = document.getElementById('contractCode');
+                    const statusInput = document.getElementById('contractStatus');
+                    if (nameInput) nameInput.value = contract.name;
+                    if (descInput) descInput.value = contract.description || '';
+                    if (codeInput) codeInput.value = contract.contract_code || '';
+                    if (statusInput) statusInput.value = contract.status;
+                }
+            } else {
+                title.textContent = 'Novo Contrato';
+            }
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closeContractModal() {
+            document.getElementById('contractModal').classList.add('hidden');
+        }
+
+        async function saveContract(event) {
+            event.preventDefault();
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) {
+                alert('Você precisa estar logado para criar contratos');
+                return;
+            }
+
+            const contractId = document.getElementById('contractId').value;
+            const data = {
+                name: document.getElementById('contractName').value,
+                description: document.getElementById('contractDescription').value || null,
+                contract_code: document.getElementById('contractCode').value || null,
+                status: document.getElementById('contractStatus').value
+            };
+
+            try {
+                const url = contractId 
+                    ? `${CONFIG.API_URL}/api/contracts/${contractId}`
+                    : `${CONFIG.API_URL}/api/contracts`;
+                const method = contractId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.ok) {
+                    closeContractModal();
+                    await loadContracts();
+                } else if (response.status === 403) {
+                    const error = await response.json();
+                    alert(error.detail || 'Você precisa de uma licença ativa para gerenciar contratos');
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Erro ao salvar contrato');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro de conexão ao salvar contrato');
+            }
+        }
+
+        async function editContract(contractId) {
+            openContractModal(contractId);
+        }
+
+        async function deleteContract(contractId) {
+            if (!confirm('Tem certeza que deseja excluir este contrato?')) {
+                return;
+            }
+
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/contracts/${contractId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok || response.status === 204) {
+                    await loadContracts();
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Erro ao excluir contrato');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alert('Erro de conexão ao excluir contrato');
+            }
+        }
+
+        function loadContractData() {
+            const selector = document.getElementById('selectedContract');
+            if (!selector) return;
+
+            const contractId = selector.value;
+            if (!contractId) {
+                currentContractId = null;
+                // Esconder botões
+                const btnProcessar = document.getElementById('btnProcessarContrato');
+                const btnArquivar = document.getElementById('btnArquivarVersao');
+                if (btnProcessar) btnProcessar.classList.add('hidden');
+                if (btnArquivar) btnArquivar.classList.add('hidden');
+                return;
+            }
+            currentContractId = contractId;
+            console.log('Contrato selecionado:', contractId);
+        }
+
+        // ========================================
+        // FUNÇÕES DE FILTROS
+        // ========================================
+        
+        function toggleFilters() {
+            const panel = document.getElementById('filtersPanel');
+            if (panel) {
+                panel.classList.toggle('hidden');
+            }
+        }
+
+        async function applyFilters() {
+            currentFilters = {
+                name: document.getElementById('filterName')?.value || '',
+                code: document.getElementById('filterCode')?.value || '',
+                startDate: document.getElementById('filterStartDate')?.value || '',
+                endDate: document.getElementById('filterEndDate')?.value || ''
+            };
+            await loadContracts();
+        }
+
+        function clearFilters() {
+            const filterName = document.getElementById('filterName');
+            const filterCode = document.getElementById('filterCode');
+            const filterStartDate = document.getElementById('filterStartDate');
+            const filterEndDate = document.getElementById('filterEndDate');
+            
+            if (filterName) filterName.value = '';
+            if (filterCode) filterCode.value = '';
+            if (filterStartDate) filterStartDate.value = '';
+            if (filterEndDate) filterEndDate.value = '';
+            
+            currentFilters = { name: '', code: '', startDate: '', endDate: '' };
+            loadContracts();
+        }
+
+        // ========================================
+        // FUNÇÕES DE ÍNDICES ECONÔMICOS
+        // ========================================
+        
+        async function loadEconomicIndexes() {
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/economic-indexes?limit=1000`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    economicIndexes = {};
+                    data.indexes.forEach(idx => {
+                        if (!economicIndexes[idx.index_type]) {
+                            economicIndexes[idx.index_type] = [];
+                        }
+                        economicIndexes[idx.index_type].push(idx);
+                    });
+                    console.log('Índices econômicos carregados:', economicIndexes);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar índices:', error);
+            }
+        }
+
+        async function handleReajusteChange() {
+            const tipo = document.getElementById('reajusteTipo')?.value;
+            const container = document.getElementById('reajusteManualContainer');
+            const input = document.getElementById('reajusteAnual');
+            const info = document.getElementById('reajusteIndicadorInfo');
+            
+            if (!tipo || !container || !input) return;
+
+            if (tipo === 'manual') {
+                input.disabled = false;
+                if (info) info.textContent = '';
+            } else {
+                const indexes = economicIndexes[tipo];
+                if (indexes && indexes.length > 0) {
+                    const latest = indexes.sort((a, b) => 
+                        new Date(b.reference_date) - new Date(a.reference_date)
+                    )[0];
+                    
+                    input.value = parseFloat(latest.value).toFixed(2);
+                    input.disabled = true;
+                    
+                    if (info) {
+                        const refDate = new Date(latest.reference_date);
+                        info.textContent = `(Último: ${refDate.toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})} - ${parseFloat(latest.value).toFixed(2)}%)`;
+                    }
+                } else {
+                    input.disabled = false;
+                    if (info) info.textContent = '(Índice não disponível - use manual)';
+                }
+            }
+            
+            calcular();
+        }
+
+        // ========================================
+        // FUNÇÕES DE VERSIONAMENTO
+        // ========================================
+        
+        async function arquivarVersao() {
+            if (!currentContractId) {
+                alert('Por favor, selecione um contrato antes de arquivar uma versão.');
+                return;
+            }
+
+            if (!dadosCalculados || !dadosCalculados.inputs) {
+                alert('Por favor, calcule o contrato antes de arquivar uma versão.');
+                return;
+            }
+
+            const notas = prompt('Adicione observações para esta versão (opcional):');
+            if (notas === null) return;
+
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) {
+                alert('Você precisa estar logado para arquivar versões');
+                return;
+            }
+
+            try {
+                const reajusteTipo = document.getElementById('reajusteTipo')?.value || 'manual';
+                const reajusteValor = reajusteTipo === 'manual' ? parseFloat(document.getElementById('reajusteAnual').value) : null;
+
+                const versionData = {
+                    data_inicio: dadosCalculados.inputs.dataInicio.toISOString().split('T')[0],
+                    prazo_meses: dadosCalculados.inputs.prazoMeses,
+                    carencia_meses: dadosCalculados.inputs.carenciaMeses,
+                    parcela_inicial: dadosCalculados.inputs.parcelaInicial,
+                    taxa_desconto_anual: dadosCalculados.inputs.taxaAnual,
+                    reajuste_tipo: reajusteTipo,
+                    reajuste_valor: reajusteValor,
+                    mes_reajuste: parseInt(document.getElementById('mesReajuste').value),
+                    resultados_json: {
+                        fluxoCaixa: dadosCalculados.fluxoCaixa,
+                        contabilizacao: dadosCalculados.contabilizacao,
+                        cpLp: dadosCalculados.cpLp
+                    },
+                    total_vp: dadosCalculados.totalVP,
+                    total_nominal: dadosCalculados.totalNominal,
+                    avp: dadosCalculados.avp,
+                    notas: notas || null
+                };
+
+                const response = await fetch(`${CONFIG.API_URL}/api/contracts/${currentContractId}/versions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(versionData)
+                });
+
+                if (response.ok) {
+                    const version = await response.json();
+                    alert(`Versão ${version.version_number} arquivada com sucesso!`);
+                } else {
+                    const error = await response.json();
+                    alert(`Erro ao arquivar versão: ${error.detail || 'Erro desconhecido'}`);
+                }
+            } catch (error) {
+                console.error('Erro ao arquivar versão:', error);
+                alert('Erro ao arquivar versão. Verifique o console para mais detalhes.');
+            }
+        }
+
+        async function processarContrato() {
+            if (!currentContractId) {
+                alert('Por favor, selecione um contrato antes de processar.');
+                return;
+            }
+
+            if (!dadosCalculados || !dadosCalculados.inputs) {
+                alert('Por favor, calcule o contrato antes de processar.');
+                return;
+            }
+
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) {
+                alert('Você precisa estar logado para processar contratos');
+                return;
+            }
+
+            // Pedir observações opcionais
+            const notas = prompt('Adicione observações para esta versão (opcional):\n\nDeixe em branco para salvar sem observações.');
+            if (notas === null) return; // Usuário cancelou
+
+            try {
+                const reajusteTipo = document.getElementById('reajusteTipo')?.value || 'manual';
+                const reajusteValor = reajusteTipo === 'manual' ? parseFloat(document.getElementById('reajusteAnual').value) : null;
+
+                const versionData = {
+                    data_inicio: dadosCalculados.inputs.dataInicio.toISOString().split('T')[0],
+                    prazo_meses: dadosCalculados.inputs.prazoMeses,
+                    carencia_meses: dadosCalculados.inputs.carenciaMeses,
+                    parcela_inicial: dadosCalculados.inputs.parcelaInicial,
+                    taxa_desconto_anual: dadosCalculados.inputs.taxaAnual,
+                    reajuste_tipo: reajusteTipo,
+                    reajuste_valor: reajusteValor,
+                    mes_reajuste: parseInt(document.getElementById('mesReajuste').value),
+                    resultados_json: {
+                        fluxoCaixa: dadosCalculados.fluxoCaixa,
+                        contabilizacao: dadosCalculados.contabilizacao,
+                        cpLp: dadosCalculados.cpLp
+                    },
+                    total_vp: dadosCalculados.totalVP,
+                    total_nominal: dadosCalculados.totalNominal,
+                    avp: dadosCalculados.avp,
+                    notas: notas || null
+                };
+
+                const response = await fetch(`${CONFIG.API_URL}/api/contracts/${currentContractId}/versions`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(versionData)
+                });
+
+                if (response.ok) {
+                    const version = await response.json();
+                    alert(`✅ Contrato processado com sucesso!\n\nVersão ${version.version_number} gravada.`);
+                } else {
+                    const errorText = await response.text();
+                    let errorMessage = 'Erro ao processar contrato';
+                    try {
+                        const error = JSON.parse(errorText);
+                        errorMessage = error.detail || error.message || errorMessage;
+                    } catch (e) {
+                        errorMessage = errorText || errorMessage;
+                    }
+                    alert(`❌ Erro ao processar contrato:\n${errorMessage}`);
+                    console.error('Erro completo:', response.status, errorText);
+                }
+            } catch (error) {
+                console.error('Erro ao processar contrato:', error);
+                alert('❌ Erro ao processar contrato. Verifique o console para mais detalhes.');
+            }
+        }
+
+        async function verHistoricoVersoes(contractId) {
+            // Verificar ambas as chaves para compatibilidade
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) {
+                alert('Você precisa estar logado');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/contracts/${contractId}/versions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Dados recebidos:', data);
+                    
+                    // Verificar estrutura da resposta
+                    const versions = data.versions || (Array.isArray(data) ? data : []);
+                    
+                    if (versions.length > 0) {
+                        let html = '<div class="space-y-2">';
+                        versions.forEach(v => {
+                            const date = new Date(v.archived_at || v.created_at).toLocaleString('pt-BR');
+                            html += `
+                                <div class="glass-card-light p-3 rounded-lg">
+                                    <div class="flex justify-between items-start">
+                                        <div>
+                                            <p class="font-semibold text-white">Versão ${v.version_number}</p>
+                                            <p class="text-xs text-dark-400">${date}</p>
+                                            ${v.notas ? `<p class="text-sm text-dark-300 mt-1">${v.notas}</p>` : ''}
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="text-sm text-primary-400">VP: R$ ${parseFloat(v.total_vp || 0).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</p>
+                                            <p class="text-xs text-dark-400">${v.prazo_meses} meses</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        
+                        const modal = document.createElement('div');
+                        modal.className = 'fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4';
+                        modal.innerHTML = `
+                            <div class="glass-card rounded-2xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-lg font-semibold text-white">Histórico de Versões</h3>
+                                    <button onclick="this.closest('.fixed').remove()" class="text-dark-400 hover:text-white">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                                ${html}
+                            </div>
+                        `;
+                        document.body.appendChild(modal);
+                    } else {
+                        alert('Nenhuma versão arquivada para este contrato.');
+                    }
+                } else {
+                    const errorText = await response.text();
+                    let errorMessage = 'Erro ao carregar histórico de versões';
+                    try {
+                        const error = JSON.parse(errorText);
+                        errorMessage = error.detail || error.message || errorMessage;
+                    } catch (e) {
+                        errorMessage = errorText || errorMessage;
+                    }
+                    console.error('Erro ao carregar versões:', response.status, errorMessage);
+                    alert(`❌ Erro ao carregar histórico:\n${errorMessage}\n\nStatus: ${response.status}`);
+                }
+            } catch (error) {
+                console.error('Erro ao carregar histórico:', error);
+                alert(`❌ Erro ao carregar histórico:\n${error.message || 'Erro desconhecido'}`);
+            }
+        }
+
+    </script>
+</body>
+</html>

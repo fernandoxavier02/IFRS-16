@@ -1,0 +1,73 @@
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+.env.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.cursor/
+
+# Logs
+*.log
+logs/
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+backend/ifrs16_licenses.db
+
+# Build
+dist/
+build/
+*.spec
+
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Firebase
+.firebase/
+firebase-debug.log
+
+# Mac
+.DS_Store
+
+# Critical Secrets to Ignore and Remove
+CREDENCIAIS_MASTER.md
+CREDENCIAIS_USUARIO_MASTER.txt
+LICENCA_MASTER.txt
+STRIPE_WEBHOOK_SECRET.txt
+FIREBASE_ENV_VARS.txt
+VARIABLES_RAILWAY.txt
+conectividade_resultado.json
+EMAIL_CREDENCIAIS_TEXTO.txt
+VARIABLES_PARA_ADICIONAR.txt
+env_vars.json
+render_service*.json
+
+# Backend Secrets
+backend/.env
+backend/CLOUD_SQL_PASSWORD.txt
+backend/CLOUD_SQL_PASSWORD_NEW.txt
+backend/admin_token.txt
+backend/current_env_vars.txt
+backend/temp_db_url.txt
+backend/hash_master.txt
+backend/login.json
+backend/validate.json
+backend/*.db
+
+# Relatórios com dados sensíveis
+RELATORIO_CONECTIVIDADE_FIREBASE_*.json
+RELATORIO_TESTES_CLOUD_SQL.json

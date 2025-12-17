@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Gerenciamento de Licenças IFRS 16</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .spinner { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="max-w-6xl mx-auto p-6">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-800 to-purple-600 rounded-lg p-6 mb-6 text-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    <div>
+                        <h1 class="text-2xl font-bold">Painel Administrativo</h1>
+                        <p class="text-purple-200">Gerenciamento de Licenças IFRS 16</p>
+                    </div>
+                </div>
+                <div id="headerLogoutSection" class="hidden">
+                    <div class="flex items-center gap-3">
+                        <span class="text-purple-200 text-sm">Logado como: <strong id="headerLoggedUser"></strong></span>
+                        <button onclick="fazerLogout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                            </svg>
+                            Sair
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuração / Login -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">⚙️ Configuração e Login</h2>
+            <div id="loginSection">
+                <div class="mb-4 p-3 bg-blue-50 border border-blue-200 rounded">
+                    <p class="text-sm text-blue-800">
+                        <strong>URL da API:</strong> <span id="apiUrlDisplay" class="font-mono text-xs"></span>
+                    </p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" id="adminEmail" value="fernandocostaxavier@gmail.com" placeholder="admin@ifrs16.local"
+                            class="w-full border rounded px-3 py-2">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+                        <input type="password" id="adminPassword" placeholder="Digite a senha"
+                            class="w-full border rounded px-3 py-2">
+                    </div>
+                </div>
+                <button onclick="fazerLogin()" class="mt-4 bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                    🔐 Fazer Login
+                </button>
+                <span id="connectionStatus" class="ml-4"></span>
+                <input type="hidden" id="apiUrl" value="">
+            </div>
+            <div id="loggedInSection" class="hidden">
+                <div class="bg-green-50 border border-green-200 rounded p-4">
+                    <p class="text-green-800 font-semibold">✅ Logado como: <span id="loggedUser"></span></p>
+                    <button onclick="fazerLogout()" class="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700">
+                        Sair
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gerar Nova Licença -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">🔑 Gerar Nova Licença</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Cliente</label>
+                    <input type="text" id="customerName" placeholder="Nome completo"
+                        class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                    <input type="email" id="customerEmail" placeholder="email@exemplo.com"
+                        class="w-full border rounded px-3 py-2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Tipo de Licença</label>
+                    <select id="licenseType" class="w-full border rounded px-3 py-2">
+                        <option value="trial">Trial (demonstração)</option>
+                        <option value="basic">Basic</option>
+                        <option value="pro" selected>Pro</option>
+                        <option value="enterprise">Enterprise</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Duração (meses)</label>
+                    <input type="number" id="durationMonths" placeholder="Vazio = permanente" min="1"
+                        class="w-full border rounded px-3 py-2">
+                </div>
+            </div>
+            <button onclick="gerarLicenca()" class="mt-4 bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 flex items-center gap-2">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                </svg>
+                Gerar Licença
+            </button>
+            <div id="generateResult" class="mt-4"></div>
+        </div>
+
+        <!-- Ações em Licença -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">⚡ Ações em Licença</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Chave da Licença</label>
+                    <input type="text" id="actionKey" placeholder="FX2025-IFRS16-XXX-XXXXX"
+                        class="w-full border rounded px-3 py-2 uppercase">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Motivo (para revogação)</label>
+                    <input type="text" id="revokeReason" placeholder="Opcional"
+                        class="w-full border rounded px-3 py-2">
+                </div>
+                <div class="flex items-end gap-2">
+                    <button onclick="revogarLicenca()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+                        Revogar
+                    </button>
+                    <button onclick="reativarLicenca()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Reativar
+                    </button>
+                    <button onclick="buscarLicenca()" class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+            <div id="actionResult" class="mt-4"></div>
+        </div>
+
+        <!-- Lista de Licenças -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">📋 Licenças Cadastradas</h2>
+                <button onclick="listarLicencas()" class="bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-700 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Atualizar
+                </button>
+            </div>
+            <div id="licenseList" class="overflow-x-auto">
+                <p class="text-gray-500 text-center py-8">Clique em "Atualizar" para carregar as licenças</p>
+            </div>
+        </div>
+
+        <!-- Lista de Usuários -->
+        <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">👥 Usuários Cadastrados</h2>
+                <button onclick="listarUsuarios()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Atualizar
+                </button>
+            </div>
+            <div id="userList" class="overflow-x-auto">
+                <p class="text-gray-500 text-center py-8">Clique em "Atualizar" para carregar os usuários</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>© 2025 Fernando Xavier - Painel Administrativo IFRS 16</p>
+            <p class="text-xs text-gray-400 mt-1">v1.0.0 • Build 2025.12.11</p>
+        </div>
+    </div>
+
+    <script>
+        // Detectar URL da API automaticamente
+        const getApiUrl = () => {
+            const hostname = window.location.hostname;
+            
+            // Firebase Hosting (produção) - Backend no Cloud Run
+            if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
+                return 'https://ifrs16-backend-ox4zylcs5a-uc.a.run.app';
+            }
+            
+            // Desenvolvimento local
+            return 'http://localhost:8000';
+        };
+        
+        const API_URL = getApiUrl();
+        
+        let jwtToken = null;
+        let loggedUser = null;
+
+        // Verificar se há token salvo no localStorage
+        function checkStoredToken() {
+            const storedToken = localStorage.getItem('ifrs16_auth_token');
+            const storedUserType = localStorage.getItem('ifrs16_user_type');
+            
+            if (storedToken && storedUserType === 'admin') {
+                jwtToken = storedToken;
+                // Tentar obter dados do usuário
+                loadUserData();
+            }
+        }
+
+        // Carregar dados do usuário logado
+        async function loadUserData() {
+            if (!jwtToken) return;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/auth/admin/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${jwtToken}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    loggedUser = data.username || data.email;
+                    showLoggedInState();
+                } else if (response.status === 401) {
+                    // Token inválido ou expirado
+                    clearAuth();
+                }
+            } catch (e) {
+                console.error('Erro ao carregar dados do usuário:', e);
+            }
+        }
+
+        // Mostrar estado logado
+        function showLoggedInState() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('loggedInSection').classList.remove('hidden');
+            document.getElementById('loggedUser').textContent = loggedUser;
+            document.getElementById('headerLogoutSection').classList.remove('hidden');
+            document.getElementById('headerLoggedUser').textContent = loggedUser;
+            document.getElementById('apiUrl').value = API_URL;
+        }
+
+        // Limpar autenticação
+        function clearAuth() {
+            jwtToken = null;
+            loggedUser = null;
+            localStorage.removeItem('ifrs16_auth_token');
+            localStorage.removeItem('ifrs16_user_type');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('loggedInSection').classList.add('hidden');
+            document.getElementById('headerLogoutSection').classList.add('hidden');
+        }
+
+        function getConfig() {
+            return {
+                apiUrl: API_URL
+            };
+        }
+        
+        // Verificar token ao carregar a página
+        window.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('apiUrl').value = API_URL;
+            document.getElementById('apiUrlDisplay').textContent = API_URL;
+            checkStoredToken();
+        });
+
+        async function fazerLogin() {
+            const status = document.getElementById('connectionStatus');
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+
+            if (!email || !password) {
+                status.innerHTML = '<span class="text-red-600">❌ Preencha email e senha</span>';
+                return;
+            }
+
+            status.innerHTML = '<span class="text-gray-500">Conectando...</span>';
+
+            try {
+                console.log('🔍 DEBUG LOGIN:', {
+                    url: `${API_URL}/api/auth/admin/login`,
+                    email: email
+                });
+
+                const response = await fetch(`${API_URL}/api/auth/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+                
+                console.log('📥 RESPOSTA:', {
+                    status: response.status,
+                    ok: response.ok,
+                    detail: data.detail
+                });
+
+                if (response.ok && data.access_token) {
+                    jwtToken = data.access_token;
+                    
+                    // Salvar token no localStorage
+                    localStorage.setItem('ifrs16_auth_token', jwtToken);
+                    localStorage.setItem('ifrs16_user_type', 'admin');
+                    
+                    // Obter dados do usuário
+                    try {
+                        const meResponse = await fetch(`${API_URL}/api/auth/admin/me`, {
+                            headers: {
+                                'Authorization': `Bearer ${jwtToken}`
+                            }
+                        });
+                        if (meResponse.ok) {
+                            const meData = await meResponse.json();
+                            loggedUser = meData.username || meData.email || email;
+                        } else {
+                            loggedUser = email;
+                        }
+                    } catch (e) {
+                        console.error('Erro ao obter dados do usuário:', e);
+                        loggedUser = email;
+                    }
+                    
+                    showLoggedInState();
+                    status.innerHTML = '<span class="text-green-600">✅ Login realizado com sucesso!</span>';
+                } else {
+                    status.innerHTML = `<span class="text-red-600">❌ ${data.detail || 'Erro no login'}</span>`;
+                }
+            } catch (e) {
+                console.error('Erro no login:', e);
+                status.innerHTML = '<span class="text-red-600">❌ Erro de conexão. Verifique se a API está rodando.</span>';
+            }
+        }
+
+        function fazerLogout() {
+            clearAuth();
+            document.getElementById('connectionStatus').innerHTML = '';
+            document.getElementById('adminPassword').value = '';
+            
+            // Limpar resultados das seções
+            document.getElementById('generateResult').innerHTML = '';
+            document.getElementById('actionResult').innerHTML = '';
+            document.getElementById('licenseList').innerHTML = '<p class="text-gray-500 text-center py-8">Clique em "Atualizar" para carregar as licenças</p>';
+        }
+
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            if (!jwtToken) {
+                throw new Error('Faça login primeiro');
+            }
+
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${jwtToken}`
+                }
+            };
+            if (body) options.body = JSON.stringify(body);
+            
+            const url = `${API_URL}${endpoint}`;
+            console.log(`🌐 API Call: ${method} ${url}`, body ? { body } : '');
+            
+            const response = await fetch(url, options);
+            const data = await response.json();
+            
+            // Se token expirado, limpar autenticação
+            if (response.status === 401) {
+                clearAuth();
+                throw new Error('Token expirado. Faça login novamente.');
+            }
+            
+            return { response, data };
+        }
+
+        async function testarConexao() {
+            const status = document.getElementById('connectionStatus');
+            try {
+                const { response, data } = await apiCall('/api/auth/admin/me');
+                if (response.ok) {
+                    status.innerHTML = '<span class="text-green-600">✅ Conectado</span>';
+                } else {
+                    status.innerHTML = '<span class="text-red-600">❌ Erro</span>';
+                }
+            } catch (e) {
+                status.innerHTML = '<span class="text-red-600">❌ Faça login primeiro</span>';
+            }
+        }
+
+        async function gerarLicenca() {
+            const result = document.getElementById('generateResult');
+            result.innerHTML = '<span class="text-gray-500">Gerando...</span>';
+            
+            try {
+                if (!jwtToken) {
+                    result.innerHTML = '<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ Faça login primeiro</div>';
+                    return;
+                }
+
+                const body = {
+                    customer_name: document.getElementById('customerName').value,
+                    email: document.getElementById('customerEmail').value,
+                    license_type: document.getElementById('licenseType').value,
+                };
+                
+                const months = document.getElementById('durationMonths').value;
+                if (months) body.duration_months = parseInt(months);
+                
+                const { response, data } = await apiCall('/api/admin/generate-license', 'POST', body);
+                
+                if (response.ok && data.success) {
+                    result.innerHTML = `
+                        <div class="bg-green-50 border border-green-200 rounded p-4">
+                            <p class="text-green-800 font-semibold">✅ Licença gerada com sucesso!</p>
+                            <p class="mt-2"><strong>Chave:</strong> <code class="bg-gray-100 px-2 py-1 rounded">${data.license.key}</code></p>
+                            <p><strong>Cliente:</strong> ${data.license.customer_name}</p>
+                            <p><strong>Tipo:</strong> ${data.license.license_type}</p>
+                            <p><strong>Expira:</strong> ${data.license.expires_at ? new Date(data.license.expires_at).toLocaleDateString('pt-BR') : 'Nunca'}</p>
+                        </div>
+                    `;
+                } else {
+                    if (response.status === 401) {
+                        fazerLogout();
+                        result.innerHTML = '<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ Token expirado. Faça login novamente.</div>';
+                    } else {
+                        result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${data.detail || 'Erro ao gerar'}</div>`;
+                    }
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${e.message || 'Erro de conexão'}</div>`;
+            }
+        }
+
+        async function revogarLicenca() {
+            const key = document.getElementById('actionKey').value;
+            const reason = document.getElementById('revokeReason').value;
+            const result = document.getElementById('actionResult');
+            
+            if (!key) {
+                result.innerHTML = '<div class="text-red-600">Digite a chave da licença</div>';
+                return;
+            }
+            
+            try {
+                const { response, data } = await apiCall('/api/admin/revoke-license', 'POST', { key, reason });
+                
+                if (response.ok && data.success) {
+                    result.innerHTML = `<div class="bg-green-50 border border-green-200 rounded p-4 text-green-800">✅ ${data.message}</div>`;
+                } else {
+                    result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${data.detail || 'Erro'}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ Erro de conexão</div>`;
+            }
+        }
+
+        async function reativarLicenca() {
+            const key = document.getElementById('actionKey').value;
+            const result = document.getElementById('actionResult');
+            
+            if (!key) {
+                result.innerHTML = '<div class="text-red-600">Digite a chave da licença</div>';
+                return;
+            }
+            
+            try {
+                const { response, data } = await apiCall('/api/admin/reactivate-license', 'POST', { key });
+                
+                if (response.ok && data.success) {
+                    result.innerHTML = `<div class="bg-green-50 border border-green-200 rounded p-4 text-green-800">✅ ${data.message}</div>`;
+                } else {
+                    result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${data.detail || 'Erro'}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ Erro de conexão</div>`;
+            }
+        }
+
+        async function buscarLicenca() {
+            const key = document.getElementById('actionKey').value;
+            const result = document.getElementById('actionResult');
+            
+            if (!key) {
+                result.innerHTML = '<div class="text-red-600">Digite a chave da licença</div>';
+                return;
+            }
+            
+            try {
+                const { response, data } = await apiCall(`/api/admin/license/${key}`);
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-200 rounded p-4">
+                            <p class="font-semibold text-blue-800 mb-2">Detalhes da Licença</p>
+                            <div class="grid grid-cols-2 gap-2 text-sm">
+                                <p><strong>Chave:</strong> ${data.key}</p>
+                                <p><strong>Cliente:</strong> ${data.customer_name}</p>
+                                <p><strong>Email:</strong> ${data.email}</p>
+                                <p><strong>Tipo:</strong> ${data.license_type}</p>
+                                <p><strong>Status:</strong> <span class="${data.status === 'active' ? 'text-green-600' : 'text-red-600'}">${data.status}</span></p>
+                                <p><strong>Revogada:</strong> ${data.revoked ? 'Sim' : 'Não'}</p>
+                                <p><strong>Criada:</strong> ${new Date(data.created_at).toLocaleDateString('pt-BR')}</p>
+                                <p><strong>Expira:</strong> ${data.expires_at ? new Date(data.expires_at).toLocaleDateString('pt-BR') : 'Nunca'}</p>
+                                <p><strong>Última validação:</strong> ${data.last_validation ? new Date(data.last_validation).toLocaleString('pt-BR') : 'Nunca'}</p>
+                                <p><strong>Ativações:</strong> ${data.current_activations}/${data.max_activations}</p>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${data.detail || 'Licença não encontrada'}</div>`;
+                }
+            } catch (e) {
+                result.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ Erro de conexão</div>`;
+            }
+        }
+
+        async function listarLicencas() {
+            const container = document.getElementById('licenseList');
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando...</p>';
+            
+            try {
+                const { response, data } = await apiCall('/api/admin/licenses');
+                
+                if (response.ok) {
+                    if (data.licenses.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhuma licença cadastrada</p>';
+                        return;
+                    }
+                    
+                    let html = `
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Chave</th>
+                                    <th class="px-3 py-2 text-left">Cliente</th>
+                                    <th class="px-3 py-2 text-center">Tipo</th>
+                                    <th class="px-3 py-2 text-center">Status</th>
+                                    <th class="px-3 py-2 text-center">Expira</th>
+                                    <th class="px-3 py-2 text-center">Última Validação</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.licenses.forEach((lic, idx) => {
+                        const statusClass = lic.status === 'active' ? 'bg-green-100 text-green-800' : 
+                                          lic.status === 'suspended' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800';
+                        html += `
+                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+                                <td class="px-3 py-2 font-mono text-xs">${lic.key}</td>
+                                <td class="px-3 py-2">${lic.customer_name}</td>
+                                <td class="px-3 py-2 text-center">${lic.license_type}</td>
+                                <td class="px-3 py-2 text-center"><span class="px-2 py-1 rounded text-xs ${statusClass}">${lic.status}</span></td>
+                                <td class="px-3 py-2 text-center">${lic.expires_at ? new Date(lic.expires_at).toLocaleDateString('pt-BR') : '-'}</td>
+                                <td class="px-3 py-2 text-center text-xs">${lic.last_validation ? new Date(lic.last_validation).toLocaleString('pt-BR') : '-'}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    html += `<p class="text-sm text-gray-500 mt-2">Total: ${data.total} licença(s)</p>`;
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${data.detail || 'Erro ao carregar'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ Erro de conexão. Verifique se a API está rodando.</div>`;
+            }
+        }
+
+        async function listarUsuarios() {
+            const container = document.getElementById('userList');
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">Carregando...</p>';
+            
+            try {
+                const { response, data } = await apiCall('/api/admin/users?limit=1000');
+                
+                if (response.ok) {
+                    if (data.users.length === 0) {
+                        container.innerHTML = '<p class="text-gray-500 text-center py-8">Nenhum usuário cadastrado</p>';
+                        return;
+                    }
+                    
+                    let html = `
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="px-3 py-2 text-left">Email</th>
+                                    <th class="px-3 py-2 text-left">Nome</th>
+                                    <th class="px-3 py-2 text-center">Status</th>
+                                    <th class="px-3 py-2 text-center">Email Verificado</th>
+                                    <th class="px-3 py-2 text-center">Criado em</th>
+                                    <th class="px-3 py-2 text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    data.users.forEach((user, idx) => {
+                        const statusClass = user.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+                        const verifiedClass = user.email_verified ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800';
+                        html += `
+                            <tr class="${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50'}">
+                                <td class="px-3 py-2">${user.email}</td>
+                                <td class="px-3 py-2">${user.name || '-'}</td>
+                                <td class="px-3 py-2 text-center"><span class="px-2 py-1 rounded text-xs ${statusClass}">${user.is_active ? 'Ativo' : 'Inativo'}</span></td>
+                                <td class="px-3 py-2 text-center"><span class="px-2 py-1 rounded text-xs ${verifiedClass}">${user.email_verified ? 'Sim' : 'Não'}</span></td>
+                                <td class="px-3 py-2 text-center text-xs">${new Date(user.created_at).toLocaleDateString('pt-BR')}</td>
+                                <td class="px-3 py-2 text-center">
+                                    <button onclick="verDetalhesUsuario('${user.id}')" class="text-blue-600 hover:text-blue-800 text-xs">Ver</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += '</tbody></table>';
+                    html += `<p class="text-sm text-gray-500 mt-2">Total: ${data.total} usuário(s)</p>`;
+                    container.innerHTML = html;
+                } else {
+                    container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${data.detail || 'Erro ao carregar'}</div>`;
+                }
+            } catch (e) {
+                container.innerHTML = `<div class="bg-red-50 border border-red-200 rounded p-4 text-red-800">❌ ${e.message || 'Erro de conexão'}</div>`;
+            }
+        }
+
+        async function verDetalhesUsuario(userId) {
+            try {
+                const { response, data } = await apiCall(`/api/admin/users/${userId}`);
+                
+                if (response.ok) {
+                    alert(`Detalhes do Usuário:\n\nEmail: ${data.email}\nNome: ${data.name || '-'}\nAtivo: ${data.is_active ? 'Sim' : 'Não'}\nEmail Verificado: ${data.email_verified ? 'Sim' : 'Não'}\nCriado em: ${new Date(data.created_at).toLocaleString('pt-BR')}\nStripe Customer ID: ${data.stripe_customer_id || '-'}`);
+                } else {
+                    alert(`Erro: ${data.detail || 'Não foi possível carregar os detalhes'}`);
+                }
+            } catch (e) {
+                alert(`Erro: ${e.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
+

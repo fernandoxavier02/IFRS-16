@@ -428,14 +428,12 @@
                             }
                             
                             if (resultados) {
-                                const resultadosObj = resultados;
                                 const fluxo = resultados.fluxoCaixa || [];
                                 const contab = resultados.contabilizacao || [];
 
                                 // Debug: ver estrutura dos dados
                                 console.log('=== DEBUG RELATÓRIOS ===');
                                 console.log('Contrato:', contrato?.name);
-                                console.log('resultados_json:', resultados);
                                 console.log('fluxoCaixa length:', fluxo.length);
                                 console.log('contabilizacao length:', contab.length);
                                 if (fluxo.length > 0) console.log('Exemplo fluxo[0]:', fluxo[0]);
@@ -469,7 +467,49 @@
                                         saldoPassivo: linhaContab?.passivoFinal || 0,
                                         saldoDDU: linhaContab?.ativoLiquido || 0
                                     });
+                                } else if (contab.length > 0) {
+                                    // Fallback: usar última linha da contabilização se competência não encontrada
+                                    console.log('Competência não encontrada, usando última linha disponível');
+                                    const ultimaContab = contab[contab.length - 1];
+                                    const ultimaFluxo = fluxo.length > 0 ? fluxo[fluxo.length - 1] : null;
+                                    
+                                    // Calcular valores médios mensais
+                                    const prazoMeses = version.prazo_meses || contab.length;
+                                    const parcelaMensal = (version.total_nominal || 0) / prazoMeses;
+                                    const jurosMensal = (version.avp || 0) / prazoMeses;
+                                    const depreciacaoMensal = (version.total_vp || 0) / prazoMeses;
+
+                                    movimentacoes.push({
+                                        contrato: contrato?.name || 'N/A',
+                                        versionId: version.version_id || '-',
+                                        categoria: contrato?.categoria || 'OT',
+                                        parcela: parcelaMensal,
+                                        juros: jurosMensal,
+                                        amortizacao: parcelaMensal - jurosMensal,
+                                        depreciacao: depreciacaoMensal,
+                                        saldoPassivo: ultimaContab?.passivoFinal || version.total_vp || 0,
+                                        saldoDDU: ultimaContab?.ativoLiquido || version.total_vp || 0
+                                    });
                                 }
+                            } else {
+                                // Sem resultados_json - usar valores da versão
+                                console.log('Sem resultados_json, usando valores da versão');
+                                const prazoMeses = version.prazo_meses || 60;
+                                const parcelaMensal = (version.total_nominal || 0) / prazoMeses;
+                                const jurosMensal = (version.avp || 0) / prazoMeses;
+                                const depreciacaoMensal = (version.total_vp || 0) / prazoMeses;
+
+                                movimentacoes.push({
+                                    contrato: contrato?.name || 'N/A',
+                                    versionId: version.version_id || '-',
+                                    categoria: contrato?.categoria || 'OT',
+                                    parcela: parcelaMensal,
+                                    juros: jurosMensal,
+                                    amortizacao: parcelaMensal - jurosMensal,
+                                    depreciacao: depreciacaoMensal,
+                                    saldoPassivo: version.total_vp || 0,
+                                    saldoDDU: version.total_vp || 0
+                                });
                             }
 
                             // Acumular por categoria

@@ -446,12 +446,11 @@
                                 if (fluxo.length > 0) console.log('Exemplo fluxo[0]:', fluxo[0]);
                                 if (contab.length > 0) console.log('Exemplo contab[0]:', contab[0]);
 
-                                // Meses em português para parsing
-                                const mesesPT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-                                const competenciaStr = `${mesesPT[mes - 1]}/${ano}`;
+                                // Formato da data nos dados é "MM/YYYY" (ex: "08/2025", "12/2025")
+                                const competenciaStr = `${String(mes).padStart(2, '0')}/${ano}`;
                                 console.log('Buscando competência:', competenciaStr);
 
-                                // Encontrar linha do mês pela string de data (formato "Jan/2025")
+                                // Encontrar linha do mês pela string de data (formato "12/2025")
                                 const linhaFluxo = fluxo.find(f => f.data === competenciaStr);
                                 const linhaContab = contab.find(c => c.data === competenciaStr);
                                 console.log('linhaFluxo encontrada:', linhaFluxo);

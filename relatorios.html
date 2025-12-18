@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios IFRS 16 | Fernando Xavier</title>
+    <meta name="description" content="Relatórios consolidados de contratos IFRS 16">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        primary: {
+                            50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+                            400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d',
+                            800: '#166534', 900: '#14532d',
+                        },
+                        dark: {
+                            50: '#f8fafc', 100: '#f1f5f9', 200: '#e2e8f0', 300: '#cbd5e1',
+                            400: '#94a3b8', 500: '#64748b', 600: '#475569', 700: '#334155',
+                            800: '#1e293b', 900: '#0f172a', 950: '#020617',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 40px 40px;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        .glass-card-light {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .input-dark {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .input-dark:focus {
+            outline: none;
+            border-color: #22c55e;
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(34, 197, 94, 0.3);
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        .trial-balance-row:nth-child(even) { background: rgba(255,255,255,0.02); }
+        .trial-balance-row:hover { background: rgba(34, 197, 94, 0.1); }
+        @media print {
+            body { background: white !important; }
+            body::before { display: none; }
+            .glass-card { background: white !important; border: 1px solid #ddd !important; box-shadow: none !important; }
+            .no-print { display: none !important; }
+            .text-white, .text-dark-300, .text-dark-400 { color: #333 !important; }
+        }
+    </style>
+</head>
+<body class="text-white">
+    <div class="relative z-10 max-w-7xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="glass-card rounded-2xl p-6 mb-6 no-print">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <a href="Calculadora_IFRS16_Deploy.html" class="text-dark-400 hover:text-white transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        </svg>
+                    </a>
+                    <div>
+                        <h1 class="text-2xl font-bold text-white">Relatórios IFRS 16</h1>
+                        <p class="text-dark-400 text-sm">Consolidação e Trial Balance</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="exportarRelatorio()" class="btn-primary px-4 py-2 rounded-lg text-white text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                        Exportar
+                    </button>
+                    <button onclick="window.print()" class="btn-secondary px-4 py-2 rounded-lg text-dark-200 text-sm flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                        </svg>
+                        Imprimir
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Filtros -->
+        <div class="glass-card rounded-2xl p-6 mb-6 no-print">
+            <h2 class="text-lg font-semibold text-white mb-4">Filtros do Relatório</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm text-dark-300 mb-2">Competência</label>
+                    <input type="month" id="competencia" class="w-full input-dark rounded-lg px-4 py-3">
+                </div>
+                <div>
+                    <label class="block text-sm text-dark-300 mb-2">Categoria</label>
+                    <select id="filtroCategoria" class="w-full input-dark rounded-lg px-4 py-3" title="Filtrar por categoria">
+                        <option value="">Todas</option>
+                        <option value="IM">Imóvel (IM)</option>
+                        <option value="VE">Veículo (VE)</option>
+                        <option value="EQ">Equipamento (EQ)</option>
+                        <option value="PC">Computadores (PC)</option>
+                        <option value="OT">Outros (OT)</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="gerarRelatorio()" class="w-full btn-primary px-4 py-3 rounded-lg text-white font-medium">
+                        Gerar Relatório
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Seleção de Contratos -->
+            <div class="mt-4">
+                <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm text-dark-300">Contratos</label>
+                    <div class="flex gap-2">
+                        <button onclick="selecionarTodos()" class="text-xs text-primary-400 hover:text-primary-300">Selecionar Todos</button>
+                        <span class="text-dark-600">|</span>
+                        <button onclick="limparSelecao()" class="text-xs text-dark-400 hover:text-dark-300">Limpar</button>
+                    </div>
+                </div>
+                <div id="listaContratos" class="grid grid-cols-2 md:grid-cols-4 gap-2 max-h-40 overflow-y-auto p-2 glass-card-light rounded-lg">
+                    <p class="text-dark-500 text-sm col-span-full text-center py-4">Carregando contratos...</p>
+                </div>
+                <p id="contratosCount" class="text-xs text-dark-500 mt-2">0 contrato(s) selecionado(s)</p>
+            </div>
+        </div>
+
+        <!-- Resumo Consolidado -->
+        <div class="glass-card rounded-2xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Resumo Consolidado</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="glass-card-light rounded-xl p-4 text-center">
+                    <p class="text-dark-400 text-xs uppercase mb-1">Total VP</p>
+                    <p id="totalVP" class="text-xl font-bold text-primary-400 font-mono">R$ 0,00</p>
+                </div>
+                <div class="glass-card-light rounded-xl p-4 text-center">
+                    <p class="text-dark-400 text-xs uppercase mb-1">Total Nominal</p>
+                    <p id="totalNominal" class="text-xl font-bold text-white font-mono">R$ 0,00</p>
+                </div>
+                <div class="glass-card-light rounded-xl p-4 text-center">
+                    <p class="text-dark-400 text-xs uppercase mb-1">AVP Total</p>
+                    <p id="totalAVP" class="text-xl font-bold text-amber-400 font-mono">R$ 0,00</p>
+                </div>
+                <div class="glass-card-light rounded-xl p-4 text-center">
+                    <p class="text-dark-400 text-xs uppercase mb-1">Contratos</p>
+                    <p id="qtdContratos" class="text-xl font-bold text-white font-mono">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trial Balance -->
+        <div class="glass-card rounded-2xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Trial Balance - Saldos Contábeis</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-dark-700 text-dark-400 text-xs uppercase">
+                            <th class="text-left py-3 px-4">Conta</th>
+                            <th class="text-left py-3 px-4">Descrição</th>
+                            <th class="text-right py-3 px-4">Débito</th>
+                            <th class="text-right py-3 px-4">Crédito</th>
+                            <th class="text-right py-3 px-4">Saldo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trialBalanceBody">
+                        <tr><td colspan="5" class="text-center py-8 text-dark-500">Selecione os filtros e clique em "Gerar Relatório"</td></tr>
+                    </tbody>
+                    <tfoot class="border-t-2 border-dark-600">
+                        <tr class="font-bold">
+                            <td colspan="2" class="py-3 px-4 text-white">TOTAL</td>
+                            <td id="totalDebito" class="text-right py-3 px-4 text-primary-400 font-mono">R$ 0,00</td>
+                            <td id="totalCredito" class="text-right py-3 px-4 text-rose-400 font-mono">R$ 0,00</td>
+                            <td id="totalSaldo" class="text-right py-3 px-4 text-white font-mono">R$ 0,00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Movimentação do Mês -->
+        <div class="glass-card rounded-2xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Movimentação da Competência</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="border-b border-dark-700 text-dark-400 text-xs uppercase">
+                            <th class="text-left py-3 px-4">Contrato</th>
+                            <th class="text-left py-3 px-4">ID Versão</th>
+                            <th class="text-right py-3 px-4">Parcela</th>
+                            <th class="text-right py-3 px-4">Juros</th>
+                            <th class="text-right py-3 px-4">Amortização</th>
+                            <th class="text-right py-3 px-4">Depreciação</th>
+                            <th class="text-right py-3 px-4">Saldo Passivo</th>
+                            <th class="text-right py-3 px-4">Saldo DDU</th>
+                        </tr>
+                    </thead>
+                    <tbody id="movimentacaoBody">
+                        <tr><td colspan="8" class="text-center py-8 text-dark-500">Selecione os filtros e clique em "Gerar Relatório"</td></tr>
+                    </tbody>
+                    <tfoot class="border-t-2 border-dark-600">
+                        <tr class="font-bold">
+                            <td colspan="2" class="py-3 px-4 text-white">TOTAL</td>
+                            <td id="totalParcela" class="text-right py-3 px-4 font-mono text-white">R$ 0,00</td>
+                            <td id="totalJuros" class="text-right py-3 px-4 font-mono text-rose-400">R$ 0,00</td>
+                            <td id="totalAmortizacao" class="text-right py-3 px-4 font-mono text-primary-400">R$ 0,00</td>
+                            <td id="totalDepreciacao" class="text-right py-3 px-4 font-mono text-amber-400">R$ 0,00</td>
+                            <td id="totalSaldoPassivo" class="text-right py-3 px-4 font-mono text-white">R$ 0,00</td>
+                            <td id="totalSaldoDDU" class="text-right py-3 px-4 font-mono text-white">R$ 0,00</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Detalhamento por Categoria -->
+        <div class="glass-card rounded-2xl p-6 mb-6">
+            <h2 class="text-lg font-semibold text-white mb-4">Detalhamento por Categoria</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="categoriaCards">
+                <p class="text-dark-500 text-sm col-span-full text-center py-4">Gere o relatório para ver o detalhamento</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/config.js"></script>
+    <script>
+        let contratosData = [];
+        let contratosSelecionados = new Set();
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Definir competência atual
+            const hoje = new Date();
+            document.getElementById('competencia').value = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}`;
+            
+            await carregarContratos();
+        });
+
+        async function carregarContratos() {
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) {
+                window.location.href = 'Calculadora_IFRS16_Deploy.html';
+                return;
+            }
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/contracts`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    contratosData = data.contracts || [];
+                    renderizarListaContratos();
+                }
+            } catch (error) {
+                console.error('Erro ao carregar contratos:', error);
+            }
+        }
+
+        function renderizarListaContratos() {
+            const container = document.getElementById('listaContratos');
+            const categoriaFiltro = document.getElementById('filtroCategoria').value;
+            
+            let contratosFiltrados = contratosData;
+            if (categoriaFiltro) {
+                contratosFiltrados = contratosData.filter(c => c.categoria === categoriaFiltro);
+            }
+
+            if (contratosFiltrados.length === 0) {
+                container.innerHTML = '<p class="text-dark-500 text-sm col-span-full text-center py-4">Nenhum contrato encontrado</p>';
+                return;
+            }
+
+            container.innerHTML = contratosFiltrados.map(c => `
+                <label class="flex items-center gap-2 p-2 rounded hover:bg-dark-800/50 cursor-pointer text-sm">
+                    <input type="checkbox" value="${c.id}" onchange="toggleContrato('${c.id}')" 
+                        ${contratosSelecionados.has(c.id) ? 'checked' : ''}
+                        class="rounded border-dark-600 text-primary-500 focus:ring-primary-500">
+                    <span class="text-dark-300 truncate" title="${c.name}">
+                        <span class="text-dark-500 text-xs">[${c.categoria || 'OT'}]</span> ${c.name}
+                    </span>
+                </label>
+            `).join('');
+
+            atualizarContagem();
+        }
+
+        function toggleContrato(id) {
+            if (contratosSelecionados.has(id)) {
+                contratosSelecionados.delete(id);
+            } else {
+                contratosSelecionados.add(id);
+            }
+            atualizarContagem();
+        }
+
+        function selecionarTodos() {
+            const categoriaFiltro = document.getElementById('filtroCategoria').value;
+            contratosData.forEach(c => {
+                if (!categoriaFiltro || c.categoria === categoriaFiltro) {
+                    contratosSelecionados.add(c.id);
+                }
+            });
+            renderizarListaContratos();
+        }
+
+        function limparSelecao() {
+            contratosSelecionados.clear();
+            renderizarListaContratos();
+        }
+
+        function atualizarContagem() {
+            document.getElementById('contratosCount').textContent = `${contratosSelecionados.size} contrato(s) selecionado(s)`;
+        }
+
+        document.getElementById('filtroCategoria').addEventListener('change', renderizarListaContratos);
+
+        async function gerarRelatorio() {
+            if (contratosSelecionados.size === 0) {
+                alert('Selecione pelo menos um contrato');
+                return;
+            }
+
+            const competencia = document.getElementById('competencia').value;
+            if (!competencia) {
+                alert('Selecione a competência');
+                return;
+            }
+
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) return;
+
+            const [ano, mes] = competencia.split('-').map(Number);
+            
+            let totalVP = 0, totalNominal = 0, totalAVP = 0;
+            let movimentacoes = [];
+            let saldosPorConta = {};
+            let saldosPorCategoria = {};
+
+            // Buscar dados de cada contrato selecionado
+            for (const contractId of contratosSelecionados) {
+                try {
+                    const response = await fetch(`${CONFIG.API_URL}/api/contracts/${contractId}/versions`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const versions = data.versions || [];
+                        
+                        if (versions.length > 0) {
+                            const version = versions[0]; // Última versão
+                            const contrato = contratosData.find(c => c.id === contractId);
+                            
+                            totalVP += version.total_vp || 0;
+                            totalNominal += version.total_nominal || 0;
+                            totalAVP += version.avp || 0;
+
+                            // Processar resultados_json para encontrar o mês
+                            if (version.resultados_json) {
+                                const resultados = version.resultados_json;
+                                const fluxo = resultados.fluxoCaixa || [];
+                                const contab = resultados.contabilizacao || [];
+
+                                // Encontrar linha do mês
+                                const linhaFluxo = fluxo.find(f => {
+                                    const dataFluxo = new Date(f.data || f.mes);
+                                    return dataFluxo.getFullYear() === ano && (dataFluxo.getMonth() + 1) === mes;
+                                });
+
+                                const linhaContab = contab.find(c => {
+                                    const dataContab = new Date(c.data || c.mes);
+                                    return dataContab.getFullYear() === ano && (dataContab.getMonth() + 1) === mes;
+                                });
+
+                                if (linhaFluxo || linhaContab) {
+                                    movimentacoes.push({
+                                        contrato: contrato?.name || 'N/A',
+                                        versionId: version.version_id || '-',
+                                        categoria: contrato?.categoria || 'OT',
+                                        parcela: linhaFluxo?.parcela || linhaContab?.parcela || 0,
+                                        juros: linhaContab?.juros || linhaContab?.despesaJuros || 0,
+                                        amortizacao: linhaContab?.amortizacao || 0,
+                                        depreciacao: linhaContab?.depreciacao || linhaContab?.despesaDepreciacao || 0,
+                                        saldoPassivo: linhaContab?.saldoPassivo || linhaContab?.passivoFinal || 0,
+                                        saldoDDU: linhaContab?.saldoDDU || linhaContab?.dduFinal || 0
+                                    });
+                                }
+                            }
+
+                            // Acumular por categoria
+                            const cat = contrato?.categoria || 'OT';
+                            if (!saldosPorCategoria[cat]) {
+                                saldosPorCategoria[cat] = { vp: 0, nominal: 0, avp: 0, count: 0 };
+                            }
+                            saldosPorCategoria[cat].vp += version.total_vp || 0;
+                            saldosPorCategoria[cat].nominal += version.total_nominal || 0;
+                            saldosPorCategoria[cat].avp += version.avp || 0;
+                            saldosPorCategoria[cat].count++;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Erro ao buscar versões:', error);
+                }
+            }
+
+            // Atualizar resumo
+            document.getElementById('totalVP').textContent = formatarMoeda(totalVP);
+            document.getElementById('totalNominal').textContent = formatarMoeda(totalNominal);
+            document.getElementById('totalAVP').textContent = formatarMoeda(totalAVP);
+            document.getElementById('qtdContratos').textContent = contratosSelecionados.size;
+
+            // Renderizar movimentações
+            renderizarMovimentacoes(movimentacoes);
+
+            // Renderizar Trial Balance
+            renderizarTrialBalance(movimentacoes, totalVP, totalAVP);
+
+            // Renderizar cards por categoria
+            renderizarCategorias(saldosPorCategoria);
+        }
+
+        function renderizarMovimentacoes(movimentacoes) {
+            const tbody = document.getElementById('movimentacaoBody');
+            
+            if (movimentacoes.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="text-center py-8 text-dark-500">Nenhuma movimentação encontrada para esta competência</td></tr>';
+                return;
+            }
+
+            let totais = { parcela: 0, juros: 0, amortizacao: 0, depreciacao: 0, saldoPassivo: 0, saldoDDU: 0 };
+
+            tbody.innerHTML = movimentacoes.map(m => {
+                totais.parcela += m.parcela;
+                totais.juros += m.juros;
+                totais.amortizacao += m.amortizacao;
+                totais.depreciacao += m.depreciacao;
+                totais.saldoPassivo += m.saldoPassivo;
+                totais.saldoDDU += m.saldoDDU;
+
+                return `
+                    <tr class="border-b border-dark-800 hover:bg-dark-800/50">
+                        <td class="py-2 px-4 text-white">${m.contrato}</td>
+                        <td class="py-2 px-4 text-primary-400 font-mono text-xs">${m.versionId}</td>
+                        <td class="py-2 px-4 text-right font-mono text-white">${formatarMoeda(m.parcela)}</td>
+                        <td class="py-2 px-4 text-right font-mono text-rose-400">${formatarMoeda(m.juros)}</td>
+                        <td class="py-2 px-4 text-right font-mono text-primary-400">${formatarMoeda(m.amortizacao)}</td>
+                        <td class="py-2 px-4 text-right font-mono text-amber-400">${formatarMoeda(m.depreciacao)}</td>
+                        <td class="py-2 px-4 text-right font-mono">${formatarMoeda(m.saldoPassivo)}</td>
+                        <td class="py-2 px-4 text-right font-mono">${formatarMoeda(m.saldoDDU)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('totalParcela').textContent = formatarMoeda(totais.parcela);
+            document.getElementById('totalJuros').textContent = formatarMoeda(totais.juros);
+            document.getElementById('totalAmortizacao').textContent = formatarMoeda(totais.amortizacao);
+            document.getElementById('totalDepreciacao').textContent = formatarMoeda(totais.depreciacao);
+            document.getElementById('totalSaldoPassivo').textContent = formatarMoeda(totais.saldoPassivo);
+            document.getElementById('totalSaldoDDU').textContent = formatarMoeda(totais.saldoDDU);
+        }
+
+        function renderizarTrialBalance(movimentacoes, totalVP, totalAVP) {
+            const tbody = document.getElementById('trialBalanceBody');
+            
+            let totais = { parcela: 0, juros: 0, amortizacao: 0, depreciacao: 0, saldoPassivo: 0, saldoDDU: 0 };
+            movimentacoes.forEach(m => {
+                totais.parcela += m.parcela;
+                totais.juros += m.juros;
+                totais.amortizacao += m.amortizacao;
+                totais.depreciacao += m.depreciacao;
+                totais.saldoPassivo += m.saldoPassivo;
+                totais.saldoDDU += m.saldoDDU;
+            });
+
+            const contas = [
+                { grupo: 'ATIVO', conta: '1.2.3.01', desc: 'Direito de Uso (DDU)', debito: totais.saldoDDU, credito: 0, natureza: 'D' },
+                { grupo: 'ATIVO', conta: '1.2.3.02', desc: '(-) Depreciação Acumulada DDU', debito: 0, credito: totais.depreciacao, natureza: 'C' },
+                { grupo: 'PASSIVO', conta: '2.1.4.01', desc: 'Arrendamento a Pagar - CP', debito: 0, credito: Math.min(totais.saldoPassivo, totais.parcela * 12), natureza: 'C' },
+                { grupo: 'PASSIVO', conta: '2.2.4.01', desc: 'Arrendamento a Pagar - LP', debito: 0, credito: Math.max(0, totais.saldoPassivo - totais.parcela * 12), natureza: 'C' },
+                { grupo: 'RESULTADO', conta: '3.1.1.01', desc: 'Despesa de Juros - Arrendamento', debito: totais.juros, credito: 0, natureza: 'D' },
+                { grupo: 'RESULTADO', conta: '3.1.2.01', desc: 'Despesa de Depreciação - DDU', debito: totais.depreciacao, credito: 0, natureza: 'D' },
+            ];
+
+            let totalDebito = 0, totalCredito = 0;
+
+            tbody.innerHTML = contas.map(c => {
+                totalDebito += c.debito;
+                totalCredito += c.credito;
+                const saldo = c.natureza === 'D' ? c.debito - c.credito : c.credito - c.debito;
+                const saldoClass = saldo >= 0 ? 'text-primary-400' : 'text-rose-400';
+
+                return `
+                    <tr class="trial-balance-row border-b border-dark-800">
+                        <td class="py-2 px-4 font-mono text-dark-400">${c.conta}</td>
+                        <td class="py-2 px-4 text-white">${c.desc}</td>
+                        <td class="py-2 px-4 text-right font-mono ${c.debito > 0 ? 'text-primary-400' : 'text-dark-600'}">${formatarMoeda(c.debito)}</td>
+                        <td class="py-2 px-4 text-right font-mono ${c.credito > 0 ? 'text-rose-400' : 'text-dark-600'}">${formatarMoeda(c.credito)}</td>
+                        <td class="py-2 px-4 text-right font-mono ${saldoClass}">${formatarMoeda(Math.abs(saldo))}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('totalDebito').textContent = formatarMoeda(totalDebito);
+            document.getElementById('totalCredito').textContent = formatarMoeda(totalCredito);
+            document.getElementById('totalSaldo').textContent = formatarMoeda(Math.abs(totalDebito - totalCredito));
+        }
+
+        function renderizarCategorias(saldosPorCategoria) {
+            const container = document.getElementById('categoriaCards');
+            const categoriaLabels = { IM: 'Imóvel', VE: 'Veículo', EQ: 'Equipamento', PC: 'Computadores', OT: 'Outros' };
+            const categoriaColors = { IM: 'primary', VE: 'amber', EQ: 'blue', PC: 'purple', OT: 'dark' };
+
+            const cats = Object.entries(saldosPorCategoria);
+            if (cats.length === 0) {
+                container.innerHTML = '<p class="text-dark-500 text-sm col-span-full text-center py-4">Nenhum dado disponível</p>';
+                return;
+            }
+
+            container.innerHTML = cats.map(([cat, dados]) => `
+                <div class="glass-card-light rounded-xl p-4">
+                    <div class="flex items-center gap-2 mb-3">
+                        <span class="px-2 py-1 rounded text-xs bg-${categoriaColors[cat] || 'dark'}-500/20 text-${categoriaColors[cat] || 'dark'}-300">${cat}</span>
+                        <span class="text-white font-medium">${categoriaLabels[cat] || cat}</span>
+                        <span class="text-dark-500 text-xs ml-auto">${dados.count} contrato(s)</span>
+                    </div>
+                    <div class="space-y-2 text-sm">
+                        <div class="flex justify-between">
+                            <span class="text-dark-400">Valor Presente:</span>
+                            <span class="font-mono text-primary-400">${formatarMoeda(dados.vp)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-dark-400">Valor Nominal:</span>
+                            <span class="font-mono text-white">${formatarMoeda(dados.nominal)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-dark-400">AVP:</span>
+                            <span class="font-mono text-amber-400">${formatarMoeda(dados.avp)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(valor || 0);
+        }
+
+        async function exportarRelatorio() {
+            if (contratosSelecionados.size === 0) {
+                alert('Gere o relatório antes de exportar');
+                return;
+            }
+
+            const competencia = document.getElementById('competencia').value;
+            const [ano, mes] = competencia.split('-');
+
+            const workbook = new ExcelJS.Workbook();
+            workbook.creator = 'IFRS 16 - Fernando Xavier';
+            workbook.created = new Date();
+
+            // Aba Resumo
+            const wsResumo = workbook.addWorksheet('Resumo');
+            wsResumo.columns = [
+                { header: 'Métrica', key: 'metrica', width: 25 },
+                { header: 'Valor', key: 'valor', width: 20 }
+            ];
+            wsResumo.addRow({ metrica: 'Competência', valor: `${mes}/${ano}` });
+            wsResumo.addRow({ metrica: 'Total VP', valor: parseFloat(document.getElementById('totalVP').textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0 });
+            wsResumo.addRow({ metrica: 'Total Nominal', valor: parseFloat(document.getElementById('totalNominal').textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0 });
+            wsResumo.addRow({ metrica: 'AVP Total', valor: parseFloat(document.getElementById('totalAVP').textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0 });
+            wsResumo.addRow({ metrica: 'Qtd Contratos', valor: contratosSelecionados.size });
+
+            // Estilizar cabeçalho
+            wsResumo.getRow(1).font = { bold: true };
+            wsResumo.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF22C55E' } };
+
+            // Aba Trial Balance
+            const wsTrial = workbook.addWorksheet('Trial Balance');
+            wsTrial.columns = [
+                { header: 'Conta', key: 'conta', width: 15 },
+                { header: 'Descrição', key: 'descricao', width: 35 },
+                { header: 'Débito', key: 'debito', width: 18 },
+                { header: 'Crédito', key: 'credito', width: 18 },
+                { header: 'Saldo', key: 'saldo', width: 18 }
+            ];
+
+            const trialRows = document.querySelectorAll('#trialBalanceBody tr');
+            trialRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 5) {
+                    wsTrial.addRow({
+                        conta: cells[0].textContent.trim(),
+                        descricao: cells[1].textContent.trim(),
+                        debito: parseFloat(cells[2].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                        credito: parseFloat(cells[3].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                        saldo: parseFloat(cells[4].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0
+                    });
+                }
+            });
+
+            wsTrial.getRow(1).font = { bold: true };
+            wsTrial.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF22C55E' } };
+
+            // Aba Movimentação
+            const wsMov = workbook.addWorksheet('Movimentação');
+            wsMov.columns = [
+                { header: 'Contrato', key: 'contrato', width: 25 },
+                { header: 'ID Versão', key: 'versionId', width: 18 },
+                { header: 'Parcela', key: 'parcela', width: 15 },
+                { header: 'Juros', key: 'juros', width: 15 },
+                { header: 'Amortização', key: 'amortizacao', width: 15 },
+                { header: 'Depreciação', key: 'depreciacao', width: 15 },
+                { header: 'Saldo Passivo', key: 'saldoPassivo', width: 18 },
+                { header: 'Saldo DDU', key: 'saldoDDU', width: 18 }
+            ];
+
+            const movRows = document.querySelectorAll('#movimentacaoBody tr');
+            movRows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (cells.length >= 8) {
+                    wsMov.addRow({
+                        contrato: cells[0].textContent.trim(),
+                        versionId: cells[1].textContent.trim(),
+                        parcela: parseFloat(cells[2].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                        juros: parseFloat(cells[3].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                        amortizacao: parseFloat(cells[4].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                        depreciacao: parseFloat(cells[5].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                        saldoPassivo: parseFloat(cells[6].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0,
+                        saldoDDU: parseFloat(cells[7].textContent.replace(/[^\d,-]/g, '').replace(',', '.')) || 0
+                    });
+                }
+            });
+
+            wsMov.getRow(1).font = { bold: true };
+            wsMov.getRow(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF22C55E' } };
+
+            // Formatar colunas numéricas
+            [wsTrial, wsMov].forEach(ws => {
+                ws.eachRow((row, rowNumber) => {
+                    if (rowNumber > 1) {
+                        row.eachCell((cell, colNumber) => {
+                            if (typeof cell.value === 'number') {
+                                cell.numFmt = '#,##0.00';
+                            }
+                        });
+                    }
+                });
+            });
+
+            // Gerar e baixar arquivo
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, `Relatorio_IFRS16_${ano}${mes}.xlsx`);
+        }
+    </script>
+</body>
+</html>

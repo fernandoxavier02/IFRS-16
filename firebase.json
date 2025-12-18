@@ -20,12 +20,8 @@
       "env_vars.json",
       "service_info.json"
     ],
-    "rewrites": [
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ],
+    "cleanUrls": true,
+    "trailingSlash": false,
     "headers": [
       {
         "source": "**/*.@(html|js|css)",

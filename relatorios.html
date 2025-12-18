@@ -367,21 +367,28 @@
         document.getElementById('filtroCategoria').addEventListener('change', renderizarListaContratos);
 
         async function gerarRelatorio() {
+            console.log('>>> gerarRelatorio() chamada');
+            console.log('Contratos selecionados:', Array.from(contratosSelecionados));
+            
             if (contratosSelecionados.size === 0) {
                 alert('Selecione pelo menos um contrato');
                 return;
             }
 
             const competencia = document.getElementById('competencia').value;
+            console.log('Competência selecionada:', competencia);
+            
             if (!competencia) {
                 alert('Selecione a competência');
                 return;
             }
 
             const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            console.log('Token encontrado:', token ? 'SIM' : 'NÃO');
             if (!token) return;
 
             const [ano, mes] = competencia.split('-').map(Number);
+            console.log('Ano:', ano, 'Mês:', mes);
             
             let totalVP = 0, totalNominal = 0, totalAVP = 0;
             let movimentacoes = [];

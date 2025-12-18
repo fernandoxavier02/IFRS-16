@@ -1,0 +1,38 @@
+{
+  "mcpServers": {
+    "stripe": {
+      "command": "npx",
+      "args": ["-y", "@stripe/mcp", "--tools=all", "--api-key", "YOUR_STRIPE_SECRET_KEY"],
+      "env": {
+        "STRIPE_SECRET_KEY": "sk_live_YOUR_KEY_HERE"
+      }
+    },
+    "firebase": {
+      "command": "npx",
+      "args": ["-y", "firebase-mcp"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "./firebase-service-account.json",
+        "FIREBASE_PROJECT_ID": "ifrs16-app"
+      }
+    },
+    "gcloud-sql": {
+      "command": "npx",
+      "args": ["-y", "@anthropic/mcp-server-postgres"],
+      "env": {
+        "POSTGRES_HOST": "YOUR_CLOUD_SQL_HOST",
+        "POSTGRES_PORT": "5432",
+        "POSTGRES_USER": "postgres",
+        "POSTGRES_PASSWORD": "YOUR_PASSWORD",
+        "POSTGRES_DATABASE": "ifrs16_licenses"
+      }
+    },
+    "postgres": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-postgres",
+        "postgresql://USER:PASSWORD@HOST:5432/ifrs16_licenses?sslmode=require"
+      ]
+    }
+  }
+}

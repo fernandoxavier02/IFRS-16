@@ -1,0 +1,115 @@
+{
+  "timestamp": "2025-12-17T21:53:36.997173",
+  "tests": {
+    "stripe_connection": {
+      "success": true,
+      "skipped": false,
+      "details": {
+        "products": 4,
+        "prices": 7,
+        "balance_available": 0.0,
+        "balance_pending": 0.0,
+        "webhooks": 1,
+        "products_list": [
+          {
+            "id": "prod_TZMz0PLSTkchQt",
+            "name": "IFRS 16 - Teste Gratuito"
+          },
+          {
+            "id": "prod_TZ00irDet8RjeE",
+            "name": "Plano Enterprise - Calculadora IFRS 16"
+          },
+          {
+            "id": "prod_TZ00SGwmFsCozk",
+            "name": "Plano Pro - Calculadora IFRS 16"
+          },
+          {
+            "id": "prod_TYzlhemwvrK7jo",
+            "name": "Assinatura Básica Mensal  -  até 3 contratos"
+          }
+        ],
+        "prices_list": [
+          {
+            "id": "price_1ScEFZGEyVmwHCe6NAi21g9c",
+            "amount": 0
+          },
+          {
+            "id": "price_1Sbs0uGEyVmwHCe6MHEVICw5",
+            "amount": 10789.2
+          },
+          {
+            "id": "price_1Sbs0sGEyVmwHCe6gRVChJI6",
+            "amount": 999.0
+          },
+          {
+            "id": "price_1Sbs0qGEyVmwHCe6NbW9697S",
+            "amount": 5389.2
+          },
+          {
+            "id": "price_1Sbs0pGEyVmwHCe6pRDe6BfP",
+            "amount": 499.0
+          },
+          {
+            "id": "price_1Sbs0oGEyVmwHCe6P9IylBWe",
+            "amount": 299.0
+          },
+          {
+            "id": "price_1SbrmCGEyVmwHCe6wlkuX7Z9",
+            "amount": 3229.0
+          }
+        ]
+      },
+      "timestamp": "2025-12-17T21:53:39.923170"
+    },
+    "firebase_connection": {
+      "success": false,
+      "skipped": false,
+      "details": {
+        "error": "403 Cloud Firestore API has not been used in project ifrs16-app before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=ifrs16-app then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry. [reason: \"SERVICE_DISABLED\"\ndomain: \"googleapis.com\"\nmetadata {\n  key: \"service\"\n  value: \"firestore.googleapis.com\"\n}\nmetadata {\n  key: \"serviceTitle\"\n  value: \"Cloud Firestore API\"\n}\nmetadata {\n  key: \"containerInfo\"\n  value: \"ifrs16-app\"\n}\nmetadata {\n  key: \"consumer\"\n  value: \"projects/ifrs16-app\"\n}\nmetadata {\n  key: \"activationUrl\"\n  value: \"https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=ifrs16-app\"\n}\n, locale: \"en-US\"\nmessage: \"Cloud Firestore API has not been used in project ifrs16-app before or it is disabled. Enable it by visiting https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=ifrs16-app then retry. If you enabled this API recently, wait a few minutes for the action to propagate to our systems and retry.\"\n, links {\n  description: \"Google developers console API activation\"\n  url: \"https://console.developers.google.com/apis/api/firestore.googleapis.com/overview?project=ifrs16-app\"\n}\n]"
+      },
+      "timestamp": "2025-12-17T21:53:41.214519"
+    },
+    "cloudsql_connection": {
+      "success": true,
+      "skipped": false,
+      "details": {
+        "host": "136.112.221.225",
+        "database": "ifrs16_licenses",
+        "tables": [
+          "admin_users",
+          "contract_versions",
+          "contracts",
+          "economic_indexes",
+          "licenses",
+          "subscriptions",
+          "users",
+          "validation_logs"
+        ],
+        "record_counts": {
+          "users": 3,
+          "licenses": 5,
+          "subscriptions": 0,
+          "admin_users": 1
+        },
+        "database_size": "8205 kB",
+        "active_connections": 2,
+        "postgres_version": "PostgreSQL 15.15 on x86_64-pc-linux-gnu, compiled ..."
+      },
+      "timestamp": "2025-12-17T21:53:45.023411"
+    },
+    "api_backend": {
+      "success": true,
+      "skipped": false,
+      "details": {
+        "api_url": "https://ifrs16-backend-1051753255664.us-central1.run.app"
+      },
+      "timestamp": "2025-12-17T21:53:45.911296"
+    }
+  },
+  "summary": {
+    "total": 4,
+    "passed": 3,
+    "failed": 1,
+    "skipped": 0
+  }
+}

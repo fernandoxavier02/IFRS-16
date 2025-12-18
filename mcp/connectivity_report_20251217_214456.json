@@ -1,0 +1,95 @@
+{
+  "timestamp": "2025-12-17T21:44:46.458296",
+  "tests": {
+    "stripe_connection": {
+      "success": true,
+      "skipped": false,
+      "details": {
+        "products": 4,
+        "prices": 7,
+        "balance_available": 0.0,
+        "balance_pending": 0.0,
+        "webhooks": 1,
+        "products_list": [
+          {
+            "id": "prod_TZMz0PLSTkchQt",
+            "name": "IFRS 16 - Teste Gratuito"
+          },
+          {
+            "id": "prod_TZ00irDet8RjeE",
+            "name": "Plano Enterprise - Calculadora IFRS 16"
+          },
+          {
+            "id": "prod_TZ00SGwmFsCozk",
+            "name": "Plano Pro - Calculadora IFRS 16"
+          },
+          {
+            "id": "prod_TYzlhemwvrK7jo",
+            "name": "Assinatura Básica Mensal  -  até 3 contratos"
+          }
+        ],
+        "prices_list": [
+          {
+            "id": "price_1ScEFZGEyVmwHCe6NAi21g9c",
+            "amount": 0
+          },
+          {
+            "id": "price_1Sbs0uGEyVmwHCe6MHEVICw5",
+            "amount": 10789.2
+          },
+          {
+            "id": "price_1Sbs0sGEyVmwHCe6gRVChJI6",
+            "amount": 999.0
+          },
+          {
+            "id": "price_1Sbs0qGEyVmwHCe6NbW9697S",
+            "amount": 5389.2
+          },
+          {
+            "id": "price_1Sbs0pGEyVmwHCe6pRDe6BfP",
+            "amount": 499.0
+          },
+          {
+            "id": "price_1Sbs0oGEyVmwHCe6P9IylBWe",
+            "amount": 299.0
+          },
+          {
+            "id": "price_1SbrmCGEyVmwHCe6wlkuX7Z9",
+            "amount": 3229.0
+          }
+        ]
+      },
+      "timestamp": "2025-12-17T21:44:49.321277"
+    },
+    "firebase_connection": {
+      "success": false,
+      "skipped": true,
+      "details": {
+        "error": "Credenciais não configuradas"
+      },
+      "timestamp": "2025-12-17T21:44:49.677311"
+    },
+    "cloudsql_connection": {
+      "success": false,
+      "skipped": true,
+      "details": {
+        "error": "DATABASE_URL não configurada"
+      },
+      "timestamp": "2025-12-17T21:44:49.706131"
+    },
+    "api_backend": {
+      "success": true,
+      "skipped": false,
+      "details": {
+        "api_url": "https://ifrs16-backend-1051753255664.us-central1.run.app"
+      },
+      "timestamp": "2025-12-17T21:44:56.634259"
+    }
+  },
+  "summary": {
+    "total": 4,
+    "passed": 2,
+    "failed": 0,
+    "skipped": 2
+  }
+}

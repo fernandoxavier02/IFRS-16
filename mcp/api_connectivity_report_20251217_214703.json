@@ -1,0 +1,59 @@
+{
+  "timestamp": "2025-12-17T21:47:01.701343",
+  "api_url": "https://ifrs16-backend-1051753255664.us-central1.run.app",
+  "tests": {
+    "health": {
+      "success": true,
+      "details": {
+        "status": "healthy",
+        "environment": "production"
+      },
+      "timestamp": "2025-12-17T21:47:02.019818"
+    },
+    "root": {
+      "success": true,
+      "details": {
+        "name": "IFRS 16 License API",
+        "version": "1.0.0",
+        "status": "running",
+        "docs": "/docs",
+        "redoc": "/redoc"
+      },
+      "timestamp": "2025-12-17T21:47:02.183536"
+    },
+    "cloudsql_via_api": {
+      "success": true,
+      "details": {
+        "database_status": "unknown"
+      },
+      "timestamp": "2025-12-17T21:47:02.351349"
+    },
+    "prices": {
+      "success": true,
+      "details": {
+        "count": 0,
+        "prices": []
+      },
+      "timestamp": "2025-12-17T21:47:02.510821"
+    },
+    "validate_license": {
+      "success": false,
+      "details": {
+        "status_code": 500
+      },
+      "timestamp": "2025-12-17T21:47:02.824029"
+    },
+    "auth_endpoints": {
+      "success": true,
+      "details": {
+        "endpoints_tested": 2
+      },
+      "timestamp": "2025-12-17T21:47:03.188993"
+    }
+  },
+  "summary": {
+    "total": 6,
+    "passed": 5,
+    "failed": 1
+  }
+}

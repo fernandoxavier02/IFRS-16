@@ -1,0 +1,22 @@
+# MCP Servers - Dependências
+# ============================
+
+# Stripe
+stripe>=7.0.0
+
+# Firebase Admin SDK
+firebase-admin>=6.0.0
+
+# PostgreSQL Async
+asyncpg>=0.29.0
+psycopg2-binary>=2.9.0
+
+# SQLAlchemy (opcional, para operações complexas)
+sqlalchemy[asyncio]>=2.0.25
+
+# Utilitários
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+
+# MCP Protocol
+mcp>=0.1.0

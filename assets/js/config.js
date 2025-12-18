@@ -16,8 +16,8 @@ const getApiUrl = () => {
 };
 
 const CONFIG = {
-    VERSION: '1.0.0',
-    BUILD: '2025.12.11',
+    VERSION: '1.1.0',
+    BUILD: '2025.12.18',
     API_URL: getApiUrl(),
     URL_COMPRA: window.location.origin + '/pricing.html',
     CHECK_INTERVAL: 300000, // Verificar a cada 5 minutos (era 1 hora)

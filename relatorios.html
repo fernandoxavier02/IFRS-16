@@ -367,28 +367,21 @@
         document.getElementById('filtroCategoria').addEventListener('change', renderizarListaContratos);
 
         async function gerarRelatorio() {
-            console.log('>>> gerarRelatorio() chamada');
-            console.log('Contratos selecionados:', Array.from(contratosSelecionados));
-            
             if (contratosSelecionados.size === 0) {
                 alert('Selecione pelo menos um contrato');
                 return;
             }
 
             const competencia = document.getElementById('competencia').value;
-            console.log('Competência selecionada:', competencia);
-            
             if (!competencia) {
                 alert('Selecione a competência');
                 return;
             }
 
             const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
-            console.log('Token encontrado:', token ? 'SIM' : 'NÃO');
             if (!token) return;
 
             const [ano, mes] = competencia.split('-').map(Number);
-            console.log('Ano:', ano, 'Mês:', mes);
             
             let totalVP = 0, totalNominal = 0, totalAVP = 0;
             let movimentacoes = [];
@@ -406,17 +399,9 @@
                         const data = await response.json();
                         const versions = data.versions || [];
                         
-                        console.log('=== VERSIONS RESPONSE ===');
-                        console.log('Contract ID:', contractId);
-                        console.log('Versions count:', versions.length);
-                        
                         if (versions.length > 0) {
                             const version = versions[0]; // Última versão
                             const contrato = contratosData.find(c => c.id === contractId);
-                            
-                            console.log('Version object:', version);
-                            console.log('resultados_json type:', typeof version.resultados_json);
-                            console.log('resultados_json value:', version.resultados_json);
                             
                             totalVP += version.total_vp || 0;
                             totalNominal += version.total_nominal || 0;
@@ -438,23 +423,12 @@
                                 const fluxo = resultados.fluxoCaixa || [];
                                 const contab = resultados.contabilizacao || [];
 
-                                // Debug: ver estrutura dos dados
-                                console.log('=== DEBUG RELATÓRIOS ===');
-                                console.log('Contrato:', contrato?.name);
-                                console.log('fluxoCaixa length:', fluxo.length);
-                                console.log('contabilizacao length:', contab.length);
-                                if (fluxo.length > 0) console.log('Exemplo fluxo[0]:', fluxo[0]);
-                                if (contab.length > 0) console.log('Exemplo contab[0]:', contab[0]);
-
                                 // Formato da data nos dados é "MM/YYYY" (ex: "08/2025", "12/2025")
                                 const competenciaStr = `${String(mes).padStart(2, '0')}/${ano}`;
-                                console.log('Buscando competência:', competenciaStr);
 
                                 // Encontrar linha do mês pela string de data (formato "12/2025")
                                 const linhaFluxo = fluxo.find(f => f.data === competenciaStr);
                                 const linhaContab = contab.find(c => c.data === competenciaStr);
-                                console.log('linhaFluxo encontrada:', linhaFluxo);
-                                console.log('linhaContab encontrada:', linhaContab);
 
                                 if (linhaFluxo || linhaContab) {
                                     // Calcular amortização = pagamento - juros
@@ -475,7 +449,6 @@
                                     });
                                 } else if (contab.length > 0) {
                                     // Fallback: usar última linha da contabilização se competência não encontrada
-                                    console.log('Competência não encontrada, usando última linha disponível');
                                     const ultimaContab = contab[contab.length - 1];
                                     const ultimaFluxo = fluxo.length > 0 ? fluxo[fluxo.length - 1] : null;
                                     
@@ -499,7 +472,6 @@
                                 }
                             } else {
                                 // Sem resultados_json - usar valores da versão
-                                console.log('Sem resultados_json, usando valores da versão');
                                 const prazoMeses = version.prazo_meses || 60;
                                 const parcelaMensal = (version.total_nominal || 0) / prazoMeses;
                                 const jurosMensal = (version.avp || 0) / prazoMeses;

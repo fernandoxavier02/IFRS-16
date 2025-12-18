@@ -413,28 +413,30 @@
                                 const fluxo = resultados.fluxoCaixa || [];
                                 const contab = resultados.contabilizacao || [];
 
-                                // Encontrar linha do mês
-                                const linhaFluxo = fluxo.find(f => {
-                                    const dataFluxo = new Date(f.data || f.mes);
-                                    return dataFluxo.getFullYear() === ano && (dataFluxo.getMonth() + 1) === mes;
-                                });
+                                // Meses em português para parsing
+                                const mesesPT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                                const competenciaStr = `${mesesPT[mes - 1]}/${ano}`;
 
-                                const linhaContab = contab.find(c => {
-                                    const dataContab = new Date(c.data || c.mes);
-                                    return dataContab.getFullYear() === ano && (dataContab.getMonth() + 1) === mes;
-                                });
+                                // Encontrar linha do mês pela string de data (formato "Jan/2025")
+                                const linhaFluxo = fluxo.find(f => f.data === competenciaStr);
+                                const linhaContab = contab.find(c => c.data === competenciaStr);
 
                                 if (linhaFluxo || linhaContab) {
+                                    // Calcular amortização = pagamento - juros
+                                    const pagamento = linhaFluxo?.parcela || linhaContab?.pagamento || 0;
+                                    const juros = linhaContab?.juros || linhaContab?.despJuros || 0;
+                                    const amortizacao = pagamento - juros;
+
                                     movimentacoes.push({
                                         contrato: contrato?.name || 'N/A',
                                         versionId: version.version_id || '-',
                                         categoria: contrato?.categoria || 'OT',
-                                        parcela: linhaFluxo?.parcela || linhaContab?.parcela || 0,
-                                        juros: linhaContab?.juros || linhaContab?.despesaJuros || 0,
-                                        amortizacao: linhaContab?.amortizacao || 0,
-                                        depreciacao: linhaContab?.depreciacao || linhaContab?.despesaDepreciacao || 0,
-                                        saldoPassivo: linhaContab?.saldoPassivo || linhaContab?.passivoFinal || 0,
-                                        saldoDDU: linhaContab?.saldoDDU || linhaContab?.dduFinal || 0
+                                        parcela: pagamento,
+                                        juros: juros,
+                                        amortizacao: amortizacao > 0 ? amortizacao : 0,
+                                        depreciacao: linhaContab?.despDeprec || 0,
+                                        saldoPassivo: linhaContab?.passivoFinal || 0,
+                                        saldoDDU: linhaContab?.ativoLiquido || 0
                                     });
                                 }
                             }

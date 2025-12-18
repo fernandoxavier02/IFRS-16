@@ -65,6 +65,14 @@ class StripeService:
         "enterprise_yearly": -1,   # ilimitado
     }
     
+    # Máximo de ativações por tipo de licença
+    LICENSE_MAX_ACTIVATIONS = {
+        LicenseType.TRIAL: 1,
+        LicenseType.BASIC: 3,
+        LicenseType.PRO: 5,
+        LicenseType.ENTERPRISE: 10,  # Enterprise tem mais ativações
+    }
+    
     @staticmethod
     def get_price_id(plan_type) -> Optional[str]:
         """Retorna o price_id do Stripe para o plano"""
@@ -341,6 +349,9 @@ class StripeService:
         if duration_months:
             expires_at = datetime.utcnow() + timedelta(days=duration_months * 30)
         
+        # Determinar max_activations baseado no tipo de licença
+        max_activations = cls.LICENSE_MAX_ACTIVATIONS.get(license_type, 3)
+        
         # Criar licença
         license = License(
             key=cls.generate_license_key(),
@@ -350,7 +361,7 @@ class StripeService:
             license_type=license_type,
             status=LicenseStatus.ACTIVE,
             expires_at=expires_at,
-            max_activations=3,
+            max_activations=max_activations,
         )
         db.add(license)
         await db.flush()

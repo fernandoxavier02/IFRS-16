@@ -19,6 +19,7 @@ from .routers import (
     payments_router,
     user_dashboard_router
 )
+from .routers.contracts import router as contracts_router
 
 settings = get_settings()
 
@@ -140,6 +141,7 @@ app.include_router(licenses_router)
 app.include_router(admin_router)
 app.include_router(payments_router)
 app.include_router(user_dashboard_router)
+app.include_router(contracts_router)
 
 
 # Rota raiz

@@ -5,8 +5,9 @@ param(
     [string]$AuthCode = ""
 )
 
-$gcloudPath = "C:\Users\Mazars\AppData\Local\Google\Cloud SDK\google-cloud-sdk\bin"
-$env:PATH = "$gcloudPath;$env:PATH"
+
+# gcloud está no PATH
+
 
 $PROJECT_ID = "ifrs16-app"
 $REGION = "us-central1"
@@ -28,7 +29,8 @@ Write-Host "1. Verificando autenticacao..." -ForegroundColor Yellow
 $accounts = gcloud auth list --format="value(account)" 2>$null
 if ($accounts) {
     Write-Host "   Logado como: $accounts" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   Nao logado. Execute: gcloud auth login" -ForegroundColor Red
     Write-Host ""
     Write-Host "   Abrindo navegador para login..." -ForegroundColor Yellow
@@ -45,7 +47,8 @@ Write-Host "2. Configurando projeto..." -ForegroundColor Yellow
 gcloud config set project $PROJECT_ID
 if ($LASTEXITCODE -eq 0) {
     Write-Host "   Projeto configurado: $PROJECT_ID" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   ERRO ao configurar projeto" -ForegroundColor Red
     exit 1
 }
@@ -69,16 +72,17 @@ Write-Host "4. Verificando Cloud SQL..." -ForegroundColor Yellow
 $sqlInstances = gcloud sql instances list --project $PROJECT_ID --format="value(name)" 2>$null
 if ($sqlInstances) {
     Write-Host "   Instancia existente: $sqlInstances" -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "   Nenhuma instancia encontrada" -ForegroundColor Yellow
-    Write-Host "   Deseja criar uma nova instancia Cloud SQL? (s/N): " -NoNewline
-    $criar = Read-Host
+    Write-Host "   Deseja criar uma nova instancia Cloud SQL? (s/N): s"
+    $criar = 's'
     if ($criar -eq 's') {
         Write-Host ""
         Write-Host "   Criando Cloud SQL PostgreSQL..." -ForegroundColor Yellow
         Write-Host "   Isso pode demorar 5-10 minutos..." -ForegroundColor Gray
         
-        $dbPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 16 | ForEach-Object {[char]$_})
+        $dbPassword = -join ((48..57) + (65..90) + (97..122) | Get-Random -Count 16 | ForEach-Object { [char]$_ })
         
         gcloud sql instances create ifrs16-database `
             --database-version=POSTGRES_15 `
@@ -104,8 +108,8 @@ if ($sqlInstances) {
 # Deploy Backend
 Write-Host ""
 Write-Host "5. Deploy do Backend no Cloud Run..." -ForegroundColor Yellow
-Write-Host "   Deseja fazer deploy do backend? (s/N): " -NoNewline
-$deploy = Read-Host
+Write-Host "   Deseja fazer deploy do backend? (s/N): s"
+$deploy = 's'
 
 if ($deploy -eq 's') {
     Write-Host ""

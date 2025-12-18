@@ -629,3 +629,129 @@ async function verHistoricoVersoes(contractId) {
         alert(`❌ Erro ao carregar histórico:\n${error.message || 'Erro desconhecido'}`);
     }
 }
+
+// ============================================================
+// FUNÇÃO PARA GRAVAR CONTRATO COM VERSÃO
+// ============================================================
+
+async function gravarContratoComVersao() {
+    // Verificar token
+    const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+    if (!token) {
+        alert('❌ Você precisa estar logado para gravar contratos.\n\nFaça login primeiro.');
+        return;
+    }
+
+    // Verificar se há dados calculados
+    if (typeof dadosCalculados === 'undefined' || !dadosCalculados || !dadosCalculados.inputs) {
+        alert('❌ Por favor, preencha os dados do contrato e aguarde o cálculo antes de gravar.');
+        return;
+    }
+
+    // Pedir nome do contrato
+    const nomeContrato = prompt('📝 Digite o nome do contrato:\n\n(Ex: Aluguel Sede SP, Veículo Frota 01, etc.)');
+    if (!nomeContrato || nomeContrato.trim() === '') {
+        alert('❌ Nome do contrato é obrigatório.');
+        return;
+    }
+
+    // Pedir código opcional
+    const codigoContrato = prompt('🔢 Digite o código do contrato (opcional):\n\n(Ex: CONT-2025-001, deixe em branco para pular)') || null;
+
+    // Pedir observações opcionais
+    const notas = prompt('📋 Adicione observações para esta versão (opcional):\n\nDeixe em branco para salvar sem observações.') || null;
+
+    try {
+        // 1. Criar o contrato primeiro
+        const contractResponse = await fetch(`${CONFIG.API_URL}/api/contracts`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                name: nomeContrato.trim(),
+                description: notas,
+                contract_code: codigoContrato,
+                status: 'active'
+            })
+        });
+
+        if (!contractResponse.ok) {
+            const error = await contractResponse.json();
+            if (contractResponse.status === 403) {
+                alert('❌ Você precisa de uma licença ativa para criar contratos.\n\nAdquira uma licença para usar esta funcionalidade.');
+            } else {
+                alert(`❌ Erro ao criar contrato:\n${error.detail || 'Erro desconhecido'}`);
+            }
+            return;
+        }
+
+        const contract = await contractResponse.json();
+        console.log('Contrato criado:', contract);
+
+        // 2. Criar a versão do contrato
+        const reajusteTipo = document.getElementById('reajusteTipo')?.value || 'manual';
+        const reajusteValor = reajusteTipo === 'manual' ? parseFloat(document.getElementById('reajusteAnual')?.value || 5) : null;
+
+        const versionData = {
+            data_inicio: dadosCalculados.inputs.dataInicio.toISOString().split('T')[0],
+            prazo_meses: dadosCalculados.inputs.prazoMeses,
+            carencia_meses: dadosCalculados.inputs.carenciaMeses,
+            parcela_inicial: dadosCalculados.inputs.parcelaInicial,
+            taxa_desconto_anual: dadosCalculados.inputs.taxaAnual,
+            reajuste_tipo: reajusteTipo,
+            reajuste_valor: reajusteValor,
+            mes_reajuste: parseInt(document.getElementById('mesReajuste')?.value || 1),
+            resultados_json: {
+                fluxoCaixa: dadosCalculados.fluxoCaixa,
+                contabilizacao: dadosCalculados.contabilizacao,
+                cpLp: dadosCalculados.cpLp
+            },
+            total_vp: dadosCalculados.totalVP,
+            total_nominal: dadosCalculados.totalNominal,
+            avp: dadosCalculados.avp,
+            notas: notas
+        };
+
+        const versionResponse = await fetch(`${CONFIG.API_URL}/api/contracts/${contract.id}/versions`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(versionData)
+        });
+
+        if (!versionResponse.ok) {
+            const error = await versionResponse.json();
+            alert(`❌ Contrato criado, mas erro ao salvar versão:\n${error.detail || 'Erro desconhecido'}`);
+            return;
+        }
+
+        const version = await versionResponse.json();
+        console.log('Versão criada:', version);
+
+        // 3. Atualizar lista de contratos
+        await loadContracts();
+
+        // 4. Selecionar o contrato recém-criado
+        currentContractId = contract.id;
+        const selector = document.getElementById('selectedContract');
+        if (selector) {
+            selector.value = contract.id;
+        }
+
+        // Mostrar botões de processar/arquivar
+        const btnProcessar = document.getElementById('btnProcessarContrato');
+        const btnArquivar = document.getElementById('btnArquivarVersao');
+        if (btnProcessar) btnProcessar.classList.remove('hidden');
+        if (btnArquivar) btnArquivar.classList.remove('hidden');
+
+        alert(`✅ Contrato gravado com sucesso!\n\n📄 Nome: ${nomeContrato}\n📊 Versão: ${version.version_number}\n💰 VP: R$ ${dadosCalculados.totalVP.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+
+    } catch (error) {
+        console.error('Erro ao gravar contrato:', error);
+        alert(`❌ Erro ao gravar contrato:\n${error.message || 'Erro desconhecido'}`);
+    }
+}

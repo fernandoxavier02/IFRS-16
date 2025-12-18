@@ -5,12 +5,16 @@
       "backend/**",
       "node_modules/**",
       ".git/**",
+      ".cursor/**",
       "*.md",
       "firebase.json",
       "firebase-debug.log",
       "*.ps1",
       "*.py",
+      "*.yaml",
+      "*.yml",
       "*.json",
+      "pricing-test.html",
       "tests/**",
       "alembic/**",
       ".github/**",
@@ -24,7 +28,16 @@
     "trailingSlash": false,
     "headers": [
       {
-        "source": "**/*.@(html|js|css)",
+        "source": "**/*.html",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(js|css)",
         "headers": [
           {
             "key": "Cache-Control",

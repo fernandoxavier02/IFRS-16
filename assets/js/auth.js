@@ -162,6 +162,49 @@ async function verificarSessaoSalva() {
         }
     }
 
+    // 1.5. Usuário logado (token existe), mas ainda não ativou licença
+    // Não deve voltar para a tela de login novamente após o redirect do login.html.
+    const userTokenStored = localStorage.getItem('ifrs16_user_token') || localStorage.getItem('ifrs16_auth_token');
+    if (userTokenStored && userType !== 'admin') {
+        try {
+            // Validar token rapidamente para não manter sessão inválida
+            const meResponse = await fetch(`${CONFIG.API_URL}/api/auth/me`, {
+                headers: { 'Authorization': `Bearer ${userTokenStored}` }
+            });
+
+            if (meResponse.ok) {
+                userData = await meResponse.json();
+                localStorage.setItem('ifrs16_user_data', JSON.stringify(userData));
+                userToken = userTokenStored;
+
+                // Direcionar para ativação de licença
+                mostrarTelaLicenca();
+                const licenseError = document.getElementById('licenseError');
+                if (licenseError) {
+                    licenseError.textContent = '✅ Login realizado! Agora insira a chave de licença recebida no seu email.';
+                    licenseError.classList.remove('hidden');
+                    licenseError.classList.remove('text-rose-400');
+                    licenseError.classList.add('text-emerald-400');
+                }
+
+                return true;
+            }
+
+            if (meResponse.status === 401) {
+                limparDadosSessao();
+                return false;
+            }
+
+            // Qualquer outro status: permitir seguir para tela de licença e o usuário tenta ativar
+            mostrarTelaLicenca();
+            return true;
+        } catch (error) {
+            // Sem conexão momentânea: ainda assim não pedir login de novo.
+            mostrarTelaLicenca();
+            return true;
+        }
+    }
+
     // 2. Verificar se tem licença já ativada (chave + token de licença)
     const savedLicense = localStorage.getItem('ifrs16_license');
     const savedToken = localStorage.getItem('ifrs16_token');

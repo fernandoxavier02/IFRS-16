@@ -31,6 +31,7 @@
         }
         .glass-card {
             background: rgba(30, 41, 59, 0.7);
+            -webkit-backdrop-filter: blur(20px);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
@@ -177,7 +178,21 @@
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8000';
+        const getApiUrl = () => {
+            const hostname = window.location.hostname;
+
+            if (
+                hostname.includes('fxstudioai.com') ||
+                hostname.includes('web.app') ||
+                hostname.includes('firebaseapp.com')
+            ) {
+                return 'https://ifrs16-backend-1051753255664.us-central1.run.app';
+            }
+
+            return 'http://localhost:8000';
+        };
+
+        const API_URL = getApiUrl();
         let dashboardData = null;
 
         async function loadDashboard() {

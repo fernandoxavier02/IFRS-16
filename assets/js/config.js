@@ -7,7 +7,11 @@ const getApiUrl = () => {
     const hostname = window.location.hostname;
     
     // Firebase Hosting (produção) - Backend no Cloud Run
-    if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
+    if (
+        hostname.includes('fxstudioai.com') ||
+        hostname.includes('web.app') ||
+        hostname.includes('firebaseapp.com')
+    ) {
         return 'https://ifrs16-backend-1051753255664.us-central1.run.app';
     }
     

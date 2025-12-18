@@ -46,12 +46,15 @@ class Settings(BaseSettings):
     API_URL: str = "http://localhost:8000"
     
     # Email SMTP
-    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_HOST: str = "smtp.zoho.com"
     SMTP_PORT: int = 587
     SMTP_USER: str = ""
     SMTP_PASSWORD: str = ""  # Senha de App do Gmail
     SMTP_FROM_EMAIL: str = ""
     SMTP_FROM_NAME: str = "IFRS 16 - Sistema de Gestão"
+    SMTP_USE_SSL: bool = False
+    SMTP_USE_STARTTLS: bool = True
+    SMTP_TIMEOUT_SECONDS: int = 30
     
     # Ambiente
     ENVIRONMENT: str = "development"

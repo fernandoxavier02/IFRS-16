@@ -3,100 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Planos e Preços | Repositório IFRS 16</title>
+    <title>Planos e Preços | Engine IFRS 16</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/theme-neon.css">
     <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] },
-                    colors: {
-                        primary: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
-                        dark: { 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
-                    }
-                }
-            }
-        }
-    </script>
     <style>
-        body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            min-height: 100vh;
+        .pricing-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+            z-index: 10;
         }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .pricing-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 48px;
+            flex-wrap: wrap;
+            gap: 16px;
         }
-        .pricing-card {
-            background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            transition: all 0.3s ease;
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
-        .pricing-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(34, 197, 94, 0.3);
+        .header-brand img {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.4));
         }
-        .pricing-card.featured {
-            border-color: #22c55e;
-            box-shadow: 0 0 40px rgba(34, 197, 94, 0.2);
+        .header-brand h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        .header-brand p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
         }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        .hero-section {
+            text-align: center;
+            margin-bottom: 48px;
         }
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .hero-section h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #ffffff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
         }
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
+        .hero-section p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
         }
-        /* Estilização da tabela de preços do Stripe */
+        .stripe-wrapper {
+            margin-bottom: 48px;
+        }
         stripe-pricing-table {
             width: 100%;
+        }
+        .comparison-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .comparison-table thead th {
+            background: rgba(0, 212, 255, 0.1);
+            color: var(--neon-cyan);
+            font-weight: 600;
+            padding: 16px;
+            border-bottom: 1px solid var(--dark-border);
+        }
+        .comparison-table tbody td {
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(26, 35, 50, 0.5);
+            color: var(--text-secondary);
+        }
+        .comparison-table tbody tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+        .check-icon {
+            color: var(--neon-cyan);
+        }
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+        }
+        .faq-item h4 {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .faq-item p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
-    <div class="max-w-6xl mx-auto p-6">
+    <!-- Circuit Background -->
+    <div class="circuit-bg"></div>
+
+    <div class="pricing-container fade-in">
         <!-- Header -->
-        <header class="flex items-center justify-between mb-12">
-            <div class="flex items-center gap-4">
-                <img src="assets/logo.png" alt="IFRS 16" class="h-12 w-auto">
+        <header class="pricing-header">
+            <div class="header-brand">
+                <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
                 <div>
-                    <h1 class="text-xl font-bold text-white">Repositório IFRS 16</h1>
-                    <p class="text-gray-400 text-sm">Escolha o plano ideal para sua empresa</p>
+                    <h1>Engine IFRS 16</h1>
+                    <p>Escolha o plano ideal para sua empresa</p>
                 </div>
             </div>
-            <div class="flex items-center gap-4">
-                <a href="login.html" id="loginBtn" class="btn-secondary text-gray-300 px-4 py-2 rounded-lg text-sm">
-                    Entrar
-                </a>
-                <a href="dashboard.html" id="dashboardBtn" class="btn-primary text-white px-4 py-2 rounded-lg text-sm hidden">
-                    Minha Conta
-                </a>
+            <div style="display: flex; gap: 12px;">
+                <a href="login.html" id="loginBtn" class="btn-neon-outline btn-neon-sm">Entrar</a>
+                <a href="dashboard.html" id="dashboardBtn" class="btn-neon btn-neon-sm" style="display: none;">Minha Conta</a>
             </div>
         </header>
 
         <!-- Hero -->
-        <div class="text-center mb-8">
-            <h2 class="text-4xl font-bold text-white mb-4">Planos por CNPJ</h2>
-            <p class="text-gray-400 text-lg max-w-2xl mx-auto">
-                Calculadora profissional para contratos de arrendamento conforme IFRS 16 / CPC 06 (R2).
-            </p>
+        <div class="hero-section">
+            <h2>Planos por CNPJ</h2>
+            <p>Calculadora profissional para contratos de arrendamento conforme IFRS 16 / CPC 06 (R2).</p>
         </div>
 
         <!-- Stripe Pricing Table -->
-        <div class="mb-12">
+        <div class="stripe-wrapper">
             <stripe-pricing-table 
                 pricing-table-id="prctbl_1SbsBzGEyVmwHCe67gq4hqL6"
                 publishable-key="pk_live_51SbrHyGEyVmwHCe6H4ZQU7jIe2ehaxo2SXmonoZZwZzIpoOslJ8RWCgcYWbz3Fc7Jn0eOb4U5EEafnjAK5kDS51500YPiJvR9x">
@@ -104,92 +150,92 @@
         </div>
 
         <!-- Comparativo -->
-        <div class="glass-card rounded-2xl p-8 mb-12 overflow-x-auto">
-            <h3 class="text-xl font-bold text-white mb-6 text-center">Comparativo de Planos</h3>
-            <table class="w-full min-w-[600px]">
+        <div class="glass-card" style="padding: 32px; margin-bottom: 48px; overflow-x: auto;">
+            <h3 class="page-title" style="text-align: center; margin-bottom: 24px;">Comparativo de Planos</h3>
+            <table class="comparison-table">
                 <thead>
-                    <tr class="border-b border-gray-700">
-                        <th class="text-left text-gray-400 font-medium py-3">Recurso</th>
-                        <th class="text-center text-blue-400 font-medium py-3">Básico</th>
-                        <th class="text-center text-primary-400 font-medium py-3">Pro</th>
-                        <th class="text-center text-purple-400 font-medium py-3">Enterprise</th>
+                    <tr>
+                        <th style="text-align: left;">Recurso</th>
+                        <th style="text-align: center; color: var(--neon-blue);">Básico</th>
+                        <th style="text-align: center; color: var(--neon-cyan);">Pro</th>
+                        <th style="text-align: center; color: var(--neon-purple);">Enterprise</th>
                     </tr>
                 </thead>
-                <tbody class="text-sm">
-                    <tr class="border-b border-gray-800">
-                        <td class="text-gray-300 py-3">Contratos por CNPJ</td>
-                        <td class="text-center text-white py-3">Até 3</td>
-                        <td class="text-center text-white py-3">Até 20</td>
-                        <td class="text-center text-white py-3">Ilimitado</td>
-                    </tr>
-                    <tr class="border-b border-gray-800">
-                        <td class="text-gray-300 py-3">Exportação Excel/CSV</td>
-                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
-                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
-                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
-                    </tr>
-                    <tr class="border-b border-gray-800">
-                        <td class="text-gray-300 py-3">Suporte</td>
-                        <td class="text-center text-gray-400 py-3">Email</td>
-                        <td class="text-center text-white py-3">Prioritário</td>
-                        <td class="text-center text-white py-3">Dedicado + SLA</td>
-                    </tr>
-                    <tr class="border-b border-gray-800">
-                        <td class="text-gray-300 py-3">Multi-usuário</td>
-                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
-                        <td class="text-center text-white py-3">Até 5</td>
-                        <td class="text-center text-white py-3">Ilimitado</td>
-                    </tr>
-                    <tr class="border-b border-gray-800">
-                        <td class="text-gray-300 py-3">API de integração</td>
-                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
-                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
-                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                <tbody>
+                    <tr>
+                        <td>Contratos por CNPJ</td>
+                        <td style="text-align: center; color: var(--text-primary);">Até 3</td>
+                        <td style="text-align: center; color: var(--text-primary);">Até 20</td>
+                        <td style="text-align: center; color: var(--text-primary);">Ilimitado</td>
                     </tr>
                     <tr>
-                        <td class="text-gray-300 py-3">Treinamento</td>
-                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
-                        <td class="text-center py-3"><span class="text-gray-500">—</span></td>
-                        <td class="text-center py-3"><span class="text-primary-400">✓</span></td>
+                        <td>Exportação Excel/CSV</td>
+                        <td style="text-align: center;" class="check-icon">✓</td>
+                        <td style="text-align: center;" class="check-icon">✓</td>
+                        <td style="text-align: center;" class="check-icon">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Suporte</td>
+                        <td style="text-align: center; color: var(--text-muted);">Email</td>
+                        <td style="text-align: center; color: var(--text-primary);">Prioritário</td>
+                        <td style="text-align: center; color: var(--text-primary);">Dedicado + SLA</td>
+                    </tr>
+                    <tr>
+                        <td>Multi-usuário</td>
+                        <td style="text-align: center; color: var(--text-muted);">—</td>
+                        <td style="text-align: center; color: var(--text-primary);">Até 5</td>
+                        <td style="text-align: center; color: var(--text-primary);">Ilimitado</td>
+                    </tr>
+                    <tr>
+                        <td>API de integração</td>
+                        <td style="text-align: center; color: var(--text-muted);">—</td>
+                        <td style="text-align: center;" class="check-icon">✓</td>
+                        <td style="text-align: center;" class="check-icon">✓</td>
+                    </tr>
+                    <tr>
+                        <td>Treinamento</td>
+                        <td style="text-align: center; color: var(--text-muted);">—</td>
+                        <td style="text-align: center; color: var(--text-muted);">—</td>
+                        <td style="text-align: center;" class="check-icon">✓</td>
                     </tr>
                 </tbody>
             </table>
         </div>
 
         <!-- FAQ -->
-        <div class="glass-card rounded-2xl p-8 mb-12">
-            <h3 class="text-xl font-bold text-white mb-6 text-center">Perguntas Frequentes</h3>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div>
-                    <h4 class="text-white font-semibold mb-2">Como funciona a licença por CNPJ?</h4>
-                    <p class="text-gray-400 text-sm">Cada licença é vinculada a um CNPJ específico. Se sua empresa tem múltiplos CNPJs, será necessária uma licença para cada.</p>
+        <div class="glass-card" style="padding: 32px; margin-bottom: 48px;">
+            <h3 class="page-title" style="text-align: center; margin-bottom: 24px;">Perguntas Frequentes</h3>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h4>Como funciona a licença por CNPJ?</h4>
+                    <p>Cada licença é vinculada a um CNPJ específico. Se sua empresa tem múltiplos CNPJs, será necessária uma licença para cada.</p>
                 </div>
-                <div>
-                    <h4 class="text-white font-semibold mb-2">Posso fazer upgrade do plano?</h4>
-                    <p class="text-gray-400 text-sm">Sim! Você pode fazer upgrade a qualquer momento. O valor já pago é proporcionalizado para o novo plano.</p>
+                <div class="faq-item">
+                    <h4>Posso fazer upgrade do plano?</h4>
+                    <p>Sim! Você pode fazer upgrade a qualquer momento. O valor já pago é proporcionalizado para o novo plano.</p>
                 </div>
-                <div>
-                    <h4 class="text-white font-semibold mb-2">Quais formas de pagamento são aceitas?</h4>
-                    <p class="text-gray-400 text-sm">Aceitamos cartões de crédito (Visa, Mastercard, Amex), débito e PIX através do Stripe.</p>
+                <div class="faq-item">
+                    <h4>Quais formas de pagamento são aceitas?</h4>
+                    <p>Aceitamos cartões de crédito (Visa, Mastercard, Amex), débito e PIX através do Stripe.</p>
                 </div>
-                <div>
-                    <h4 class="text-white font-semibold mb-2">Tem período de teste gratuito?</h4>
-                    <p class="text-gray-400 text-sm">Oferecemos 7 dias de teste gratuito para novos usuários conhecerem a plataforma.</p>
+                <div class="faq-item">
+                    <h4>Tem período de teste gratuito?</h4>
+                    <p>Oferecemos 7 dias de teste gratuito para novos usuários conhecerem a plataforma.</p>
                 </div>
             </div>
         </div>
 
         <!-- Footer -->
-        <footer class="text-center text-gray-500 text-sm">
-            <p>© 2025 Fernando Xavier - Todos os direitos reservados</p>
-            <p class="mt-2">
-                <a href="Calculadora_IFRS16_Deploy.html" class="text-primary-500 hover:text-primary-400">Calculadora</a>
-                <span class="mx-2">•</span>
-                <a href="login.html" class="text-primary-500 hover:text-primary-400">Login</a>
-                <span class="mx-2">•</span>
-                <a href="register.html" class="text-primary-500 hover:text-primary-400">Cadastro</a>
+        <div class="footer-neon">
+            <p>© 2025 FX Studio AI - Todos os direitos reservados</p>
+            <p style="margin-top: 12px;">
+                <a href="Calculadora_IFRS16_Deploy.html" style="color: var(--neon-cyan); text-decoration: none;">Calculadora</a>
+                <span style="margin: 0 8px; color: var(--text-muted);">•</span>
+                <a href="login.html" style="color: var(--neon-cyan); text-decoration: none;">Login</a>
+                <span style="margin: 0 8px; color: var(--text-muted);">•</span>
+                <a href="register.html" style="color: var(--neon-cyan); text-decoration: none;">Cadastro</a>
             </p>
-        </footer>
+        </div>
     </div>
 
     <script>
@@ -197,8 +243,8 @@
         window.onload = function() {
             const token = localStorage.getItem('ifrs16_auth_token');
             if (token) {
-                document.getElementById('loginBtn').classList.add('hidden');
-                document.getElementById('dashboardBtn').classList.remove('hidden');
+                document.getElementById('loginBtn').style.display = 'none';
+                document.getElementById('dashboardBtn').style.display = 'inline-flex';
             }
         };
     </script>

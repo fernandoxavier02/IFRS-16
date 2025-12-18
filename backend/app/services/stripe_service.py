@@ -351,8 +351,84 @@ class StripeService:
         
         # Determinar max_activations baseado no tipo de licença
         max_activations = cls.LICENSE_MAX_ACTIVATIONS.get(license_type, 3)
-        
-        # Criar licença
+
+        # Criar/atualizar subscription de forma idempotente
+        stripe_subscription_id = session.get("subscription")
+        existing_subscription = None
+        if stripe_subscription_id:
+            result = await db.execute(
+                select(Subscription).where(Subscription.stripe_subscription_id == stripe_subscription_id)
+            )
+            existing_subscription = result.scalar_one_or_none()
+
+        if existing_subscription:
+            existing_subscription.user_id = user.id
+            existing_subscription.stripe_price_id = price_id
+            existing_subscription.plan_type = plan_type
+            existing_subscription.status = SubscriptionStatus.ACTIVE
+            existing_subscription.current_period_start = datetime.utcnow()
+            existing_subscription.current_period_end = expires_at
+
+            license = None
+            if existing_subscription.license_id:
+                result = await db.execute(
+                    select(License).where(License.id == existing_subscription.license_id)
+                )
+                license = result.scalar_one_or_none()
+
+            if license:
+                license.status = LicenseStatus.ACTIVE
+                license.expires_at = expires_at
+                license.license_type = license_type
+                license.max_activations = max_activations
+            else:
+                license = License(
+                    key=cls.generate_license_key(),
+                    user_id=user.id,
+                    customer_name=user.name,
+                    email=user.email,
+                    license_type=license_type,
+                    status=LicenseStatus.ACTIVE,
+                    expires_at=expires_at,
+                    max_activations=max_activations,
+                )
+                db.add(license)
+                await db.flush()
+                existing_subscription.license_id = license.id
+
+            await db.commit()
+            print(
+                f"✅ Subscription atualizada (idempotente): {stripe_subscription_id} | "
+                f"Licença: {license.key} | {user.email} (Plano: {plan_name})"
+            )
+
+            # Enviar email de boas-vindas se usuário foi criado agora (tem senha temporária)
+            temp_password = getattr(user, '_temp_password', None)
+            from .email_service import EmailService
+            try:
+                if temp_password:
+                    await EmailService.send_welcome_email(
+                        to_email=user.email,
+                        user_name=user.name,
+                        temp_password=temp_password,
+                        license_key=license.key,
+                        plan_name=plan_name
+                    )
+                    print(f"📧 Email de boas-vindas enviado para: {user.email}")
+                else:
+                    await EmailService.send_license_activated_email(
+                        to_email=user.email,
+                        user_name=user.name,
+                        license_key=license.key,
+                        plan_name=plan_name
+                    )
+                    print(f"📧 Email de licença ativada enviado para: {user.email}")
+            except Exception as e:
+                print(f"⚠️ Erro ao enviar email pós-checkout: {e}")
+
+            return existing_subscription
+
+        # Caso não exista subscription ainda, criar normalmente
         license = License(
             key=cls.generate_license_key(),
             user_id=user.id,
@@ -365,10 +441,7 @@ class StripeService:
         )
         db.add(license)
         await db.flush()
-        
-        # Criar subscription
-        stripe_subscription_id = session.get("subscription")
-        
+
         subscription = Subscription(
             user_id=user.id,
             license_id=license.id,
@@ -381,14 +454,14 @@ class StripeService:
         )
         db.add(subscription)
         await db.commit()
-        
+
         print(f"✅ Licença criada: {license.key} para {user.email} (Plano: {plan_name})")
         
         # Enviar email de boas-vindas se usuário foi criado agora (tem senha temporária)
         temp_password = getattr(user, '_temp_password', None)
-        if temp_password:
-            from .email_service import EmailService
-            try:
+        from .email_service import EmailService
+        try:
+            if temp_password:
                 await EmailService.send_welcome_email(
                     to_email=user.email,
                     user_name=user.name,
@@ -397,8 +470,16 @@ class StripeService:
                     plan_name=plan_name
                 )
                 print(f"📧 Email de boas-vindas enviado para: {user.email}")
-            except Exception as e:
-                print(f"⚠️ Erro ao enviar email de boas-vindas: {e}")
+            else:
+                await EmailService.send_license_activated_email(
+                    to_email=user.email,
+                    user_name=user.name,
+                    license_key=license.key,
+                    plan_name=plan_name
+                )
+                print(f"📧 Email de licença ativada enviado para: {user.email}")
+        except Exception as e:
+            print(f"⚠️ Erro ao enviar email pós-checkout: {e}")
         
         return subscription
     

@@ -32,14 +32,20 @@ class EmailService:
         Envia email de forma síncrona (usado internamente).
         """
         if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
-            print("⚠️ SMTP não configurado - email não enviado")
+            print(
+                "⚠️ SMTP não configurado - email não enviado "
+                f"(SMTP_USER={'OK' if settings.SMTP_USER else 'MISSING'}, "
+                f"SMTP_PASSWORD={'OK' if settings.SMTP_PASSWORD else 'MISSING'})"
+            )
             return False
         
         try:
+            from_email = settings.SMTP_FROM_EMAIL or settings.SMTP_USER
+
             # Criar mensagem
             message = MIMEMultipart("alternative")
             message["Subject"] = subject
-            message["From"] = f"{settings.SMTP_FROM_NAME} <{settings.SMTP_FROM_EMAIL or settings.SMTP_USER}>"
+            message["From"] = f"{settings.SMTP_FROM_NAME} <{from_email}>"
             message["To"] = to_email
             
             # Adicionar versão texto (fallback)
@@ -51,28 +57,46 @@ class EmailService:
             part2 = MIMEText(html_content, "html", "utf-8")
             message.attach(part2)
             
-            # Conectar e enviar
+            timeout = getattr(settings, 'SMTP_TIMEOUT_SECONDS', 30)
+            use_ssl = bool(getattr(settings, 'SMTP_USE_SSL', False))
+            use_starttls = bool(getattr(settings, 'SMTP_USE_STARTTLS', True))
+
+            print(
+                "📧 Enviando email via SMTP "
+                f"host={settings.SMTP_HOST} port={settings.SMTP_PORT} ssl={use_ssl} starttls={use_starttls} "
+                f"from={from_email} to={to_email}"
+            )
+
             context = ssl.create_default_context()
-            
-            # Configurar timeout (30 segundos)
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=30) as server:
-                print(f"🔌 Conectado ao SMTP {settings.SMTP_HOST}:{settings.SMTP_PORT}")
-                server.starttls(context=context)
-                print("✅ TLS iniciado")
-                server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
-                print("✅ Login realizado")
-                server.sendmail(
-                    settings.SMTP_USER,
-                    to_email,
-                    message.as_string()
-                )
-                print(f"✅ Email enviado para {to_email}")
-            
+
+            if use_ssl:
+                with smtplib.SMTP_SSL(
+                    settings.SMTP_HOST,
+                    settings.SMTP_PORT,
+                    timeout=timeout,
+                    context=context
+                ) as server:
+                    server.ehlo()
+                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.sendmail(from_email, [to_email], message.as_string())
+            else:
+                with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=timeout) as server:
+                    server.ehlo()
+                    if use_starttls:
+                        server.starttls(context=context)
+                        server.ehlo()
+                    server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
+                    server.sendmail(from_email, [to_email], message.as_string())
+
             print(f"✅ Email enviado para: {to_email}")
             return True
             
         except Exception as e:
-            print(f"❌ Erro ao enviar email para {to_email}: {e}")
+            print(
+                "❌ Erro ao enviar email via SMTP "
+                f"host={settings.SMTP_HOST} port={settings.SMTP_PORT} "
+                f"to={to_email}: {e}"
+            )
             return False
     
     @classmethod
@@ -242,6 +266,70 @@ Atenciosamente,
 Equipe IFRS 16
         """
         
+        return await cls.send_email(to_email, subject, html_content, text_content)
+
+    @classmethod
+    async def send_license_activated_email(
+        cls,
+        to_email: str,
+        user_name: str,
+        license_key: str,
+        plan_name: str
+    ) -> bool:
+        subject = "✅ Assinatura ativada - Sua licença Engine IFRS 16"
+
+        login_url = f"{settings.FRONTEND_URL}/login.html"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset=\"UTF-8\">
+  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+</head>
+<body style=\"margin:0;padding:0;font-family:Arial, sans-serif;background:#f4f7fa;\">
+  <div style=\"max-width:600px;margin:0 auto;padding:32px;\">
+    <div style=\"background:#ffffff;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08);overflow:hidden;\">
+      <div style=\"background:linear-gradient(135deg,#0b1220,#1b2a44);padding:28px 28px;color:#fff;\">
+        <h1 style=\"margin:0;font-size:22px;\">Engine IFRS 16</h1>
+        <p style=\"margin:8px 0 0 0;color:#cbd5e1;font-size:14px;\">Licença ativada com sucesso</p>
+      </div>
+      <div style=\"padding:28px;\">
+        <p style=\"margin:0 0 12px 0;color:#111827;font-size:16px;\">Olá, <strong>{user_name}</strong>.</p>
+        <p style=\"margin:0 0 16px 0;color:#374151;font-size:15px;line-height:1.6;\">
+          Sua assinatura do plano <strong>{plan_name}</strong> foi ativada com sucesso.
+        </p>
+        <div style=\"background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:16px;\">
+          <p style=\"margin:0 0 6px 0;color:#6b7280;font-size:13px;\">Chave de Licença</p>
+          <p style=\"margin:0;font-family:Courier New, monospace;font-size:15px;color:#111827;\">{license_key}</p>
+        </div>
+        <p style=\"margin:16px 0 0 0;color:#6b7280;font-size:13px;line-height:1.6;\">
+          Para acessar o sistema, utilize seu email e sua senha já cadastrada.
+        </p>
+        <div style=\"margin-top:22px;\">
+          <a href=\"{login_url}\" style=\"display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:600;\">
+            Acessar o sistema
+          </a>
+        </div>
+      </div>
+      <div style=\"padding:18px 28px;background:#f8fafc;color:#9ca3af;font-size:12px;text-align:center;\">
+        © 2025 FX Studio AI
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+        """
+
+        text_content = f"""Olá, {user_name}!
+
+Sua assinatura do plano {plan_name} foi ativada com sucesso.
+
+Chave de Licença: {license_key}
+
+Acesse: {login_url}
+"""
+
         return await cls.send_email(to_email, subject, html_content, text_content)
     
     @classmethod

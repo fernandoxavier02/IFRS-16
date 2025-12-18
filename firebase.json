@@ -1,6 +1,18 @@
 {
   "hosting": {
     "public": ".",
+    "redirects": [
+      {
+        "source": "/",
+        "destination": "/landing.html",
+        "type": 302
+      },
+      {
+        "source": "/index.html",
+        "destination": "/landing.html",
+        "type": 302
+      }
+    ],
     "ignore": [
       "backend/**",
       "node_modules/**",

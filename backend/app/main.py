@@ -34,6 +34,37 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     # Startup
     print("🚀 Iniciando API de Licenciamento IFRS 16...")
     print(f"📊 Ambiente: {settings.ENVIRONMENT}")
+
+    # Fail-fast em produção: evita deploy com placeholders (sk_live_...) e SMTP incompleto
+    if settings.ENVIRONMENT == "production":
+        stripe_key = (getattr(settings, "STRIPE_SECRET_KEY", "") or "").strip()
+        webhook_secret = (getattr(settings, "STRIPE_WEBHOOK_SECRET", "") or "").strip()
+
+        smtp_user = (getattr(settings, "SMTP_USER", "") or "").strip()
+        smtp_pass = (getattr(settings, "SMTP_PASSWORD", "") or "").strip()
+        smtp_host = (getattr(settings, "SMTP_HOST", "") or "").strip()
+        smtp_port = getattr(settings, "SMTP_PORT", None)
+
+        errors = []
+
+        if not stripe_key or stripe_key.endswith("...") or not stripe_key.startswith("sk_"):
+            errors.append("STRIPE_SECRET_KEY inválida/placeholder")
+        if not webhook_secret or webhook_secret.endswith("...") or not webhook_secret.startswith("whsec_"):
+            errors.append("STRIPE_WEBHOOK_SECRET inválida/placeholder")
+
+        if not smtp_host:
+            errors.append("SMTP_HOST ausente")
+        if not smtp_port:
+            errors.append("SMTP_PORT ausente")
+        if not smtp_user:
+            errors.append("SMTP_USER ausente")
+        if not smtp_pass:
+            errors.append("SMTP_PASSWORD ausente")
+
+        if errors:
+            msg = " | ".join(errors)
+            print(f"❌ Configuração inválida em produção: {msg}")
+            raise RuntimeError(f"Configuração inválida em produção: {msg}")
     
     # Criar tabelas automaticamente se não existirem
     print("📦 Inicializando banco de dados...")

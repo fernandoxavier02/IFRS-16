@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Engine IFRS 16 | Transforme Complexidade em Potência</title>
+    <meta name="description" content="O motor de inteligência artificial para sua conformidade contábil IFRS 16 / CPC 06 (R2). Automatize cálculos, elimine erros e acelere sua auditoria.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-blue: #00d4ff;
+            --neon-cyan: #00fff7;
+            --neon-purple: #b829dd;
+            --neon-magenta: #ff00ff;
+            --dark-bg: #0a0e17;
+            --dark-card: #0d1321;
+            --dark-border: #1a2332;
+            --text-primary: #ffffff;
+            --text-secondary: #8892a4;
+            --glow-blue: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+            --glow-purple: 0 0 20px rgba(184, 41, 221, 0.5), 0 0 40px rgba(184, 41, 221, 0.3);
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* Circuit Pattern Background */
+        .circuit-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.15;
+            background-image: 
+                linear-gradient(90deg, var(--neon-blue) 1px, transparent 1px),
+                linear-gradient(var(--neon-blue) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
+        }
+
+        /* Animated Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: float 15s infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 20px 0;
+            background: rgba(10, 14, 23, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+        }
+
+        nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-logo img {
+            height: 56px;
+            width: auto;
+            filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
+        }
+
+        .nav-logo span {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+
+        .btn-nav {
+            padding: 10px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-nav-outline {
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            background: transparent;
+        }
+
+        .btn-nav-outline:hover {
+            background: rgba(0, 212, 255, 0.1);
+            box-shadow: var(--glow-blue);
+        }
+
+        .btn-nav-primary {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            border: none;
+        }
+
+        .btn-nav-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--glow-blue);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 120px 0 80px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+        }
+
+        .hero-logo {
+            width: 400px;
+            max-width: 90%;
+            margin: 0 auto 40px;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.8)) drop-shadow(0 0 60px rgba(184, 41, 221, 0.4)); }
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--neon-cyan) 50%, var(--neon-purple) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 100%);
+            color: white;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.6), var(--glow-blue);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 255, 247, 0.1);
+            box-shadow: var(--glow-blue);
+        }
+
+        /* Problem vs Solution Section */
+        .problem-solution {
+            padding: 100px 0;
+            position: relative;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-title h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .section-title p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+
+        .comparison-card {
+            padding: 40px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .comparison-card.before {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid #2d3748;
+        }
+
+        .comparison-card.after {
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .comparison-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .comparison-card.before h3 {
+            color: #ef4444;
+        }
+
+        .comparison-card.after h3 {
+            color: var(--neon-cyan);
+        }
+
+        .comparison-card ul {
+            list-style: none;
+        }
+
+        .comparison-card li {
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-card.before li::before {
+            content: "✗";
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .comparison-card.after li::before {
+            content: "✓";
+            color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .vs-badge {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: 0 0 30px rgba(184, 41, 221, 0.5);
+        }
+
+        @media (max-width: 900px) {
+            .vs-badge {
+                margin: 0 auto;
+            }
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.02) 50%, transparent 100%);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--dark-border);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s ease;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.15);
+        }
+
+        .feature-card:hover::before {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(184, 41, 221, 0.15));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 
+                0 8px 32px rgba(0, 212, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .feature-card:hover .feature-icon::before {
+            left: 100%;
+        }
+
+        .feature-icon svg {
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        .icon-3d {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .icon-3d {
+            transform: rotateY(10deg) rotateX(-5deg) scale(1.1);
+        }
+
+        .feature-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .feature-card p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* Compliance Section */
+        .compliance {
+            padding: 100px 0;
+        }
+
+        .compliance-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .compliance-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .compliance-text h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .compliance-text p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+
+        .compliance-list {
+            list-style: none;
+        }
+
+        .compliance-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--dark-border);
+        }
+
+        .compliance-list li:last-child {
+            border-bottom: none;
+        }
+
+        .compliance-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(184, 41, 221, 0.2));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 1.2rem;
+        }
+
+        .compliance-list h4 {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .compliance-list p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .compliance-visual {
+            position: relative;
+        }
+
+        .compliance-card {
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--neon-blue);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.15);
+        }
+
+        .compliance-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 24px;
+            color: var(--neon-cyan);
+            text-align: center;
+        }
+
+        .standard-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .standard-item {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .standard-item:hover {
+            transform: scale(1.05);
+            box-shadow: var(--glow-blue);
+        }
+
+        .standard-item span {
+            display: block;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--neon-cyan);
+        }
+
+        .standard-item small {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(184, 41, 221, 0.02) 50%, transparent 100%);
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .pricing-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff, var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pricing-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .stripe-container {
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--dark-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
+        }
+
+        stripe-pricing-table {
+            width: 100%;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-content {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(184, 41, 221, 0.1) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 30px;
+            padding: 80px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-purple), transparent);
+        }
+
+        .cta h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 0 30px;
+            border-top: 1px solid var(--dark-border);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .footer-brand img {
+            height: 70px;
+            width: auto;
+            filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.5));
+        }
+
+        .footer-brand span {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--text-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--neon-cyan);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--dark-border);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        /* Animations */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            nav .container {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .nav-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .hero {
+                padding: 140px 0 60px;
+            }
+
+            .hero-logo {
+                width: 280px;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .stripe-container {
+                padding: 20px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* Glow effects on scroll */
+        .glow-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+            animation: glow-move 3s ease-in-out infinite;
+        }
+
+        @keyframes glow-move {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Circuit Background -->
+    <div class="circuit-bg"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+        <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+        <div class="particle" style="left: 50%; animation-delay: 1s;"></div>
+        <div class="particle" style="left: 70%; animation-delay: 3s;"></div>
+        <div class="particle" style="left: 80%; animation-delay: 5s;"></div>
+        <div class="particle" style="left: 90%; animation-delay: 2.5s;"></div>
+    </div>
+
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-logo">
+                <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
+                <div>
+                    <span>FX STUDIO AI</span>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px;">by Fernando Xavier</p>
+                </div>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Recursos</a>
+                <a href="#compliance">Compliance</a>
+                <a href="#pricing">Planos</a>
+                <a href="login.html" class="btn-nav btn-nav-outline">Entrar</a>
+                <a href="#pricing" class="btn-nav btn-nav-primary">Assinar Agora</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content fade-in">
+                <img src="logo/Gemini_Generated_Image_5mhc5l5mhc5l5mhc.png" alt="Engine IFRS 16" class="hero-logo">
+                <h1>Transforme a Complexidade do IFRS 16 em Potência Pura</h1>
+                <p>Abandone planilhas estáticas. O Engine IFRS 16 processa, calcula e automatiza seus contratos de arrendamento com velocidade de IA e precisão de auditoria.</p>
+                <div class="hero-cta">
+                    <a href="#pricing" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        LIGAR OS MOTORES
+                    </a>
+                    <a href="#features" class="btn btn-secondary">
+                        Explorar Recursos
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Problem vs Solution -->
+    <section class="problem-solution">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Repositórios são Passivos. O Engine é Ativo.</h2>
+                <p>Chega de perder horas em cálculos manuais propensos a erros.</p>
+            </div>
+            <div class="comparison-grid">
+                <div class="comparison-card before fade-in">
+                    <h3>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        O Problema
+                    </h3>
+                    <ul>
+                        <li>Planilhas complexas e propensas a erros</li>
+                        <li>Horas perdidas em cálculos manuais</li>
+                        <li>Risco de não conformidade em auditorias</li>
+                        <li>Dificuldade em rastrear modificações</li>
+                        <li>Relatórios inconsistentes</li>
+                    </ul>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="comparison-card after fade-in">
+                    <h3>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                        A Solução
+                    </h3>
+                    <ul>
+                        <li>Cálculos automáticos com precisão de IA</li>
+                        <li>Processamento em segundos, não horas</li>
+                        <li>100% aderente ao IFRS 16 / CPC 06</li>
+                        <li>Histórico completo de versões</li>
+                        <li>Relatórios prontos para auditoria</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Funcionalidades Turbo</h2>
+                <p>Tecnologia de ponta para sua conformidade contábil</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a4 4 0 0 1 4 4v1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2V6a4 4 0 0 1 4-4z"/>
+                            <path d="M10 10v4a2 2 0 1 0 4 0v-4"/>
+                            <path d="M8 18h8"/>
+                            <path d="M10 22h4"/>
+                            <circle cx="12" cy="6" r="1" fill="var(--neon-purple)"/>
+                        </svg>
+                    </div>
+                    <h3>Núcleo de Inteligência</h3>
+                    <p>Algoritmos avançados calculam automaticamente valor presente, depreciação, juros e todos os componentes do IFRS 16 com precisão absoluta.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="rgba(0,212,255,0.2)"/>
+                        </svg>
+                    </div>
+                    <h3>Velocidade de Processamento</h3>
+                    <p>De dados brutos a relatórios completos em segundos. Processe centenas de contratos simultaneamente sem perda de performance.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="rgba(184,41,221,0.1)"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            <circle cx="12" cy="16" r="1" fill="var(--neon-purple)"/>
+                        </svg>
+                    </div>
+                    <h3>Segurança de Ponta</h3>
+                    <p>Seus dados blindados em infraestrutura cloud de última geração. Criptografia end-to-end e backups automáticos.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="M18 17V9"/>
+                            <path d="M13 17V5"/>
+                            <path d="M8 17v-3"/>
+                            <rect x="6" y="14" width="4" height="3" fill="rgba(0,212,255,0.2)" rx="0.5"/>
+                            <rect x="11" y="5" width="4" height="12" fill="rgba(184,41,221,0.15)" rx="0.5"/>
+                            <rect x="16" y="9" width="4" height="8" fill="rgba(0,255,247,0.15)" rx="0.5"/>
+                        </svg>
+                    </div>
+                    <h3>Relatórios Inteligentes</h3>
+                    <p>Exporte para Excel, PDF ou integre via API. Relatórios formatados e prontos para apresentar aos auditores.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <circle cx="12" cy="12" r="3" fill="rgba(0,212,255,0.2)"/>
+                        </svg>
+                    </div>
+                    <h3>Controle de Versões</h3>
+                    <p>Histórico completo de todas as modificações. Rastreie cada alteração e mantenha trilha de auditoria impecável.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            <circle cx="12" cy="12" r="2" fill="rgba(184,41,221,0.3)"/>
+                        </svg>
+                    </div>
+                    <h3>Índices Econômicos</h3>
+                    <p>Integração automática com IPCA, IGP-M e outros índices. Reajustes calculados automaticamente conforme seu contrato.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compliance Section -->
+    <section class="compliance" id="compliance">
+        <div class="container">
+            <div class="compliance-content">
+                <div class="compliance-text fade-in">
+                    <h2>Compliance Total com IFRS 16</h2>
+                    <p>O Engine IFRS 16 foi desenvolvido por especialistas em contabilidade e tecnologia para garantir 100% de aderência às normas internacionais de arrendamento.</p>
+                    <ul class="compliance-list">
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Reconhecimento Inicial</h4>
+                                <p>Cálculo automático do direito de uso e passivo de arrendamento no início do contrato.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 3v18h18"/>
+                                    <path d="m19 9-5 5-4-4-3 3"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Mensuração Subsequente</h4>
+                                <p>Depreciação linear ou por uso, juros pelo método da taxa efetiva, remensuração automática.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="m21 21-4.35-4.35"/>
+                                    <path d="M11 8v6"/>
+                                    <path d="M8 11h6"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Modificações de Contrato</h4>
+                                <p>Tratamento correto de alterações de prazo, valor ou escopo conforme IFRS 16.39-46.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                    <path d="M8 7h8"/>
+                                    <path d="M8 11h8"/>
+                                    <path d="M8 15h4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Divulgações Obrigatórias</h4>
+                                <p>Relatórios com todas as informações exigidas para notas explicativas.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="compliance-visual fade-in">
+                    <div class="compliance-card">
+                        <h3>Normas Suportadas</h3>
+                        <div class="standard-badge">
+                            <div class="standard-item">
+                                <span>IFRS 16</span>
+                                <small>Internacional</small>
+                            </div>
+                            <div class="standard-item">
+                                <span>CPC 06 (R2)</span>
+                                <small>Brasil</small>
+                            </div>
+                        </div>
+                        <div style="margin-top: 30px; text-align: left;">
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; line-height: 2;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><polyline points="20 6 9 17 4 12"/></svg>Vigente desde Janeiro/2019<br>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><polyline points="20 6 9 17 4 12"/></svg>Aplicável a todos os arrendamentos<br>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><polyline points="20 6 9 17 4 12"/></svg>Exceto: curto prazo e baixo valor
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="pricing-header fade-in">
+                <h2>Escolha Seu Plano de Potência</h2>
+                <p>Assine via Stripe com acesso imediato ao sistema</p>
+            </div>
+            <div class="stripe-container fade-in">
+                <stripe-pricing-table 
+                    pricing-table-id="prctbl_1SbsBzGEyVmwHCe67gq4hqL6"
+                    publishable-key="pk_live_51SbrHyGEyVmwHCe6H4ZQU7jIe2ehaxo2SXmonoZZwZzIpoOslJ8RWCgcYWbz3Fc7Jn0eOb4U5EEafnjAK5kDS51500YPiJvR9x">
+                </stripe-pricing-table>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content fade-in">
+                <h2>Pronto para Acelerar sua Conformidade?</h2>
+                <p>Junte-se a centenas de empresas que já transformaram sua gestão de arrendamentos com o Engine IFRS 16.</p>
+                <a href="#pricing" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                    INICIAR PROCESSAMENTO
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
+                    <div>
+                        <span>Engine IFRS 16 by FX Studio AI</span>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px; font-weight: 500;">Todos os direitos reservados a Fernando Xavier</p>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a href="Calculadora_IFRS16_Deploy.html">Calculadora</a>
+                    <a href="login.html">Login</a>
+                    <a href="register.html">Cadastro</a>
+                    <a href="dashboard.html">Minha Conta</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2025 FX Studio AI - Todos os direitos reservados</p>
+                <p style="margin-top: 8px; font-size: 0.8rem;">Engine IFRS 16 - Transformando complexidade em potência</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll Animation Script -->
+    <script>
+        // Fade in on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Check login status
+        window.onload = function() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            if (token) {
+                const loginBtn = document.querySelector('a[href="login.html"]');
+                if (loginBtn) {
+                    loginBtn.textContent = 'Minha Conta';
+                    loginBtn.href = 'dashboard.html';
+                }
+            }
+        };
+    </script>
+</body>
+</html>

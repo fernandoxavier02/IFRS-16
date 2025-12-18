@@ -3,121 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Repositório IFRS 16</title>
+    <title>Login | Engine IFRS 16</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Plus Jakarta Sans', 'system-ui', 'sans-serif'] },
-                    colors: {
-                        primary: { 500: '#22c55e', 600: '#16a34a', 700: '#15803d' },
-                        dark: { 700: '#334155', 800: '#1e293b', 900: '#0f172a', 950: '#020617' }
-                    }
-                }
-            }
-        }
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/theme-neon.css">
     <style>
         body {
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
         }
-        .glass-card {
-            background: rgba(30, 41, 59, 0.7);
-            -webkit-backdrop-filter: blur(20px);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .login-container {
+            width: 100%;
+            max-width: 420px;
+            position: relative;
+            z-index: 10;
         }
-        .input-dark {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: #f1f5f9;
+        .logo-section {
+            text-align: center;
+            margin-bottom: 32px;
         }
-        .input-dark:focus {
-            border-color: #22c55e;
-            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
-            outline: none;
+        .logo-section img {
+            height: 80px;
+            width: auto;
+            margin: 0 auto 16px;
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
         }
-        .btn-primary {
-            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-            box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        .form-card {
+            padding: 32px;
         }
-        .btn-primary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+        .input-group {
+            margin-bottom: 20px;
+        }
+        .tabs-container {
+            margin-bottom: 28px;
+        }
+        .form-actions {
+            margin-top: 28px;
+        }
+        .form-links {
+            margin-top: 24px;
+            text-align: center;
+        }
+        .form-links a {
+            color: var(--neon-cyan);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .form-links a:hover {
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+        .form-links p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 12px;
         }
     </style>
 </head>
-<body class="flex items-center justify-center p-4">
-    <div class="w-full max-w-md">
+<body>
+    <!-- Circuit Background -->
+    <div class="circuit-bg"></div>
+
+    <div class="login-container fade-in">
         <!-- Logo -->
-        <div class="text-center mb-8">
-            <img src="assets/logo.png" alt="IFRS 16" class="h-20 w-auto mx-auto mb-4">
-            <h1 class="text-2xl font-bold text-white">Repositório IFRS 16</h1>
-            <p class="text-gray-400 text-sm mt-1">Acesse sua conta</p>
+        <div class="logo-section">
+            <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
+            <h1 class="page-title">Engine IFRS 16</h1>
+            <p class="page-subtitle">Acesse sua conta</p>
         </div>
 
         <!-- Card de Login -->
-        <div class="glass-card rounded-2xl p-8">
+        <div class="glass-card form-card">
             <!-- Tabs -->
-            <div class="flex mb-6 bg-dark-900/50 rounded-lg p-1">
-                <button id="tabUser" onclick="switchTab('user')" 
-                    class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-white bg-primary-600">
+            <div class="tabs-container">
+                <button id="tabUser" onclick="switchTab('user')" class="tab-btn active">
                     Usuário
                 </button>
-                <button id="tabAdmin" onclick="switchTab('admin')"
-                    class="flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white">
+                <button id="tabAdmin" onclick="switchTab('admin')" class="tab-btn">
                     Administrador
                 </button>
             </div>
 
             <!-- Formulário -->
             <form id="loginForm" onsubmit="handleLogin(event)">
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Email</label>
-                        <input type="email" id="email" required
-                            class="w-full input-dark rounded-lg px-4 py-3"
-                            placeholder="seu@email.com">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-300 mb-2">Senha</label>
-                        <input type="password" id="password" required
-                            class="w-full input-dark rounded-lg px-4 py-3"
-                            placeholder="••••••••">
-                    </div>
+                <div class="input-group">
+                    <label class="label-neon">Email</label>
+                    <input type="email" id="email" required class="input-neon" placeholder="seu@email.com">
+                </div>
+                <div class="input-group">
+                    <label class="label-neon">Senha</label>
+                    <input type="password" id="password" required class="input-neon" placeholder="••••••••">
                 </div>
 
-                <div id="errorMsg" class="hidden mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm"></div>
+                <div id="errorMsg" class="error-msg" style="display: none;"></div>
 
-                <button type="submit" id="btnSubmit"
-                    class="w-full btn-primary text-white py-3 rounded-lg font-semibold mt-6 transition-all flex items-center justify-center gap-2">
-                    <span>Entrar</span>
-                    <svg id="spinner" class="w-5 h-5 animate-spin hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                </button>
+                <div class="form-actions">
+                    <button type="submit" id="btnSubmit" class="btn-neon" style="width: 100%;">
+                        <span>Entrar</span>
+                        <svg id="spinner" class="spinner" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                            <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                        </svg>
+                    </button>
+                </div>
             </form>
 
             <!-- Links -->
-            <div class="mt-6 text-center space-y-2">
-                <a href="#" onclick="forgotPassword()" class="text-primary-500 hover:text-primary-400 text-sm">
-                    Esqueceu a senha?
-                </a>
-                <p class="text-gray-500 text-sm" id="registerLink">
-                    Não tem conta? <a href="register.html" class="text-primary-500 hover:text-primary-400">Cadastre-se</a>
-                </p>
+            <div class="form-links">
+                <a href="#" onclick="forgotPassword()">Esqueceu a senha?</a>
+                <p id="registerLink">Não tem conta? <a href="register.html">Cadastre-se</a></p>
             </div>
         </div>
 
         <!-- Footer -->
-        <div class="text-center mt-6 text-gray-500 text-sm">
-            <p>© 2025 Fernando Xavier - Todos os direitos reservados</p>
-            <p class="text-xs text-gray-400 mt-1">v1.0.0 • Build 2025.12.11</p>
+        <div class="footer-neon">
+            <p>© 2025 FX Studio AI - Todos os direitos reservados</p>
+            <p style="margin-top: 8px; font-size: 0.75rem;">Engine IFRS 16 v1.1.1</p>
         </div>
     </div>
 
@@ -149,13 +152,13 @@
             const registerLink = document.getElementById('registerLink');
 
             if (tab === 'user') {
-                tabUser.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-white bg-primary-600';
-                tabAdmin.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white';
-                registerLink.classList.remove('hidden');
+                tabUser.className = 'tab-btn active';
+                tabAdmin.className = 'tab-btn';
+                registerLink.style.display = 'block';
             } else {
-                tabAdmin.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-white bg-primary-600';
-                tabUser.className = 'flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all text-gray-400 hover:text-white';
-                registerLink.classList.add('hidden');
+                tabAdmin.className = 'tab-btn active';
+                tabUser.className = 'tab-btn';
+                registerLink.style.display = 'none';
             }
         }
 
@@ -168,8 +171,8 @@
             const spinner = document.getElementById('spinner');
             const btnSubmit = document.getElementById('btnSubmit');
 
-            errorMsg.classList.add('hidden');
-            spinner.classList.remove('hidden');
+            errorMsg.style.display = 'none';
+            spinner.style.display = 'inline-block';
             btnSubmit.disabled = true;
 
             try {
@@ -219,14 +222,14 @@
                     }
                 } else {
                     errorMsg.textContent = data.detail || 'Erro ao fazer login';
-                    errorMsg.classList.remove('hidden');
+                    errorMsg.style.display = 'block';
                 }
             } catch (error) {
                 errorMsg.textContent = 'Erro de conexão. Verifique se o servidor está rodando.';
-                errorMsg.classList.remove('hidden');
+                errorMsg.style.display = 'block';
             }
 
-            spinner.classList.add('hidden');
+            spinner.style.display = 'none';
             btnSubmit.disabled = false;
         }
 

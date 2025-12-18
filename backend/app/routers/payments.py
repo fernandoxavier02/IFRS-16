@@ -260,6 +260,10 @@ async def stripe_webhook(
 async def test_email(email: str):
     """Testa o envio de email"""
     from ..services.email_service import EmailService
+
+    # Segurança: não expor endpoint de envio de email em produção
+    if settings.ENVIRONMENT == "production":
+        raise HTTPException(status_code=404, detail="Not Found")
     
     try:
         result = await EmailService.send_welcome_email(

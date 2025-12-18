@@ -30,6 +30,7 @@ class ContractBase(BaseModel):
     name: str
     description: Optional[str] = None
     contract_code: Optional[str] = None
+    categoria: str = "OT"  # IM, VE, EQ, PC, OT
     status: str = "draft"
 
 
@@ -41,7 +42,18 @@ class ContractUpdate(BaseModel):
     name: Optional[str] = None
     description: Optional[str] = None
     contract_code: Optional[str] = None
+    categoria: Optional[str] = None
     status: Optional[str] = None
+
+
+# Categorias válidas
+CATEGORIAS_VALIDAS = {
+    "IM": "Imóvel",
+    "VE": "Veículo", 
+    "EQ": "Equipamento",
+    "PC": "Computadores e Periféricos",
+    "OT": "Outros"
+}
 
 
 class ContractResponse(ContractBase):
@@ -137,32 +149,40 @@ async def list_contracts(
             detail="Você precisa de uma licença ativa para gerenciar contratos"
         )
     
-    # Query base
+    # Query com última versão usando LEFT JOIN e subquery
     query = """
-        SELECT id, user_id, name, description, contract_code, status, 
-               created_at, updated_at
-        FROM contracts 
-        WHERE user_id = :user_id AND is_deleted = FALSE
+        SELECT c.id, c.user_id, c.name, c.description, c.contract_code, c.status, 
+               c.created_at, c.updated_at, c.categoria, c.numero_sequencial,
+               v.version_number, v.version_id, v.data_inicio, v.prazo_meses, v.total_vp
+        FROM contracts c
+        LEFT JOIN LATERAL (
+            SELECT version_number, version_id, data_inicio, prazo_meses, total_vp
+            FROM contract_versions
+            WHERE contract_id = c.id
+            ORDER BY version_number DESC
+            LIMIT 1
+        ) v ON true
+        WHERE c.user_id = :user_id AND c.is_deleted = FALSE
     """
     params = {"user_id": str(user.id)}
     
     # Aplicar filtros
     if search_name:
-        query += " AND LOWER(name) LIKE :search_name"
+        query += " AND LOWER(c.name) LIKE :search_name"
         params["search_name"] = f"%{search_name.lower()}%"
     
     if search_code:
-        query += " AND LOWER(contract_code) LIKE :search_code"
+        query += " AND LOWER(c.contract_code) LIKE :search_code"
         params["search_code"] = f"%{search_code.lower()}%"
     
-    query += " ORDER BY created_at DESC"
+    query += " ORDER BY c.created_at DESC"
     
     result = await db.execute(text(query), params)
     rows = result.fetchall()
     
     contracts = []
     for row in rows:
-        contracts.append({
+        contract = {
             "id": str(row[0]),
             "user_id": str(row[1]),
             "name": row[2],
@@ -170,8 +190,23 @@ async def list_contracts(
             "contract_code": row[4],
             "status": row[5],
             "created_at": row[6].isoformat() if row[6] else None,
-            "updated_at": row[7].isoformat() if row[7] else None
-        })
+            "updated_at": row[7].isoformat() if row[7] else None,
+            "categoria": row[8] or "OT",
+            "numero_sequencial": row[9],
+            "last_version": None
+        }
+        
+        # Adicionar última versão se existir
+        if row[10] is not None:
+            contract["last_version"] = {
+                "version_number": row[10],
+                "version_id": row[11],
+                "data_inicio": str(row[12]) if row[12] else None,
+                "prazo_meses": row[13],
+                "total_vp": float(row[14]) if row[14] else None
+            }
+        
+        contracts.append(contract)
     
     return {"contracts": contracts}
 
@@ -216,11 +251,25 @@ async def create_contract(
                 detail=f"Limite de contratos excedido. Seu plano permite até {max_contracts} contratos."
             )
     
+    # Validar categoria
+    categoria = data.categoria.upper() if data.categoria else "OT"
+    if categoria not in CATEGORIAS_VALIDAS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Categoria inválida. Use: {', '.join(CATEGORIAS_VALIDAS.keys())}"
+        )
+    
+    # Obter próximo número sequencial para a categoria
+    seq_result = await db.execute(
+        text(f"SELECT nextval('seq_contrato_{categoria.lower()}')")
+    )
+    numero_sequencial = seq_result.scalar()
+    
     # Inserir contrato no banco
     insert_query = """
-        INSERT INTO contracts (user_id, name, description, contract_code, status)
-        VALUES (:user_id, :name, :description, :contract_code, :status)
-        RETURNING id, user_id, name, description, contract_code, status, created_at, updated_at
+        INSERT INTO contracts (user_id, name, description, contract_code, status, categoria, numero_sequencial)
+        VALUES (:user_id, :name, :description, :contract_code, :status, :categoria, :numero_sequencial)
+        RETURNING id, user_id, name, description, contract_code, status, created_at, updated_at, categoria, numero_sequencial
     """
     
     result = await db.execute(
@@ -230,7 +279,9 @@ async def create_contract(
             "name": data.name,
             "description": data.description,
             "contract_code": data.contract_code,
-            "status": data.status
+            "status": data.status,
+            "categoria": categoria,
+            "numero_sequencial": numero_sequencial
         }
     )
     row = result.fetchone()
@@ -244,7 +295,9 @@ async def create_contract(
         "contract_code": row[4],
         "status": row[5],
         "created_at": row[6].isoformat() if row[6] else None,
-        "updated_at": row[7].isoformat() if row[7] else None
+        "updated_at": row[7].isoformat() if row[7] else None,
+        "categoria": row[8],
+        "numero_sequencial": row[9]
     }
 
 
@@ -421,7 +474,7 @@ async def list_versions(
     # Buscar versões
     result = await db.execute(
         text("""
-            SELECT id, contract_id, version_number, data_inicio, prazo_meses,
+            SELECT id, contract_id, version_number, version_id, data_inicio, prazo_meses,
                    carencia_meses, parcela_inicial, taxa_desconto_anual,
                    reajuste_tipo, reajuste_valor, mes_reajuste,
                    resultados_json, total_vp, total_nominal, avp,
@@ -440,21 +493,22 @@ async def list_versions(
             "id": str(row[0]),
             "contract_id": str(row[1]),
             "version_number": row[2],
-            "data_inicio": str(row[3]) if row[3] else None,
-            "prazo_meses": row[4],
-            "carencia_meses": row[5],
-            "parcela_inicial": float(row[6]) if row[6] else 0,
-            "taxa_desconto_anual": float(row[7]) if row[7] else 0,
-            "reajuste_tipo": row[8],
-            "reajuste_valor": float(row[9]) if row[9] else None,
-            "mes_reajuste": row[10],
-            "resultados_json": row[11],
-            "total_vp": float(row[12]) if row[12] else 0,
-            "total_nominal": float(row[13]) if row[13] else 0,
-            "avp": float(row[14]) if row[14] else 0,
-            "notas": row[15],
-            "archived_at": row[16].isoformat() if row[16] else None,
-            "created_at": row[17].isoformat() if row[17] else None
+            "version_id": row[3],
+            "data_inicio": str(row[4]) if row[4] else None,
+            "prazo_meses": row[5],
+            "carencia_meses": row[6],
+            "parcela_inicial": float(row[7]) if row[7] else 0,
+            "taxa_desconto_anual": float(row[8]) if row[8] else 0,
+            "reajuste_tipo": row[9],
+            "reajuste_valor": float(row[10]) if row[10] else None,
+            "mes_reajuste": row[11],
+            "resultados_json": row[12],
+            "total_vp": float(row[13]) if row[13] else 0,
+            "total_nominal": float(row[14]) if row[14] else 0,
+            "avp": float(row[15]) if row[15] else 0,
+            "notas": row[16],
+            "archived_at": row[17].isoformat() if row[17] else None,
+            "created_at": row[18].isoformat() if row[18] else None
         })
     
     return {"versions": versions}
@@ -493,19 +547,32 @@ async def create_version(
     )
     version_number = version_result.scalar()
     
+    # Obter categoria e número sequencial do contrato para gerar version_id
+    contract_info = await db.execute(
+        text("SELECT categoria, numero_sequencial FROM contracts WHERE id = :contract_id"),
+        {"contract_id": contract_id}
+    )
+    contract_row = contract_info.fetchone()
+    categoria = contract_row[0] if contract_row and contract_row[0] else "OT"
+    numero_seq = contract_row[1] if contract_row and contract_row[1] else 1
+    
+    # Gerar version_id no formato ID{CATEGORIA}{VERSAO}-{NUMERO_SEQUENCIAL:04d}
+    # Exemplo: IDVE2-0001 = ID + VE (veículo) + 2 (versão 2) + - + 0001 (contrato 1)
+    version_id = f"ID{categoria}{version_number}-{numero_seq:04d}"
+    
     # Inserir versão imutável
     insert_query = """
         INSERT INTO contract_versions (
-            contract_id, version_number, data_inicio, prazo_meses, carencia_meses,
+            contract_id, version_number, version_id, data_inicio, prazo_meses, carencia_meses,
             parcela_inicial, taxa_desconto_anual, reajuste_tipo, reajuste_valor,
             mes_reajuste, resultados_json, total_vp, total_nominal, avp, notas
         )
         VALUES (
-            :contract_id, :version_number, :data_inicio, :prazo_meses, :carencia_meses,
+            :contract_id, :version_number, :version_id, :data_inicio, :prazo_meses, :carencia_meses,
             :parcela_inicial, :taxa_desconto_anual, :reajuste_tipo, :reajuste_valor,
             :mes_reajuste, :resultados_json, :total_vp, :total_nominal, :avp, :notas
         )
-        RETURNING id, contract_id, version_number, data_inicio, prazo_meses,
+        RETURNING id, contract_id, version_number, version_id, data_inicio, prazo_meses,
                   total_vp, notas, archived_at, created_at
     """
     
@@ -526,6 +593,7 @@ async def create_version(
         {
             "contract_id": contract_id,
             "version_number": version_number,
+            "version_id": version_id,
             "data_inicio": data_inicio_date,
             "prazo_meses": data.prazo_meses,
             "carencia_meses": data.carencia_meses,
@@ -548,12 +616,13 @@ async def create_version(
         "id": str(row[0]),
         "contract_id": str(row[1]),
         "version_number": row[2],
-        "data_inicio": str(row[3]) if row[3] else None,
-        "prazo_meses": row[4],
-        "total_vp": float(row[5]) if row[5] else 0,
-        "notas": row[6],
-        "archived_at": row[7].isoformat() if row[7] else None,
-        "created_at": row[8].isoformat() if row[8] else None
+        "version_id": row[3],
+        "data_inicio": str(row[4]) if row[4] else None,
+        "prazo_meses": row[5],
+        "total_vp": float(row[6]) if row[6] else 0,
+        "notas": row[7],
+        "archived_at": row[8].isoformat() if row[8] else None,
+        "created_at": row[9].isoformat() if row[9] else None
     }
 
 

@@ -424,7 +424,17 @@
                         <h2 class="text-lg font-semibold text-white">Meus Contratos</h2>
                         <p id="contractsCount" class="text-dark-400 text-sm mt-1">Carregando...</p>
                     </div>
-                    <div class="flex gap-2">
+                    <div class="flex gap-2 items-center">
+                        <!-- Itens por página -->
+                        <div class="flex items-center gap-2">
+                            <label class="text-xs text-dark-400">Exibir:</label>
+                            <select id="itemsPerPage" onchange="changeItemsPerPage()" class="input-dark rounded-lg px-2 py-1.5 text-sm w-20">
+                                <option value="10">10</option>
+                                <option value="25" selected>25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
                         <button onclick="toggleFilters()" class="btn-secondary text-dark-200 px-3 py-2 rounded-lg text-sm flex items-center gap-2">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
@@ -435,50 +445,66 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
-                            Novo Contrato
+                            Novo
                         </button>
                     </div>
                 </div>
                 
-                <!-- Filtros de Busca -->
+                <!-- Filtros de Busca Aprimorados -->
                 <div id="filtersPanel" class="hidden glass-card-light rounded-xl p-4 mb-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
                         <div>
-                            <label class="block text-xs text-dark-400 mb-1">Nome do Contrato</label>
-                            <input type="text" id="filterName" placeholder="Buscar por nome..." class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
+                            <label class="block text-xs text-dark-400 mb-1">Nome</label>
+                            <input type="text" id="filterName" placeholder="Buscar..." class="w-full input-dark rounded-lg px-3 py-2 text-sm" oninput="applyFiltersDebounced()">
                         </div>
                         <div>
                             <label class="block text-xs text-dark-400 mb-1">Código</label>
-                            <input type="text" id="filterCode" placeholder="Buscar por código..." class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
+                            <input type="text" id="filterCode" placeholder="Buscar..." class="w-full input-dark rounded-lg px-3 py-2 text-sm" oninput="applyFiltersDebounced()">
                         </div>
                         <div>
-                            <label class="block text-xs text-dark-400 mb-1">Data Inicial</label>
+                            <label class="block text-xs text-dark-400 mb-1">Status</label>
+                            <select id="filterStatus" class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
+                                <option value="">Todos</option>
+                                <option value="draft">Rascunho</option>
+                                <option value="active">Ativo</option>
+                                <option value="terminated">Encerrado</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs text-dark-400 mb-1">Data Início</label>
                             <input type="date" id="filterStartDate" class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
                         </div>
                         <div>
-                            <label class="block text-xs text-dark-400 mb-1">Data Final</label>
+                            <label class="block text-xs text-dark-400 mb-1">Data Fim</label>
                             <input type="date" id="filterEndDate" class="w-full input-dark rounded-lg px-3 py-2 text-sm" onchange="applyFilters()">
                         </div>
-                    </div>
-                    <div class="flex gap-2 mt-3">
-                        <button onclick="applyFilters()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm">
-                            Aplicar Filtros
-                        </button>
-                        <button onclick="clearFilters()" class="btn-secondary text-dark-200 px-4 py-2 rounded-lg text-sm">
-                            Limpar
-                        </button>
+                        <div class="flex items-end">
+                            <button onclick="clearFilters()" class="w-full btn-secondary text-dark-200 px-3 py-2 rounded-lg text-sm">
+                                Limpar
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
-                <div id="contractsList" class="space-y-3 mb-4">
+                <!-- Tabela de Contratos -->
+                <div id="contractsList" class="mb-4">
                     <div class="text-center py-4 text-dark-400">
                         <div class="w-6 h-6 border-2 border-primary-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
                         <p class="text-sm">Carregando contratos...</p>
                     </div>
                 </div>
 
+                <!-- Paginação -->
+                <div id="paginationContainer" class="hidden flex items-center justify-between border-t border-dark-700 pt-4">
+                    <div class="text-sm text-dark-400">
+                        Mostrando <span id="paginationStart">0</span>-<span id="paginationEnd">0</span> de <span id="paginationTotal">0</span>
+                    </div>
+                    <div class="flex gap-1" id="paginationButtons">
+                    </div>
+                </div>
+
                 <!-- Seletor de Contrato Ativo -->
-                <div id="contractSelector" class="hidden glass-card-light rounded-xl p-4">
+                <div id="contractSelector" class="hidden glass-card-light rounded-xl p-4 mt-4">
                     <label class="block text-sm font-medium text-dark-300 mb-2">Contrato Ativo</label>
                     <select id="selectedContract" onchange="loadContractData()" class="w-full input-dark rounded-lg px-4 py-3">
                         <option value="">Selecione um contrato para carregar dados...</option>
@@ -883,8 +909,19 @@
                 </div>
                 
                 <div>
+                    <label class="block text-sm text-dark-300 mb-2">Categoria *</label>
+                    <select id="contractCategoria" required class="w-full input-dark rounded-lg px-4 py-3" title="Categoria do ativo">
+                        <option value="IM">Imóvel (IM)</option>
+                        <option value="VE">Veículo (VE)</option>
+                        <option value="EQ">Equipamento (EQ)</option>
+                        <option value="PC">Computadores e Periféricos (PC)</option>
+                        <option value="OT" selected>Outros (OT)</option>
+                    </select>
+                </div>
+                
+                <div>
                     <label class="block text-sm text-dark-300 mb-2">Status</label>
-                    <select id="contractStatus" class="w-full input-dark rounded-lg px-4 py-3">
+                    <select id="contractStatus" class="w-full input-dark rounded-lg px-4 py-3" title="Status do contrato">
                         <option value="draft">Rascunho</option>
                         <option value="active">Ativo</option>
                         <option value="terminated">Encerrado</option>
@@ -981,21 +1018,95 @@
             }
         }
 
+        // Variáveis de paginação
+        let currentPage = 1;
+        let itemsPerPage = 25;
+        let filteredContracts = [];
+        let filterDebounceTimer = null;
+
+        function applyFiltersDebounced() {
+            clearTimeout(filterDebounceTimer);
+            filterDebounceTimer = setTimeout(applyFilters, 300);
+        }
+
+        function applyFilters() {
+            const nameFilter = document.getElementById('filterName')?.value?.toLowerCase() || '';
+            const codeFilter = document.getElementById('filterCode')?.value?.toLowerCase() || '';
+            const statusFilter = document.getElementById('filterStatus')?.value || '';
+            const startDateFilter = document.getElementById('filterStartDate')?.value || '';
+            const endDateFilter = document.getElementById('filterEndDate')?.value || '';
+
+            filteredContracts = contractsData.filter(contract => {
+                const matchName = !nameFilter || contract.name?.toLowerCase().includes(nameFilter);
+                const matchCode = !codeFilter || contract.contract_code?.toLowerCase().includes(codeFilter);
+                const matchStatus = !statusFilter || contract.status === statusFilter;
+                
+                let matchDate = true;
+                if (startDateFilter || endDateFilter) {
+                    const contractDate = new Date(contract.created_at);
+                    if (startDateFilter) matchDate = matchDate && contractDate >= new Date(startDateFilter);
+                    if (endDateFilter) matchDate = matchDate && contractDate <= new Date(endDateFilter + 'T23:59:59');
+                }
+                
+                return matchName && matchCode && matchStatus && matchDate;
+            });
+
+            currentPage = 1;
+            renderContracts();
+        }
+
+        function clearFilters() {
+            const filterName = document.getElementById('filterName');
+            const filterCode = document.getElementById('filterCode');
+            const filterStatus = document.getElementById('filterStatus');
+            const filterStartDate = document.getElementById('filterStartDate');
+            const filterEndDate = document.getElementById('filterEndDate');
+            
+            if (filterName) filterName.value = '';
+            if (filterCode) filterCode.value = '';
+            if (filterStatus) filterStatus.value = '';
+            if (filterStartDate) filterStartDate.value = '';
+            if (filterEndDate) filterEndDate.value = '';
+            
+            filteredContracts = [...contractsData];
+            currentPage = 1;
+            renderContracts();
+        }
+
+        function changeItemsPerPage() {
+            itemsPerPage = parseInt(document.getElementById('itemsPerPage')?.value || 25);
+            currentPage = 1;
+            renderContracts();
+        }
+
+        function goToPage(page) {
+            currentPage = page;
+            renderContracts();
+        }
+
         function renderContracts() {
             const container = document.getElementById('contractsList');
             const countEl = document.getElementById('contractsCount');
             const selector = document.getElementById('selectedContract');
             const selectorDiv = document.getElementById('contractSelector');
+            const paginationContainer = document.getElementById('paginationContainer');
             
-            // Verificar se os elementos existem
             if (!container || !countEl) {
                 console.warn('Elementos de contratos não encontrados');
                 return;
             }
+
+            // Inicializar filteredContracts se vazio
+            if (filteredContracts.length === 0 && contractsData.length > 0) {
+                filteredContracts = [...contractsData];
+            }
             
             if (contractsData.length === 0) {
                 container.innerHTML = `
-                    <div class="text-center py-4 text-dark-400">
+                    <div class="text-center py-6 text-dark-400">
+                        <svg class="w-12 h-12 mx-auto mb-3 text-dark-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
                         <p class="mb-3">Você ainda não tem contratos cadastrados.</p>
                         <button onclick="openContractModal()" class="btn-primary text-white px-4 py-2 rounded-lg text-sm">
                             Criar Primeiro Contrato
@@ -1003,17 +1114,23 @@
                     </div>
                 `;
                 countEl.textContent = 'Nenhum contrato cadastrado';
-                selectorDiv.classList.add('hidden');
+                if (selectorDiv) selectorDiv.classList.add('hidden');
+                if (paginationContainer) paginationContainer.classList.add('hidden');
                 return;
             }
 
-            countEl.textContent = `${contractsData.length} contrato(s) cadastrado(s)`;
-            
-            if (selectorDiv) {
-                selectorDiv.classList.remove('hidden');
-            }
+            // Calcular paginação
+            const totalItems = filteredContracts.length;
+            const totalPages = Math.ceil(totalItems / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+            const paginatedContracts = filteredContracts.slice(startIndex, endIndex);
 
-            // Limpar e preencher seletor
+            countEl.textContent = `${totalItems} contrato(s) ${totalItems !== contractsData.length ? `(filtrado de ${contractsData.length})` : ''}`;
+            
+            if (selectorDiv) selectorDiv.classList.remove('hidden');
+
+            // Preencher seletor
             if (selector) {
                 selector.innerHTML = '<option value="">Selecione um contrato para carregar dados...</option>';
                 contractsData.forEach(contract => {
@@ -1025,55 +1142,162 @@
                 });
             }
 
-            // Renderizar lista
-            container.innerHTML = contractsData.map(contract => {
-                const statusColors = {
-                    'draft': 'bg-dark-500/20 text-dark-300 border-dark-500/30',
-                    'active': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-                    'terminated': 'bg-rose-500/20 text-rose-300 border-rose-500/30'
-                };
-                const statusLabels = {
-                    'draft': 'Rascunho',
-                    'active': 'Ativo',
-                    'terminated': 'Encerrado'
-                };
-                const createdDate = new Date(contract.created_at).toLocaleDateString('pt-BR');
+            const statusColors = {
+                'draft': 'bg-amber-500/20 text-amber-300',
+                'active': 'bg-emerald-500/20 text-emerald-300',
+                'terminated': 'bg-rose-500/20 text-rose-300'
+            };
+            const statusLabels = {
+                'draft': 'Rascunho',
+                'active': 'Ativo',
+                'terminated': 'Encerrado'
+            };
+
+            // Renderizar tabela
+            container.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-dark-700 text-dark-400 text-xs uppercase">
+                                <th class="text-left py-2 px-3 font-medium">Nome</th>
+                                <th class="text-left py-2 px-3 font-medium hidden md:table-cell">Código</th>
+                                <th class="text-center py-2 px-3 font-medium hidden sm:table-cell">Cat.</th>
+                                <th class="text-center py-2 px-3 font-medium">Status</th>
+                                <th class="text-left py-2 px-3 font-medium hidden lg:table-cell">ID Versão</th>
+                                <th class="text-left py-2 px-3 font-medium hidden lg:table-cell">Período</th>
+                                <th class="text-right py-2 px-3 font-medium hidden md:table-cell">Valor VP</th>
+                                <th class="text-center py-2 px-3 font-medium">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${paginatedContracts.map(contract => {
+                                const createdDate = new Date(contract.created_at).toLocaleDateString('pt-BR');
+                                const lastVersion = contract.last_version || {};
+                                const periodo = lastVersion.data_inicio && lastVersion.prazo_meses 
+                                    ? `${lastVersion.data_inicio} (${lastVersion.prazo_meses}m)` 
+                                    : '-';
+                                const valorVP = lastVersion.total_vp 
+                                    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lastVersion.total_vp)
+                                    : '-';
+                                const versionId = lastVersion.version_id || '-';
+                                const categoria = contract.categoria || 'OT';
+                                
+                                return `
+                                    <tr class="border-b border-dark-800 hover:bg-dark-800/50 transition-colors cursor-pointer" onclick="selectContractRow('${contract.id}')">
+                                        <td class="py-2.5 px-3">
+                                            <div class="flex flex-col">
+                                                <span class="text-white font-medium truncate max-w-[200px]" title="${contract.name}">${contract.name}</span>
+                                                <span class="text-dark-500 text-xs">${createdDate}</span>
+                                            </div>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-dark-400 hidden md:table-cell">
+                                            ${contract.contract_code || '-'}
+                                        </td>
+                                        <td class="py-2.5 px-3 text-center hidden sm:table-cell">
+                                            <span class="px-1.5 py-0.5 rounded text-xs bg-dark-700 text-dark-300" title="${{'IM':'Imóvel','VE':'Veículo','EQ':'Equipamento','PC':'Computadores','OT':'Outros'}[categoria] || 'Outros'}">
+                                                ${categoria}
+                                            </span>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-center">
+                                            <span class="px-2 py-0.5 rounded text-xs ${statusColors[contract.status] || statusColors['draft']}">
+                                                ${statusLabels[contract.status] || 'Rascunho'}
+                                            </span>
+                                        </td>
+                                        <td class="py-2.5 px-3 text-primary-400 font-mono text-xs hidden lg:table-cell">
+                                            ${versionId}
+                                        </td>
+                                        <td class="py-2.5 px-3 text-dark-400 text-xs hidden lg:table-cell">
+                                            ${periodo}
+                                        </td>
+                                        <td class="py-2.5 px-3 text-right text-primary-400 font-mono text-xs hidden md:table-cell">
+                                            ${valorVP}
+                                        </td>
+                                        <td class="py-2.5 px-3" onclick="event.stopPropagation()">
+                                            <div class="flex justify-center gap-1">
+                                                <button onclick="verHistoricoVersoes('${contract.id}')" class="text-amber-400 hover:text-amber-300 p-1" title="Histórico">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                </button>
+                                                <button onclick="editContract('${contract.id}')" class="text-primary-400 hover:text-primary-300 p-1" title="Editar">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                                                    </svg>
+                                                </button>
+                                                <button onclick="deleteContract('${contract.id}')" class="text-rose-400 hover:text-rose-300 p-1" title="Excluir">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            // Renderizar paginação
+            if (paginationContainer && totalPages > 1) {
+                paginationContainer.classList.remove('hidden');
+                document.getElementById('paginationStart').textContent = startIndex + 1;
+                document.getElementById('paginationEnd').textContent = endIndex;
+                document.getElementById('paginationTotal').textContent = totalItems;
+
+                const buttonsContainer = document.getElementById('paginationButtons');
+                let buttonsHTML = '';
                 
-                return `
-                    <div class="bg-dark-900/50 border border-dark-700 rounded-lg p-3 hover:border-primary-500/50 transition-colors">
-                        <div class="flex items-start justify-between">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2 mb-1">
-                                    <h3 class="text-white font-medium text-sm">${contract.name}</h3>
-                                    <span class="px-2 py-0.5 rounded text-xs border ${statusColors[contract.status]}">
-                                        ${statusLabels[contract.status]}
-                                    </span>
-                                </div>
-                                ${contract.description ? `<p class="text-dark-400 text-xs mb-1">${contract.description}</p>` : ''}
-                                ${contract.contract_code ? `<p class="text-dark-500 text-xs">Código: ${contract.contract_code}</p>` : ''}
-                                <p class="text-dark-500 text-xs mt-1">Criado em ${createdDate}</p>
-                            </div>
-                            <div class="flex gap-1 ml-3">
-                                <button onclick="verHistoricoVersoes('${contract.id}')" class="text-amber-400 hover:text-amber-300 p-1.5" title="Histórico de Versões">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                </button>
-                                <button onclick="editContract('${contract.id}')" class="text-primary-400 hover:text-primary-300 p-1.5" title="Editar">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                    </svg>
-                                </button>
-                                <button onclick="deleteContract('${contract.id}')" class="text-rose-400 hover:text-rose-300 p-1.5" title="Excluir">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
+                // Botão anterior
+                buttonsHTML += `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} 
+                    class="px-2 py-1 rounded text-xs ${currentPage === 1 ? 'text-dark-600 cursor-not-allowed' : 'text-dark-300 hover:bg-dark-700'}">
+                    ← Ant
+                </button>`;
+
+                // Páginas
+                const maxButtons = 5;
+                let startPage = Math.max(1, currentPage - Math.floor(maxButtons / 2));
+                let endPage = Math.min(totalPages, startPage + maxButtons - 1);
+                if (endPage - startPage < maxButtons - 1) {
+                    startPage = Math.max(1, endPage - maxButtons + 1);
+                }
+
+                if (startPage > 1) {
+                    buttonsHTML += `<button onclick="goToPage(1)" class="px-2 py-1 rounded text-xs text-dark-300 hover:bg-dark-700">1</button>`;
+                    if (startPage > 2) buttonsHTML += `<span class="px-1 text-dark-500">...</span>`;
+                }
+
+                for (let i = startPage; i <= endPage; i++) {
+                    buttonsHTML += `<button onclick="goToPage(${i})" 
+                        class="px-2 py-1 rounded text-xs ${i === currentPage ? 'bg-primary-500 text-white' : 'text-dark-300 hover:bg-dark-700'}">
+                        ${i}
+                    </button>`;
+                }
+
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) buttonsHTML += `<span class="px-1 text-dark-500">...</span>`;
+                    buttonsHTML += `<button onclick="goToPage(${totalPages})" class="px-2 py-1 rounded text-xs text-dark-300 hover:bg-dark-700">${totalPages}</button>`;
+                }
+
+                // Botão próximo
+                buttonsHTML += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} 
+                    class="px-2 py-1 rounded text-xs ${currentPage === totalPages ? 'text-dark-600 cursor-not-allowed' : 'text-dark-300 hover:bg-dark-700'}">
+                    Próx →
+                </button>`;
+
+                buttonsContainer.innerHTML = buttonsHTML;
+            } else if (paginationContainer) {
+                paginationContainer.classList.add('hidden');
+            }
+        }
+
+        function selectContractRow(contractId) {
+            const selector = document.getElementById('selectedContract');
+            if (selector) {
+                selector.value = contractId;
+                loadContractData();
+            }
         }
 
         function openContractModal(contractId = null) {
@@ -1107,14 +1331,19 @@
                     const nameInput = document.getElementById('contractName');
                     const descInput = document.getElementById('contractDescription');
                     const codeInput = document.getElementById('contractCode');
+                    const categoriaInput = document.getElementById('contractCategoria');
                     const statusInput = document.getElementById('contractStatus');
                     if (nameInput) nameInput.value = contract.name;
                     if (descInput) descInput.value = contract.description || '';
                     if (codeInput) codeInput.value = contract.contract_code || '';
+                    if (categoriaInput) categoriaInput.value = contract.categoria || 'OT';
                     if (statusInput) statusInput.value = contract.status;
                 }
             } else {
                 title.textContent = 'Novo Contrato';
+                // Reset categoria para OT ao criar novo
+                const categoriaInput = document.getElementById('contractCategoria');
+                if (categoriaInput) categoriaInput.value = 'OT';
             }
             
             modal.classList.remove('hidden');
@@ -1138,6 +1367,7 @@
                 name: document.getElementById('contractName').value,
                 description: document.getElementById('contractDescription').value || null,
                 contract_code: document.getElementById('contractCode').value || null,
+                categoria: document.getElementById('contractCategoria').value || 'OT',
                 status: document.getElementById('contractStatus').value
             };
 
@@ -1212,7 +1442,7 @@
             }
         }
 
-        function loadContractData() {
+        async function loadContractData() {
             const selector = document.getElementById('selectedContract');
             if (!selector) return;
 
@@ -1228,6 +1458,130 @@
             }
             currentContractId = contractId;
             console.log('Contrato selecionado:', contractId);
+
+            // Buscar versões do contrato
+            const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${CONFIG.API_URL}/api/contracts/${contractId}/versions`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const versions = data.versions || [];
+                    
+                    if (versions.length > 0) {
+                        // Pegar a última versão (primeira da lista, pois está ordenada DESC)
+                        const lastVersion = versions[0];
+                        console.log('Última versão carregada:', lastVersion);
+                        
+                        // Preencher campos de premissas
+                        preencherPremissas(lastVersion);
+                        
+                        // Mostrar botões de processar/arquivar
+                        const btnProcessar = document.getElementById('btnProcessarContrato');
+                        const btnArquivar = document.getElementById('btnArquivarVersao');
+                        if (btnProcessar) btnProcessar.classList.remove('hidden');
+                        if (btnArquivar) btnArquivar.classList.remove('hidden');
+                        
+                        // Recalcular para atualizar tabelas
+                        if (typeof calcular === 'function') {
+                            calcular();
+                        }
+                    } else {
+                        console.log('Contrato sem versões, mantendo campos atuais');
+                        // Mostrar apenas botão de processar para criar primeira versão
+                        const btnProcessar = document.getElementById('btnProcessarContrato');
+                        if (btnProcessar) btnProcessar.classList.remove('hidden');
+                    }
+                }
+            } catch (error) {
+                console.error('Erro ao carregar versões:', error);
+            }
+        }
+
+        function preencherPremissas(version) {
+            // Preencher campos de premissas com dados da versão
+            const dataInicio = document.getElementById('dataInicio');
+            const prazoMeses = document.getElementById('prazoMeses');
+            const carenciaMeses = document.getElementById('carenciaMeses');
+            const parcelaInicial = document.getElementById('parcelaInicial');
+            const taxaAnual = document.getElementById('taxaAnual');
+            const reajusteTipo = document.getElementById('reajusteTipo');
+            const reajusteAnual = document.getElementById('reajusteAnual');
+            const mesReajuste = document.getElementById('mesReajuste');
+
+            if (dataInicio && version.data_inicio) {
+                dataInicio.value = version.data_inicio;
+            }
+            if (prazoMeses && version.prazo_meses) {
+                prazoMeses.value = version.prazo_meses;
+            }
+            if (carenciaMeses && version.carencia_meses !== undefined) {
+                carenciaMeses.value = version.carencia_meses;
+            }
+            if (parcelaInicial && version.parcela_inicial) {
+                parcelaInicial.value = version.parcela_inicial;
+            }
+            if (taxaAnual && version.taxa_desconto_anual) {
+                taxaAnual.value = version.taxa_desconto_anual;
+            }
+            if (reajusteTipo && version.reajuste_tipo) {
+                reajusteTipo.value = version.reajuste_tipo;
+                // Disparar evento de change para atualizar UI
+                if (typeof handleReajusteChange === 'function') {
+                    handleReajusteChange();
+                }
+            }
+            if (reajusteAnual && version.reajuste_valor !== null) {
+                reajusteAnual.value = version.reajuste_valor;
+            }
+            if (mesReajuste && version.mes_reajuste) {
+                mesReajuste.value = version.mes_reajuste;
+            }
+
+            // Se tiver resultados_json salvos, carregar nas tabelas
+            if (version.resultados_json) {
+                carregarResultadosSalvos(version.resultados_json);
+            }
+        }
+
+        function carregarResultadosSalvos(resultados) {
+            // Salvar os resultados na variável global para uso nas tabelas
+            if (typeof dadosCalculados !== 'undefined') {
+                dadosCalculados = resultados;
+            }
+            
+            // Atualizar resumo se existir
+            if (resultados.resumo) {
+                const resumo = resultados.resumo;
+                const totalVPEl = document.getElementById('totalVP');
+                const totalNominalEl = document.getElementById('totalNominal');
+                const avpEl = document.getElementById('avp');
+                
+                if (totalVPEl) totalVPEl.textContent = formatarMoeda(resumo.totalVP || 0);
+                if (totalNominalEl) totalNominalEl.textContent = formatarMoeda(resumo.totalNominal || 0);
+                if (avpEl) avpEl.textContent = formatarMoeda(resumo.avp || 0);
+            }
+
+            // Atualizar tabela de fluxo de caixa
+            if (resultados.fluxoCaixa && typeof renderizarFluxoCaixa === 'function') {
+                renderizarFluxoCaixa(resultados.fluxoCaixa);
+            }
+
+            // Atualizar tabela de contabilização
+            if (resultados.contabilizacao && typeof renderizarContabilizacao === 'function') {
+                renderizarContabilizacao(resultados.contabilizacao);
+            }
+        }
+
+        function formatarMoeda(valor) {
+            return new Intl.NumberFormat('pt-BR', { 
+                style: 'currency', 
+                currency: 'BRL' 
+            }).format(valor);
         }
 
         // ========================================

@@ -399,17 +399,36 @@
                         const data = await response.json();
                         const versions = data.versions || [];
                         
+                        console.log('=== VERSIONS RESPONSE ===');
+                        console.log('Contract ID:', contractId);
+                        console.log('Versions count:', versions.length);
+                        
                         if (versions.length > 0) {
                             const version = versions[0]; // Última versão
                             const contrato = contratosData.find(c => c.id === contractId);
+                            
+                            console.log('Version object:', version);
+                            console.log('resultados_json type:', typeof version.resultados_json);
+                            console.log('resultados_json value:', version.resultados_json);
                             
                             totalVP += version.total_vp || 0;
                             totalNominal += version.total_nominal || 0;
                             totalAVP += version.avp || 0;
 
                             // Processar resultados_json para encontrar o mês
-                            if (version.resultados_json) {
-                                const resultados = version.resultados_json;
+                            // Pode vir como string ou objeto dependendo do banco
+                            let resultados = version.resultados_json;
+                            if (typeof resultados === 'string') {
+                                try {
+                                    resultados = JSON.parse(resultados);
+                                } catch (e) {
+                                    console.error('Erro ao parsear resultados_json:', e);
+                                    resultados = null;
+                                }
+                            }
+                            
+                            if (resultados) {
+                                const resultadosObj = resultados;
                                 const fluxo = resultados.fluxoCaixa || [];
                                 const contab = resultados.contabilizacao || [];
 

@@ -413,13 +413,25 @@
                                 const fluxo = resultados.fluxoCaixa || [];
                                 const contab = resultados.contabilizacao || [];
 
+                                // Debug: ver estrutura dos dados
+                                console.log('=== DEBUG RELATÓRIOS ===');
+                                console.log('Contrato:', contrato?.name);
+                                console.log('resultados_json:', resultados);
+                                console.log('fluxoCaixa length:', fluxo.length);
+                                console.log('contabilizacao length:', contab.length);
+                                if (fluxo.length > 0) console.log('Exemplo fluxo[0]:', fluxo[0]);
+                                if (contab.length > 0) console.log('Exemplo contab[0]:', contab[0]);
+
                                 // Meses em português para parsing
                                 const mesesPT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
                                 const competenciaStr = `${mesesPT[mes - 1]}/${ano}`;
+                                console.log('Buscando competência:', competenciaStr);
 
                                 // Encontrar linha do mês pela string de data (formato "Jan/2025")
                                 const linhaFluxo = fluxo.find(f => f.data === competenciaStr);
                                 const linhaContab = contab.find(c => c.data === competenciaStr);
+                                console.log('linhaFluxo encontrada:', linhaFluxo);
+                                console.log('linhaContab encontrada:', linhaContab);
 
                                 if (linhaFluxo || linhaContab) {
                                     // Calcular amortização = pagamento - juros

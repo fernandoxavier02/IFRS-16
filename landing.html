@@ -3,15 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Engine IFRS 16 | A Revolução na Gestão de Arrendamentos</title>
-    <meta name="description" content="Transforme complexidade em potência. A plataforma de IA mais avançada para conformidade IFRS 16 / CPC 06 (R2). Automatize, elimine erros e acelere sua auditoria.">
-    
+    <title>Engine IFRS 16 | Transforme Complexidade em Potência</title>
+    <meta name="description" content="O motor de inteligência artificial para sua conformidade contábil IFRS 16 / CPC 06 (R2). Automatize cálculos, elimine erros e acelere sua auditoria.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script async src="https://js.stripe.com/v3/pricing-table.js"></script>
     <style>
         * {
             margin: 0;
@@ -20,416 +17,472 @@
         }
 
         :root {
-            --primary: #00d4ff;
-            --primary-dark: #0099cc;
-            --secondary: #b829dd;
-            --accent: #00fff7;
-            --dark: #0a0e17;
+            --neon-blue: #00d4ff;
+            --neon-cyan: #00fff7;
+            --neon-purple: #b829dd;
+            --neon-magenta: #ff00ff;
+            --dark-bg: #0a0e17;
             --dark-card: #0d1321;
             --dark-border: #1a2332;
             --text-primary: #ffffff;
             --text-secondary: #8892a4;
-            --success: #22c55e;
-            --warning: #f59e0b;
+            --glow-blue: 0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3);
+            --glow-purple: 0 0 20px rgba(184, 41, 221, 0.5), 0 0 40px rgba(184, 41, 221, 0.3);
         }
 
         html {
             scroll-behavior: smooth;
-            overflow-x: hidden;
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--dark);
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--dark-bg);
             color: var(--text-primary);
-            line-height: 1.6;
             overflow-x: hidden;
+            line-height: 1.6;
         }
 
-        .animated-bg {
+        /* Circuit Pattern Background */
+        .circuit-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
+            pointer-events: none;
             z-index: 0;
-            background: linear-gradient(135deg, #0a0e17 0%, #0d1a2d 50%, #0a0e17 100%);
+            opacity: 0.15;
+            background-image: 
+                linear-gradient(90deg, var(--neon-blue) 1px, transparent 1px),
+                linear-gradient(var(--neon-blue) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 0%, transparent 70%);
         }
 
-        .animated-bg::before {
-            content: '';
+        /* Animated Particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-cyan);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--neon-cyan);
+            animation: float 15s infinite;
+            opacity: 0.6;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(100vh) translateX(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-100vh) translateX(100px); opacity: 0; }
+        }
+
+        /* Geometric Shapes */
+        .hero-shapes {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-image: 
-                linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-            background-size: 60px 60px;
-            animation: grid-move 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
         }
 
-        @keyframes grid-move {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(60px, 60px); }
-        }
-
-        .gradient-orb {
+        .shape {
             position: absolute;
+            opacity: 0.15;
+            filter: blur(40px);
+        }
+
+        .shape-circle {
             border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.3;
-            animation: float 20s ease-in-out infinite;
+            background: radial-gradient(circle, var(--neon-cyan), transparent);
         }
 
-        .orb-1 {
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
-            top: -200px;
-            right: -200px;
-            animation-delay: 0s;
+        .shape-triangle {
+            width: 0;
+            height: 0;
+            border-style: solid;
         }
 
-        .orb-2 {
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, var(--secondary) 0%, transparent 70%);
-            bottom: -150px;
-            left: -150px;
-            animation-delay: 5s;
+        .shape-square {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            border-radius: 20px;
         }
 
-        .orb-3 {
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
-            top: 50%;
-            left: 50%;
-            animation-delay: 10s;
+        @keyframes float-shape {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(30px, -30px) rotate(90deg); }
+            50% { transform: translate(0, -60px) rotate(180deg); }
+            75% { transform: translate(-30px, -30px) rotate(270deg); }
         }
 
-        @keyframes float {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(50px, -50px) scale(1.1); }
-            66% { transform: translate(-50px, 50px) scale(0.9); }
+        @keyframes pulse-shape {
+            0%, 100% { transform: scale(1); opacity: 0.15; }
+            50% { transform: scale(1.2); opacity: 0.25; }
         }
 
+        @keyframes rotate-shape {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Main Container */
+        .container {
+            position: relative;
+            z-index: 10;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Navigation */
         nav {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 1000;
+            padding: 20px 0;
             background: rgba(10, 14, 23, 0.8);
             backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(0, 212, 255, 0.1);
         }
 
-        nav.scrolled {
-            background: rgba(10, 14, 23, 0.95);
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        }
-
-        .nav-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 1rem 2rem;
+        nav .container {
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .logo {
+        .nav-logo {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            text-decoration: none;
+            gap: 12px;
         }
 
-        .logo img {
-            height: 50px;
+        .nav-logo img {
+            height: 56px;
             width: auto;
-            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.4));
+            filter: drop-shadow(0 0 8px rgba(0, 212, 255, 0.4));
         }
 
-        .logo-text {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo-text h1 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            font-family: 'Space Grotesk', sans-serif;
-            color: var(--text-primary);
-            line-height: 1;
-        }
-
-        .logo-text p {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
+        .nav-logo span {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.3rem;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-cyan), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
         }
 
         .nav-links {
             display: flex;
-            gap: 2rem;
-            list-style: none;
+            gap: 32px;
             align-items: center;
         }
 
         .nav-links a {
             color: var(--text-secondary);
             text-decoration: none;
+            font-size: 0.9rem;
             font-weight: 500;
-            transition: color 0.3s ease;
+            transition: all 0.3s ease;
             position: relative;
-        }
-
-        .nav-links a::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: var(--primary);
-            transition: width 0.3s ease;
         }
 
         .nav-links a:hover {
-            color: var(--text-primary);
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
         }
 
-        .nav-links a:hover::after {
-            width: 100%;
-        }
-
-        .cta-nav {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 0.75rem 2rem;
-            border-radius: 50px;
-            text-decoration: none;
+        .btn-nav {
+            padding: 10px 24px;
+            border-radius: 8px;
             font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.3);
         }
 
-        .cta-nav:hover {
+        .btn-nav-outline {
+            border: 1px solid var(--neon-blue);
+            color: var(--neon-blue);
+            background: transparent;
+        }
+
+        .btn-nav-outline:hover {
+            background: rgba(0, 212, 255, 0.1);
+            box-shadow: var(--glow-blue);
+        }
+
+        .btn-nav-primary {
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            border: none;
+        }
+
+        .btn-nav-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
+            box-shadow: var(--glow-blue);
         }
 
+        /* Hero Section */
         .hero {
-            position: relative;
             min-height: 100vh;
             display: flex;
             align-items: center;
-            padding: 8rem 2rem 4rem;
-            overflow: hidden;
-        }
-
-        .hero-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            align-items: center;
+            justify-content: center;
+            padding: 120px 0 80px;
             position: relative;
-            z-index: 10;
+            overflow: hidden;
+            background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.03) 0%, transparent 70%);
         }
 
-        .hero-content h1 {
-            font-size: 4.5rem;
-            font-weight: 900;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            font-family: 'Space Grotesk', sans-serif;
-            background: linear-gradient(135deg, var(--text-primary), var(--primary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: fade-in-up 0.8s ease-out;
-        }
-
-        .hero-content .subtitle {
-            font-size: 1.5rem;
-            color: var(--text-secondary);
-            margin-bottom: 2rem;
-            animation: fade-in-up 0.8s ease-out 0.2s both;
-        }
-
-        .hero-content .highlight {
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .hero-stats {
-            display: flex;
-            gap: 3rem;
-            margin: 3rem 0;
-            animation: fade-in-up 0.8s ease-out 0.4s both;
-        }
-
-        .stat {
+        .hero-content {
             text-align: center;
+            max-width: 900px;
+            position: relative;
+            z-index: 2;
         }
 
-        .stat-number {
-            font-size: 3rem;
+        .hero-logo {
+            width: 400px;
+            max-width: 90%;
+            margin: 0 auto 40px;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5)); }
+            50% { filter: drop-shadow(0 0 40px rgba(0, 212, 255, 0.8)) drop-shadow(0 0 60px rgba(184, 41, 221, 0.4)); }
+        }
+
+        .hero h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(2rem, 5vw, 3.5rem);
             font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            line-height: 1.2;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, var(--neon-cyan) 50%, var(--neon-purple) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            font-family: 'Space Grotesk', sans-serif;
+            background-clip: text;
         }
 
-        .stat-label {
+        .hero p {
+            font-size: 1.25rem;
             color: var(--text-secondary);
-            font-size: 0.9rem;
-            margin-top: 0.5rem;
+            margin-bottom: 40px;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .hero-cta {
             display: flex;
-            gap: 1.5rem;
-            margin-top: 2rem;
-            animation: fade-in-up 0.8s ease-out 0.6s both;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: linear-gradient(135deg, var(--neon-blue) 0%, var(--neon-purple) 100%);
             color: white;
-            padding: 1.25rem 3rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 10px 40px rgba(0, 212, 255, 0.3);
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
+            box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
         }
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 50px rgba(0, 212, 255, 0.5);
+            box-shadow: 0 8px 30px rgba(0, 212, 255, 0.6), var(--glow-blue);
         }
 
         .btn-secondary {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            color: white;
-            padding: 1.25rem 3rem;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            display: inline-flex;
-            align-items: center;
-            gap: 0.75rem;
+            background: transparent;
+            color: var(--neon-cyan);
+            border: 2px solid var(--neon-cyan);
         }
 
         .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: var(--primary);
+            background: rgba(0, 255, 247, 0.1);
+            box-shadow: var(--glow-blue);
         }
 
-        .hero-visual {
+        /* Problem vs Solution Section */
+        .problem-solution {
+            padding: 100px 0;
             position: relative;
-            animation: fade-in-up 0.8s ease-out 0.4s both;
         }
 
-        .video-container {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: var(--dark-card);
-        }
-
-        .video-container video {
-            width: 100%;
-            display: block;
-        }
-
-        .video-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(184, 41, 221, 0.1));
-            pointer-events: none;
-        }
-
-        .features {
-            position: relative;
-            padding: 8rem 2rem;
-            z-index: 10;
-        }
-
-        .section-header {
+        .section-title {
             text-align: center;
-            max-width: 800px;
-            margin: 0 auto 5rem;
+            margin-bottom: 60px;
         }
 
-        .section-badge {
-            display: inline-block;
-            padding: 0.5rem 1.5rem;
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 50px;
-            color: var(--primary);
-            font-weight: 600;
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .section-title h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .section-header h2 {
-            font-size: 3.5rem;
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            font-family: 'Space Grotesk', sans-serif;
-            line-height: 1.2;
-        }
-
-        .section-header p {
-            font-size: 1.25rem;
+        .section-title p {
             color: var(--text-secondary);
-            line-height: 1.8;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 40px;
+            align-items: center;
+        }
+
+        @media (max-width: 900px) {
+            .comparison-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+        }
+
+        .comparison-card {
+            padding: 40px;
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .comparison-card.before {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 1px solid #2d3748;
+        }
+
+        .comparison-card.after {
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--neon-blue);
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .comparison-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .comparison-card.before h3 {
+            color: #ef4444;
+        }
+
+        .comparison-card.after h3 {
+            color: var(--neon-cyan);
+        }
+
+        .comparison-card ul {
+            list-style: none;
+        }
+
+        .comparison-card li {
+            padding: 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .comparison-card li:last-child {
+            border-bottom: none;
+        }
+
+        .comparison-card.before li::before {
+            content: "✗";
+            color: #ef4444;
+            font-weight: bold;
+        }
+
+        .comparison-card.after li::before {
+            content: "✓";
+            color: var(--neon-cyan);
+            font-weight: bold;
+        }
+
+        .vs-badge {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-purple), var(--neon-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1.2rem;
+            box-shadow: 0 0 30px rgba(184, 41, 221, 0.5);
+        }
+
+        @media (max-width: 900px) {
+            .vs-badge {
+                margin: 0 auto;
+            }
+        }
+
+        /* Features Section */
+        .features {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(0, 212, 255, 0.02) 50%, transparent 100%);
         }
 
         .features-grid {
-            max-width: 1400px;
-            margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
         }
 
         .feature-card {
-            background: rgba(13, 19, 33, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--dark-border);
             border-radius: 20px;
-            padding: 2.5rem;
-            transition: all 0.3s ease;
-            cursor: pointer;
+            padding: 40px;
             position: relative;
             overflow: hidden;
+            transition: all 0.4s ease;
         }
 
         .feature-card::before {
@@ -439,752 +492,878 @@
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
 
         .feature-card:hover {
-            transform: translateY(-10px);
-            border-color: rgba(0, 212, 255, 0.3);
-            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.2);
+            transform: translateY(-8px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.15);
         }
 
         .feature-card:hover::before {
-            transform: scaleX(1);
+            opacity: 1;
         }
 
         .feature-icon {
-            width: 70px;
-            height: 70px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 15px;
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            background: linear-gradient(145deg, rgba(0, 212, 255, 0.15), rgba(184, 41, 221, 0.15));
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 1.5rem;
-            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+            margin-bottom: 24px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            box-shadow: 
+                0 8px 32px rgba(0, 212, 255, 0.2),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-icon::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .feature-card:hover .feature-icon::before {
+            left: 100%;
         }
 
         .feature-icon svg {
-            width: 35px;
-            height: 35px;
-            stroke: white;
-            fill: none;
+            width: 40px;
+            height: 40px;
+            filter: drop-shadow(0 0 8px currentColor);
+        }
+
+        .icon-3d {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .icon-3d {
+            transform: rotateY(10deg) rotateX(-5deg) scale(1.1);
         }
 
         .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 1rem;
-            font-weight: 700;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
         }
 
         .feature-card p {
             color: var(--text-secondary);
-            line-height: 1.8;
-            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.7;
         }
 
-        .feature-image {
-            width: 100%;
-            border-radius: 12px;
-            margin-top: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease;
+        /* Compliance Section */
+        .compliance {
+            padding: 100px 0;
         }
 
-        .feature-card:hover .feature-image {
-            transform: scale(1.05);
-        }
-
-        .demo-section {
-            position: relative;
-            padding: 8rem 2rem;
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.05), rgba(184, 41, 221, 0.05));
-            z-index: 10;
-        }
-
-        .demo-container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .demo-video-large {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.6);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            margin-top: 3rem;
-        }
-
-        .demo-video-large video {
-            width: 100%;
-            display: block;
-        }
-
-        .gallery {
-            position: relative;
-            padding: 8rem 2rem;
-            z-index: 10;
-        }
-
-        .gallery-grid {
-            max-width: 1400px;
-            margin: 3rem auto 0;
+        .compliance-content {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 2rem;
-        }
-
-        .gallery-item {
-            position: relative;
-            border-radius: 20px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .gallery-item:hover {
-            transform: scale(1.05);
-            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
-            border-color: var(--primary);
-        }
-
-        .gallery-item img {
-            width: 100%;
-            display: block;
-            transition: transform 0.3s ease;
-        }
-
-        .gallery-item:hover img {
-            transform: scale(1.1);
-        }
-
-        .gallery-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 2rem;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
-            transform: translateY(100%);
-            transition: transform 0.3s ease;
-        }
-
-        .gallery-item:hover .gallery-overlay {
-            transform: translateY(0);
-        }
-
-        .gallery-overlay h4 {
-            font-size: 1.25rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .gallery-overlay p {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .pricing {
-            position: relative;
-            padding: 8rem 2rem;
-            z-index: 10;
-        }
-
-        .pricing-grid {
-            max-width: 1200px;
-            margin: 3rem auto 0;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 2rem;
-        }
-
-        .pricing-card {
-            background: rgba(13, 19, 33, 0.6);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 20px;
-            padding: 3rem;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-
-        .pricing-card.featured {
-            border-color: var(--primary);
-            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
-            transform: scale(1.05);
-        }
-
-        .pricing-card:hover {
-            transform: translateY(-10px) scale(1.02);
-            border-color: var(--primary);
-        }
-
-        .pricing-badge {
-            position: absolute;
-            top: -15px;
-            right: 30px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            text-transform: uppercase;
-        }
-
-        .pricing-card h3 {
-            font-size: 1.75rem;
-            margin-bottom: 1rem;
-        }
-
-        .pricing-price {
-            font-size: 3.5rem;
-            font-weight: 900;
-            margin: 1.5rem 0;
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .pricing-price span {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            font-weight: 400;
-        }
-
-        .pricing-features {
-            list-style: none;
-            margin: 2rem 0;
-        }
-
-        .pricing-features li {
-            padding: 0.75rem 0;
-            display: flex;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
             align-items: center;
-            gap: 0.75rem;
+        }
+
+        @media (max-width: 900px) {
+            .compliance-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .compliance-text h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff, var(--neon-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .compliance-text p {
             color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            line-height: 1.8;
         }
 
-        .pricing-features li svg {
-            width: 20px;
-            height: 20px;
-            stroke: var(--success);
-            flex-shrink: 0;
+        .compliance-list {
+            list-style: none;
         }
 
-        .cta-section {
-            position: relative;
-            padding: 8rem 2rem;
-            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(184, 41, 221, 0.1));
-            z-index: 10;
+        .compliance-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--dark-border);
         }
 
-        .cta-container {
-            max-width: 900px;
-            margin: 0 auto;
-            text-align: center;
-            background: rgba(13, 19, 33, 0.8);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 30px;
-            padding: 5rem 3rem;
+        .compliance-list li:last-child {
+            border-bottom: none;
         }
 
-        .cta-container h2 {
-            font-size: 3rem;
-            font-weight: 900;
-            margin-bottom: 1.5rem;
-            font-family: 'Space Grotesk', sans-serif;
-        }
-
-        .cta-container p {
-            font-size: 1.25rem;
-            color: var(--text-secondary);
-            margin-bottom: 3rem;
-        }
-
-        footer {
-            position: relative;
-            padding: 4rem 2rem 2rem;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            z-index: 10;
-        }
-
-        .footer-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            text-align: center;
-        }
-
-        .footer-logo {
+        .compliance-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.2), rgba(184, 41, 221, 0.2));
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            flex-shrink: 0;
+            font-size: 1.2rem;
         }
 
-        .footer-logo img {
-            height: 50px;
+        .compliance-list h4 {
+            font-weight: 600;
+            margin-bottom: 4px;
+            color: var(--text-primary);
+        }
+
+        .compliance-list p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .compliance-visual {
+            position: relative;
+        }
+
+        .compliance-card {
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--neon-blue);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 60px rgba(0, 212, 255, 0.15);
+        }
+
+        .compliance-card h3 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            margin-bottom: 24px;
+            color: var(--neon-cyan);
+            text-align: center;
+        }
+
+        .standard-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .standard-item {
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .standard-item:hover {
+            transform: scale(1.05);
+            box-shadow: var(--glow-blue);
+        }
+
+        .standard-item span {
+            display: block;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--neon-cyan);
+        }
+
+        .standard-item small {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        /* Pricing Section */
+        .pricing {
+            padding: 100px 0;
+            background: linear-gradient(180deg, transparent 0%, rgba(184, 41, 221, 0.02) 50%, transparent 100%);
+        }
+
+        .pricing-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .pricing-header h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #ffffff, var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .pricing-header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .stripe-container {
+            background: linear-gradient(135deg, var(--dark-card) 0%, #0a1628 100%);
+            border: 1px solid var(--dark-border);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 0 60px rgba(0, 0, 0, 0.3);
+        }
+
+        stripe-pricing-table {
+            width: 100%;
+        }
+
+        /* CTA Section */
+        .cta {
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .cta-content {
+            background: linear-gradient(135deg, rgba(0, 212, 255, 0.1) 0%, rgba(184, 41, 221, 0.1) 100%);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 30px;
+            padding: 80px 40px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), var(--neon-purple), transparent);
+        }
+
+        .cta h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: clamp(1.8rem, 4vw, 2.5rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            color: var(--text-secondary);
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Footer */
+        footer {
+            padding: 60px 0 30px;
+            border-top: 1px solid var(--dark-border);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .footer-brand {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .footer-brand img {
+            height: 70px;
             width: auto;
-            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.4));
+            filter: drop-shadow(0 0 12px rgba(0, 212, 255, 0.5));
         }
 
-        .footer-logo-text h2 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            font-family: 'Space Grotesk', sans-serif;
+        .footer-brand span {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--text-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        .footer-logo-text p {
-            font-size: 0.75rem;
+        .footer-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .footer-links a {
             color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
         }
 
-        .footer-container p {
+        .footer-links a:hover {
+            color: var(--neon-cyan);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid var(--dark-border);
             color: var(--text-secondary);
-            margin-top: 2rem;
+            font-size: 0.85rem;
         }
 
-        @keyframes fade-in-up {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
+        /* Animations */
         .fade-in {
-            animation: fade-in-up 0.8s ease-out;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
         }
 
-        @media (max-width: 1024px) {
-            .hero-container {
-                grid-template-columns: 1fr;
-                text-align: center;
-            }
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
 
-            .hero-content h1 {
-                font-size: 3.5rem;
-            }
-
-            .hero-cta {
-                justify-content: center;
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            nav .container {
+                flex-direction: column;
+                gap: 20px;
             }
 
             .nav-links {
-                display: none;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .hero-content h1 {
-                font-size: 2.5rem;
+                flex-wrap: wrap;
+                justify-content: center;
             }
 
-            .section-header h2 {
-                font-size: 2.5rem;
+            .hero {
+                padding: 140px 0 60px;
             }
 
-            .features-grid,
-            .gallery-grid,
-            .pricing-grid {
-                grid-template-columns: 1fr;
+            .hero-logo {
+                width: 280px;
             }
 
-            .hero-stats {
+            .hero-cta {
                 flex-direction: column;
-                gap: 2rem;
+                align-items: center;
+            }
+
+            .btn {
+                width: 100%;
+                max-width: 300px;
+                justify-content: center;
+            }
+
+            .stripe-container {
+                padding: 20px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
             }
         }
 
-        .reveal {
-            opacity: 0;
-            transform: translateY(50px);
-            transition: all 0.8s ease-out;
+        /* Glow effects on scroll */
+        .glow-line {
+            position: absolute;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--neon-blue), transparent);
+            animation: glow-move 3s ease-in-out infinite;
         }
 
-        .reveal.active {
-            opacity: 1;
-            transform: translateY(0);
+        @keyframes glow-move {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
         }
     </style>
 </head>
 <body>
-    <div class="animated-bg">
-        <div class="gradient-orb orb-1"></div>
-        <div class="gradient-orb orb-2"></div>
-        <div class="gradient-orb orb-3"></div>
+    <!-- Circuit Background -->
+    <div class="circuit-bg"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle" style="left: 10%; animation-delay: 0s;"></div>
+        <div class="particle" style="left: 20%; animation-delay: 2s;"></div>
+        <div class="particle" style="left: 30%; animation-delay: 4s;"></div>
+        <div class="particle" style="left: 50%; animation-delay: 1s;"></div>
+        <div class="particle" style="left: 70%; animation-delay: 3s;"></div>
+        <div class="particle" style="left: 80%; animation-delay: 5s;"></div>
+        <div class="particle" style="left: 90%; animation-delay: 2.5s;"></div>
     </div>
 
-    <nav id="navbar">
-        <div class="nav-container">
-            <a href="#" class="logo">
+    <!-- Navigation -->
+    <nav>
+        <div class="container">
+            <div class="nav-logo">
                 <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
-                <div class="logo-text">
-                    <h1>Engine IFRS 16</h1>
-                    <p>by FX Studio AI</p>
+                <div>
+                    <span>FX STUDIO AI</span>
+                    <p style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 2px;">by Fernando Xavier</p>
                 </div>
-            </a>
-            <ul class="nav-links">
-                <li><a href="#features">Recursos</a></li>
-                <li><a href="#demo">Demo</a></li>
-                <li><a href="#gallery">Galeria</a></li>
-                <li><a href="#pricing">Preços</a></li>
-                <li><a href="dashboard.html" class="cta-nav" style="background: linear-gradient(135deg, #22c55e, #16a34a); margin-right: 1rem;">Área do Cliente</a></li>
-                <li><a href="register.html" class="cta-nav">Registre-se</a></li>
-            </ul>
+            </div>
+            <div class="nav-links">
+                <a href="#features">Recursos</a>
+                <a href="#compliance">Compliance</a>
+                <a href="#pricing">Planos</a>
+                <a href="dashboard.html" class="btn-nav btn-nav-outline" style="background: linear-gradient(135deg, #22c55e, #16a34a); border-color: #22c55e;">Área do Cliente</a>
+                <a href="register.html" class="btn-nav btn-nav-outline">Registre-se</a>
+                <a href="#pricing" class="btn-nav btn-nav-primary">Assinar Agora</a>
+            </div>
         </div>
     </nav>
 
+    <!-- Hero Section -->
     <section class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1>Transforme Complexidade em <span class="highlight">Potência</span></h1>
-                <p class="subtitle">
-                    A plataforma de IA mais avançada para conformidade <strong>IFRS 16 / CPC 06 (R2)</strong>. 
-                    Automatize cálculos, elimine erros e acelere sua auditoria.
-                </p>
-
-                <div class="hero-stats">
-                    <div class="stat">
-                        <div class="stat-number">100%</div>
-                        <div class="stat-label">Conforme IFRS 16</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">10x</div>
-                        <div class="stat-label">Mais Rápido</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-number">0</div>
-                        <div class="stat-label">Erros Manuais</div>
-                    </div>
-                </div>
-
+        <!-- Animated Geometric Shapes -->
+        <div class="hero-shapes">
+            <div class="shape shape-circle" style="width: 300px; height: 300px; top: 10%; left: 5%; animation: float-shape 20s ease-in-out infinite;"></div>
+            <div class="shape shape-circle" style="width: 200px; height: 200px; top: 60%; right: 10%; animation: pulse-shape 15s ease-in-out infinite;"></div>
+            <div class="shape shape-square" style="width: 150px; height: 150px; top: 30%; right: 15%; animation: rotate-shape 25s linear infinite;"></div>
+            <div class="shape shape-square" style="width: 250px; height: 250px; bottom: 10%; left: 15%; animation: float-shape 18s ease-in-out infinite reverse;"></div>
+            <div class="shape shape-circle" style="width: 180px; height: 180px; top: 50%; left: 50%; animation: pulse-shape 12s ease-in-out infinite;"></div>
+        </div>
+        
+        <div class="container">
+            <div class="hero-content fade-in">
+                <img src="logo/Gemini_Generated_Image_5mhc5l5mhc5l5mhc.png" alt="Engine IFRS 16" class="hero-logo">
+                <h1>Transforme a Complexidade do IFRS 16 em Potência Pura</h1>
+                <p>Abandone planilhas estáticas. O Engine IFRS 16 processa, calcula e automatiza seus contratos de arrendamento com velocidade de IA e precisão de auditoria.</p>
                 <div class="hero-cta">
-                    <a href="register.html" class="btn-primary">
-                        Registre-se
-                        <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                        </svg>
+                    <a href="#pricing" class="btn btn-primary">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                        LIGAR OS MOTORES
                     </a>
-                    <a href="#demo" class="btn-secondary">
-                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                            <path d="M8 5v14l11-7z"></path>
-                        </svg>
-                        Ver Demo
+                    <a href="#features" class="btn btn-secondary">
+                        Explorar Recursos
                     </a>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="hero-visual">
-                <div class="video-container">
-                    <video autoplay muted loop playsinline>
-                        <source src="media/videos/Gravando 2025-12-19 184622.mp4" type="video/mp4">
+    <!-- Problem vs Solution -->
+    <section class="problem-solution">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Repositórios são Passivos. O Engine é Ativo.</h2>
+                <p>Chega de perder horas em cálculos manuais propensos a erros.</p>
+            </div>
+            <div class="comparison-grid">
+                <div class="comparison-card before fade-in">
+                    <h3>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        O Problema
+                    </h3>
+                    <ul>
+                        <li>Planilhas complexas e propensas a erros</li>
+                        <li>Horas perdidas em cálculos manuais</li>
+                        <li>Risco de não conformidade em auditorias</li>
+                        <li>Dificuldade em rastrear modificações</li>
+                        <li>Relatórios inconsistentes</li>
+                    </ul>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="comparison-card after fade-in">
+                    <h3>
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                        A Solução
+                    </h3>
+                    <ul>
+                        <li>Cálculos automáticos com precisão de IA</li>
+                        <li>Processamento em segundos, não horas</li>
+                        <li>100% aderente ao IFRS 16 / CPC 06</li>
+                        <li>Histórico completo de versões</li>
+                        <li>Relatórios prontos para auditoria</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Funcionalidades Turbo</h2>
+                <p>Tecnologia de ponta para sua conformidade contábil</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a4 4 0 0 1 4 4v1a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2V6a4 4 0 0 1 4-4z"/>
+                            <path d="M10 10v4a2 2 0 1 0 4 0v-4"/>
+                            <path d="M8 18h8"/>
+                            <path d="M10 22h4"/>
+                            <circle cx="12" cy="6" r="1" fill="var(--neon-purple)"/>
+                        </svg>
+                    </div>
+                    <h3>Núcleo de Inteligência</h3>
+                    <p>Algoritmos avançados calculam automaticamente valor presente, depreciação, juros e todos os componentes do IFRS 16 com precisão absoluta.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="rgba(0,212,255,0.2)"/>
+                        </svg>
+                    </div>
+                    <h3>Velocidade de Processamento</h3>
+                    <p>De dados brutos a relatórios completos em segundos. Processe centenas de contratos simultaneamente sem perda de performance.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" fill="rgba(184,41,221,0.1)"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                            <circle cx="12" cy="16" r="1" fill="var(--neon-purple)"/>
+                        </svg>
+                    </div>
+                    <h3>Segurança de Ponta</h3>
+                    <p>Seus dados blindados em infraestrutura cloud de última geração. Criptografia end-to-end e backups automáticos.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 3v18h18"/>
+                            <path d="M18 17V9"/>
+                            <path d="M13 17V5"/>
+                            <path d="M8 17v-3"/>
+                            <rect x="6" y="14" width="4" height="3" fill="rgba(0,212,255,0.2)" rx="0.5"/>
+                            <rect x="11" y="5" width="4" height="12" fill="rgba(184,41,221,0.15)" rx="0.5"/>
+                            <rect x="16" y="9" width="4" height="8" fill="rgba(0,255,247,0.15)" rx="0.5"/>
+                        </svg>
+                    </div>
+                    <h3>Relatórios Inteligentes</h3>
+                    <p>Exporte para Excel, PDF ou integre via API. Relatórios formatados e prontos para apresentar aos auditores.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/>
+                            <path d="M21 3v5h-5"/>
+                            <circle cx="12" cy="12" r="3" fill="rgba(0,212,255,0.2)"/>
+                        </svg>
+                    </div>
+                    <h3>Controle de Versões</h3>
+                    <p>Histórico completo de todas as modificações. Rastreie cada alteração e mantenha trilha de auditoria impecável.</p>
+                </div>
+                <div class="feature-card fade-in">
+                    <div class="feature-icon">
+                        <svg class="icon-3d" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                            <circle cx="12" cy="12" r="2" fill="rgba(184,41,221,0.3)"/>
+                        </svg>
+                    </div>
+                    <h3>Índices Econômicos</h3>
+                    <p>Integração automática com IPCA, IGP-M e outros índices. Reajustes calculados automaticamente conforme seu contrato.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compliance Section -->
+    <section class="compliance" id="compliance">
+        <div class="container">
+            <div class="compliance-content">
+                <div class="compliance-text fade-in">
+                    <h2>Compliance Total com IFRS 16</h2>
+                    <p>O Engine IFRS 16 foi desenvolvido por especialistas em contabilidade e tecnologia para garantir 100% de aderência às normas internacionais de arrendamento.</p>
+                    <ul class="compliance-list">
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <polyline points="10 9 9 9 8 9"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Reconhecimento Inicial</h4>
+                                <p>Cálculo automático do direito de uso e passivo de arrendamento no início do contrato.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M3 3v18h18"/>
+                                    <path d="m19 9-5 5-4-4-3 3"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Mensuração Subsequente</h4>
+                                <p>Depreciação linear ou por uso, juros pelo método da taxa efetiva, remensuração automática.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"/>
+                                    <path d="m21 21-4.35-4.35"/>
+                                    <path d="M11 8v6"/>
+                                    <path d="M8 11h6"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Modificações de Contrato</h4>
+                                <p>Tratamento correto de alterações de prazo, valor ou escopo conforme IFRS 16.39-46.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="compliance-icon">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+                                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+                                    <path d="M8 7h8"/>
+                                    <path d="M8 11h8"/>
+                                    <path d="M8 15h4"/>
+                                </svg>
+                            </div>
+                            <div>
+                                <h4>Divulgações Obrigatórias</h4>
+                                <p>Relatórios com todas as informações exigidas para notas explicativas.</p>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="compliance-visual fade-in">
+                    <div class="compliance-card">
+                        <h3>Normas Suportadas</h3>
+                        <div class="standard-badge">
+                            <div class="standard-item">
+                                <span>IFRS 16</span>
+                                <small>Internacional</small>
+                            </div>
+                            <div class="standard-item">
+                                <span>CPC 06 (R2)</span>
+                                <small>Brasil</small>
+                            </div>
+                        </div>
+                        <div style="margin-top: 30px; text-align: left;">
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px; line-height: 2;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><polyline points="20 6 9 17 4 12"/></svg>Vigente desde Janeiro/2019<br>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><polyline points="20 6 9 17 4 12"/></svg>Aplicável a todos os arrendamentos<br>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--neon-cyan)" stroke-width="2" style="vertical-align: middle; margin-right: 8px;"><polyline points="20 6 9 17 4 12"/></svg>Exceto: curto prazo e baixo valor
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Section -->
+    <section class="pricing" id="pricing">
+        <div class="container">
+            <div class="pricing-header fade-in">
+                <h2>Escolha Seu Plano de Potência</h2>
+                <p>Assine via Stripe com acesso imediato ao sistema</p>
+            </div>
+            <div class="stripe-container fade-in">
+                <stripe-pricing-table 
+                    pricing-table-id="prctbl_1SbsBzGEyVmwHCe67gq4hqL6"
+                    publishable-key="pk_live_51SbrHyGEyVmwHCe6H4ZQU7jIe2ehaxo2SXmonoZZwZzIpoOslJ8RWCgcYWbz3Fc7Jn0eOb4U5EEafnjAK5kDS51500YPiJvR9x">
+                </stripe-pricing-table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gallery Section -->
+    <section class="gallery" style="padding: 100px 0; background: linear-gradient(135deg, rgba(0, 212, 255, 0.03), rgba(184, 41, 221, 0.03));">
+        <div class="container">
+            <div class="section-header fade-in" style="text-align: center; margin-bottom: 60px;">
+                <h2 style="font-size: 2.5rem; margin-bottom: 20px;">Veja a Plataforma em Ação</h2>
+                <p style="color: var(--text-secondary); font-size: 1.1rem;">Interface moderna e intuitiva com todas as funcionalidades que você precisa</p>
+            </div>
+            
+            <!-- Video Demo -->
+            <div class="fade-in" style="margin-bottom: 60px;">
+                <h3 style="text-align: center; margin-bottom: 30px; font-size: 1.8rem;">Demonstração Completa</h3>
+                <div style="max-width: 900px; margin: 0 auto; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <video controls poster="media/screenshots/Screenshot_2.png" style="width: 100%; display: block;">
+                        <source src="media/videos/Gravando 2025-12-19 184826.mp4" type="video/mp4">
                     </video>
-                    <div class="video-overlay"></div>
+                </div>
+            </div>
+            
+            <!-- Screenshots Grid -->
+            <div class="fade-in">
+                <h3 style="text-align: center; margin-bottom: 30px; font-size: 1.8rem;">Funcionalidades Principais</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 40px;">
+                    <div style="border-radius: 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 40px rgba(0, 212, 255, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <img src="media/screenshots/Captura de tela 2025-12-19 183315.png" alt="Cálculo Automático" style="width: 100%; display: block;">
+                        <div style="padding: 20px; background: rgba(13, 19, 33, 0.8);">
+                            <h4 style="margin-bottom: 10px; color: var(--neon-cyan);">Cálculo Automático</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Processamento instantâneo conforme IFRS 16</p>
+                        </div>
+                    </div>
+                    
+                    <div style="border-radius: 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 40px rgba(0, 212, 255, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <img src="media/screenshots/Captura de tela 2025-12-19 183409.png" alt="Dashboard" style="width: 100%; display: block;">
+                        <div style="padding: 20px; background: rgba(13, 19, 33, 0.8);">
+                            <h4 style="margin-bottom: 10px; color: var(--neon-cyan);">Dashboard Intuitivo</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Visualize todos os contratos em um só lugar</p>
+                        </div>
+                    </div>
+                    
+                    <div style="border-radius: 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 40px rgba(0, 212, 255, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <img src="media/screenshots/Captura de tela 2025-12-19 183427.png" alt="Relatórios" style="width: 100%; display: block;">
+                        <div style="padding: 20px; background: rgba(13, 19, 33, 0.8);">
+                            <h4 style="margin-bottom: 10px; color: var(--neon-cyan);">Relatórios Profissionais</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Gere relatórios detalhados em PDF</p>
+                        </div>
+                    </div>
+                    
+                    <div style="border-radius: 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 40px rgba(0, 212, 255, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <img src="media/screenshots/Captura de tela 2025-12-19 184233.png" alt="Gestão" style="width: 100%; display: block;">
+                        <div style="padding: 20px; background: rgba(13, 19, 33, 0.8);">
+                            <h4 style="margin-bottom: 10px; color: var(--neon-cyan);">Gestão Completa</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Controle total dos seus contratos</p>
+                        </div>
+                    </div>
+                    
+                    <div style="border-radius: 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 40px rgba(0, 212, 255, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <img src="media/screenshots/Captura de tela 2025-12-19 184257.png" alt="Análise" style="width: 100%; display: block;">
+                        <div style="padding: 20px; background: rgba(13, 19, 33, 0.8);">
+                            <h4 style="margin-bottom: 10px; color: var(--neon-cyan);">Análise Detalhada</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Visualizações e gráficos avançados</p>
+                        </div>
+                    </div>
+                    
+                    <div style="border-radius: 15px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.1); transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;" onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 40px rgba(0, 212, 255, 0.3)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+                        <img src="media/screenshots/Screenshot_2.png" alt="Resultados" style="width: 100%; display: block;">
+                        <div style="padding: 20px; background: rgba(13, 19, 33, 0.8);">
+                            <h4 style="margin-bottom: 10px; color: var(--neon-cyan);">Resultados Precisos</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Cálculos 100% conforme IFRS 16</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <section id="features" class="features">
-        <div class="section-header reveal">
-            <span class="section-badge">Recursos Poderosos</span>
-            <h2>Tudo que você precisa para dominar o IFRS 16</h2>
-            <p>Ferramentas profissionais que transformam horas de trabalho manual em segundos de automação inteligente.</p>
-        </div>
-
-        <div class="features-grid">
-            <div class="feature-card reveal">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
-                    </svg>
-                </div>
-                <h3>Cálculo Automático</h3>
-                <p>Processamento instantâneo de valor presente, depreciação e juros conforme IFRS 16. Resultados precisos em segundos.</p>
-                <img src="media/screenshots/Captura de tela 2025-12-19 183315.png" alt="Cálculo Automático" class="feature-image">
-            </div>
-
-            <div class="feature-card reveal">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
-                    </svg>
-                </div>
-                <h3>Dashboard Intuitivo</h3>
-                <p>Visualize todos os seus contratos em um painel centralizado. Acompanhe status, vencimentos e valores em tempo real.</p>
-                <img src="media/screenshots/Captura de tela 2025-12-19 183409.png" alt="Dashboard" class="feature-image">
-            </div>
-
-            <div class="feature-card reveal">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
-                    </svg>
-                </div>
-                <h3>Relatórios Profissionais</h3>
-                <p>Gere relatórios detalhados em PDF com todos os cálculos, tabelas de amortização e demonstrações contábeis.</p>
-                <img src="media/screenshots/Captura de tela 2025-12-19 183427.png" alt="Relatórios" class="feature-image">
-            </div>
-
-            <div class="feature-card reveal">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
-                    </svg>
-                </div>
-                <h3>Análise Avançada</h3>
-                <p>Gráficos interativos para análise de evolução de passivos, ativos de direito de uso e impactos no balanço.</p>
-                <img src="media/screenshots/Captura de tela 2025-12-19 183500.png" alt="Análise" class="feature-image">
-            </div>
-
-            <div class="feature-card reveal">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                </div>
-                <h3>Exportação Excel</h3>
-                <p>Exporte todos os dados para Excel com formatação profissional. Integração perfeita com seu ERP.</p>
-                <img src="media/screenshots/Captura de tela 2025-12-19 183517.png" alt="Excel" class="feature-image">
-            </div>
-
-            <div class="feature-card reveal">
-                <div class="feature-icon">
-                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                    </svg>
-                </div>
-                <h3>Histórico Completo</h3>
-                <p>Rastreabilidade total de todas as alterações. Auditoria facilitada e compliance garantido.</p>
-                <img src="media/screenshots/Captura de tela 2025-12-19 184112.png" alt="Histórico" class="feature-image">
-            </div>
-        </div>
-    </section>
-
-    <section id="demo" class="demo-section">
-        <div class="demo-container">
-            <div class="section-header reveal">
-                <span class="section-badge">Veja em Ação</span>
-                <h2>Do cadastro ao relatório em minutos</h2>
-                <p>Assista como é simples e rápido gerenciar seus contratos de arrendamento com a Engine IFRS 16.</p>
-            </div>
-
-            <div class="demo-video-large reveal">
-                <video controls poster="media/screenshots/Screenshot_2.png">
-                    <source src="media/videos/Gravando 2025-12-19 184826.mp4" type="video/mp4">
-                </video>
-            </div>
-        </div>
-    </section>
-
-    <section id="gallery" class="gallery">
-        <div class="section-header reveal">
-            <span class="section-badge">Interface Moderna</span>
-            <h2>Design pensado para produtividade</h2>
-            <p>Cada detalhe foi cuidadosamente projetado para tornar seu trabalho mais eficiente e agradável.</p>
-        </div>
-
-        <div class="gallery-grid">
-            <div class="gallery-item reveal">
-                <img src="media/screenshots/Captura de tela 2025-12-19 184233.png" alt="Interface 1">
-                <div class="gallery-overlay">
-                    <h4>Gestão de Contratos</h4>
-                    <p>Interface limpa e organizada</p>
-                </div>
-            </div>
-
-            <div class="gallery-item reveal">
-                <img src="media/screenshots/Captura de tela 2025-12-19 184257.png" alt="Interface 2">
-                <div class="gallery-overlay">
-                    <h4>Visualização de Dados</h4>
-                    <p>Informações claras e acessíveis</p>
-                </div>
-            </div>
-
-            <div class="gallery-item reveal">
-                <img src="media/screenshots/Screenshot_2.png" alt="Interface 3">
-                <div class="gallery-overlay">
-                    <h4>Resultados Detalhados</h4>
-                    <p>Todos os cálculos à sua disposição</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <section id="pricing" class="pricing">
-        <div class="section-header reveal">
-            <span class="section-badge">Planos Flexíveis</span>
-            <h2>Escolha o plano ideal para você</h2>
-            <p>Escolha seu plano e tenha acesso completo à plataforma. Sem surpresas, sem taxas ocultas.</p>
-        </div>
-
-        <div class="pricing-grid">
-            <div class="pricing-card reveal">
-                <h3>Basic</h3>
-                <div class="pricing-price">R$ 99<span>/mês</span></div>
-                <ul class="pricing-features">
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Até 10 contratos
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Cálculos automáticos
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Relatórios em PDF
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Exportação Excel
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Suporte por email
-                    </li>
-                </ul>
-                <a href="register.html" class="btn-primary" style="width: 100%; justify-content: center;">Assinar Agora</a>
-            </div>
-
-            <div class="pricing-card featured reveal">
-                <div class="pricing-badge">Mais Popular</div>
-                <h3>Pro</h3>
-                <div class="pricing-price">R$ 299<span>/mês</span></div>
-                <ul class="pricing-features">
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Contratos ilimitados
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Todos os recursos Basic
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Análises avançadas
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        API de integração
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Suporte prioritário
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Histórico completo
-                    </li>
-                </ul>
-                <a href="register.html" class="btn-primary" style="width: 100%; justify-content: center;">Assinar Agora</a>
-            </div>
-
-            <div class="pricing-card reveal">
-                <h3>Enterprise</h3>
-                <div class="pricing-price">Custom</div>
-                <ul class="pricing-features">
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Tudo do Pro
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Múltiplos usuários
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        White label
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Treinamento dedicado
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        SLA garantido
-                    </li>
-                    <li>
-                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        Gerente de conta
-                    </li>
-                </ul>
-                <a href="mailto:contato@fxstudioai.com" class="btn-primary" style="width: 100%; justify-content: center;">Falar com Vendas</a>
-            </div>
-        </div>
-    </section>
-
-    <section class="cta-section">
-        <div class="cta-container reveal">
-            <h2>Pronto para revolucionar sua gestão de arrendamentos?</h2>
-            <p>Junte-se a centenas de empresas que já automatizaram sua conformidade IFRS 16.</p>
-            <div class="hero-cta" style="justify-content: center;">
-                <a href="register.html" class="btn-primary">
-                    Registre-se
-                    <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
-                    </svg>
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <div class="cta-content fade-in">
+                <h2>Pronto para Acelerar sua Conformidade?</h2>
+                <p>Junte-se a centenas de empresas que já transformaram sua gestão de arrendamentos com o Engine IFRS 16.</p>
+                <a href="#pricing" class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/></svg>
+                    INICIAR PROCESSAMENTO
                 </a>
-                <a href="login.html" class="btn-secondary">Área do Cliente</a>
             </div>
         </div>
     </section>
 
+    <!-- Footer -->
     <footer>
-        <div class="footer-container">
-            <div class="footer-logo">
-                <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
-                <div class="footer-logo-text">
-                    <h2>Engine IFRS 16</h2>
-                    <p>by FX Studio AI</p>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
+                    <div>
+                        <span>Engine IFRS 16 by FX Studio AI</span>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 6px; font-weight: 500;">Todos os direitos reservados a Fernando Xavier</p>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <a href="Calculadora_IFRS16_Deploy.html">Calculadora</a>
+                    <a href="auth-choice.html">Minha Conta</a>
                 </div>
             </div>
-            <p>&copy; 2025 FX Studio AI. Todos os direitos reservados.</p>
+            <div class="footer-bottom">
+                <p>© 2025 FX Studio AI - Todos os direitos reservados</p>
+                <p style="margin-top: 8px; font-size: 0.8rem;">Engine IFRS 16 - Transformando complexidade em potência</p>
+            </div>
         </div>
     </footer>
 
+    <!-- Scroll Animation Script -->
     <script>
-        window.addEventListener('scroll', () => {
-            const navbar = document.getElementById('navbar');
-            if (window.scrollY > 50) {
-                navbar.classList.add('scrolled');
-            } else {
-                navbar.classList.remove('scrolled');
-            }
-        });
-
-        const reveals = document.querySelectorAll('.reveal');
-        
-        const revealOnScroll = () => {
-            reveals.forEach(element => {
-                const elementTop = element.getBoundingClientRect().top;
-                const windowHeight = window.innerHeight;
-                
-                if (elementTop < windowHeight - 100) {
-                    element.classList.add('active');
-                }
-            });
+        // Fade in on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
         };
 
-        window.addEventListener('scroll', revealOnScroll);
-        revealOnScroll();
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
 
+        document.querySelectorAll('.fade-in').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
+            anchor.addEventListener('click', function(e) {
                 e.preventDefault();
                 const target = document.querySelector(this.getAttribute('href'));
                 if (target) {
-                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
                 }
             });
         });
+
+        // Check login status
+        window.onload = function() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            if (token) {
+                const loginBtn = document.querySelector('a[href="login.html"]');
+                if (loginBtn) {
+                    loginBtn.textContent = 'Minha Conta';
+                    loginBtn.href = 'dashboard.html';
+                }
+            }
+        };
     </script>
 </body>
 </html>

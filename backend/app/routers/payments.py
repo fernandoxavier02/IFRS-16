@@ -3,6 +3,7 @@ Endpoints de pagamento e integração Stripe
 """
 
 import stripe
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -299,8 +300,12 @@ async def get_prices():
     - Pro: R$ 499/mês ou R$ 5.389,20/ano (10% desc) - até 20 contratos
     - Enterprise: R$ 999/mês ou R$ 10.789,20/ano (10% desc) - ilimitado
     """
+    def with_price_id(plan: dict, price_id: Optional[str]):
+        plan["price_id"] = price_id
+        return plan
+
     plans = [
-        {
+        with_price_id({
             "type": "basic_monthly",
             "name": "Básico - Mensal",
             "price": 299.00,
@@ -312,8 +317,8 @@ async def get_prices():
                 "Exportação Excel e CSV",
                 "Suporte por email"
             ]
-        },
-        {
+        }, settings.STRIPE_PRICE_BASIC_MONTHLY),
+        with_price_id({
             "type": "basic_yearly",
             "name": "Básico - Anual",
             "price": 3229.20,
@@ -326,8 +331,8 @@ async def get_prices():
                 "Suporte por email",
                 "Economia de R$ 358,80"
             ]
-        },
-        {
+        }, settings.STRIPE_PRICE_BASIC_YEARLY),
+        with_price_id({
             "type": "pro_monthly",
             "name": "Pro - Mensal",
             "price": 499.00,
@@ -341,8 +346,8 @@ async def get_prices():
                 "Multi-usuário (até 5)",
                 "API de integração"
             ]
-        },
-        {
+        }, settings.STRIPE_PRICE_PRO_MONTHLY),
+        with_price_id({
             "type": "pro_yearly",
             "name": "Pro - Anual",
             "price": 5389.20,
@@ -357,8 +362,8 @@ async def get_prices():
                 "API de integração",
                 "Economia de R$ 598,80"
             ]
-        },
-        {
+        }, settings.STRIPE_PRICE_PRO_YEARLY),
+        with_price_id({
             "type": "enterprise_monthly",
             "name": "Enterprise - Mensal",
             "price": 999.00,
@@ -373,8 +378,8 @@ async def get_prices():
                 "API de integração",
                 "Treinamento incluído"
             ]
-        },
-        {
+        }, settings.STRIPE_PRICE_ENTERPRISE_MONTHLY),
+        with_price_id({
             "type": "enterprise_yearly",
             "name": "Enterprise - Anual",
             "price": 10789.20,
@@ -390,8 +395,7 @@ async def get_prices():
                 "Treinamento incluído",
                 "Economia de R$ 1.198,80"
             ]
-        }
+        }, settings.STRIPE_PRICE_ENTERPRISE_YEARLY)
     ]
     
     return {"plans": plans}
-

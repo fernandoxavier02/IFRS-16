@@ -142,23 +142,30 @@ async def validate_license(
         )
     
     # Verificar limite de ativações por machine_id
-    if body.machine_id:
-        if license.machine_id and license.machine_id != body.machine_id:
-            if license.current_activations >= license.max_activations:
-                await crud.log_validation(
-                    db,
-                    license_key=key,
-                    success=False,
-                    message="Limite de ativações excedido",
-                    machine_id=body.machine_id,
-                    ip_address=ip_address,
-                    user_agent=user_agent,
-                    app_version=body.app_version
-                )
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Esta licença já está em uso em outro dispositivo. Máximo de ativações atingido."
-                )
+    max_limit_reached = (
+        license.max_activations is not None
+        and license.max_activations > 0
+        and license.current_activations >= license.max_activations
+    )
+    if max_limit_reached:
+        # Permitir se a mesma máquina estiver validando novamente
+        if license.machine_id and body.machine_id and license.machine_id == body.machine_id:
+            pass
+        else:
+            await crud.log_validation(
+                db,
+                license_key=key,
+                success=False,
+                message="Limite de ativações excedido",
+                machine_id=body.machine_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                app_version=body.app_version
+            )
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Esta licença já está em uso em outro dispositivo. Máximo de ativações atingido."
+            )
     
     # Atualizar informações de validação
     await crud.update_license_validation(
@@ -270,4 +277,3 @@ async def check_license(
         status=license.status,
         expires_at=license.expires_at
     )
-

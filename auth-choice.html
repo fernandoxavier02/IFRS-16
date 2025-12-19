@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acesso | Engine IFRS 16</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/theme-neon.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            min-height: 100vh;
+        }
+        .choice-container {
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            z-index: 10;
+        }
+        .logo-section {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .logo-section img {
+            height: 100px;
+            width: auto;
+            margin: 0 auto 24px;
+            filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.5));
+        }
+        .choice-cards {
+            display: grid;
+            gap: 24px;
+            margin-top: 32px;
+        }
+        .choice-card {
+            background: linear-gradient(135deg, var(--dark-card) 0%, rgba(10, 22, 40, 0.9) 100%);
+            border: 2px solid rgba(0, 212, 255, 0.2);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .choice-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--neon-blue), var(--neon-cyan));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .choice-card:hover {
+            transform: translateY(-8px);
+            border-color: var(--neon-cyan);
+            box-shadow: 0 20px 60px rgba(0, 212, 255, 0.3);
+        }
+        .choice-card:hover::before {
+            opacity: 1;
+        }
+        .choice-card h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--neon-cyan);
+            margin-bottom: 12px;
+        }
+        .choice-card p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 24px;
+            line-height: 1.6;
+        }
+        .choice-card .btn {
+            width: 100%;
+        }
+        .divider {
+            text-align: center;
+            margin: 32px 0;
+            position: relative;
+        }
+        .divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--dark-border), transparent);
+        }
+        .divider span {
+            background: var(--dark-bg);
+            padding: 0 16px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+        }
+        .back-link {
+            text-align: center;
+            margin-top: 32px;
+        }
+        .back-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+        .back-link a:hover {
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+        }
+    </style>
+</head>
+<body>
+    <!-- Circuit Background -->
+    <div class="circuit-bg"></div>
+
+    <div class="choice-container fade-in">
+        <!-- Logo -->
+        <div class="logo-section">
+            <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
+            <h1 class="page-title">Bem-vindo ao Engine IFRS 16</h1>
+            <p class="page-subtitle">Escolha uma opção para continuar</p>
+        </div>
+
+        <!-- Cards de Escolha -->
+        <div class="choice-cards">
+            <!-- Card Login -->
+            <div class="choice-card" onclick="window.location.href='login.html'">
+                <h2>Já tenho conta</h2>
+                <p>Faça login para acessar sua área de cliente e gerenciar suas assinaturas</p>
+                <button class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path>
+                        <polyline points="10 17 15 12 10 7"></polyline>
+                        <line x1="15" y1="12" x2="3" y2="12"></line>
+                    </svg>
+                    Fazer Login
+                </button>
+            </div>
+
+            <div class="divider">
+                <span>OU</span>
+            </div>
+
+            <!-- Card Registro -->
+            <div class="choice-card" onclick="window.location.href='register.html'">
+                <h2>Primeira vez aqui</h2>
+                <p>Crie sua conta gratuitamente e comece a usar o Engine IFRS 16</p>
+                <button class="btn btn-secondary">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="8.5" cy="7" r="4"></circle>
+                        <line x1="20" y1="8" x2="20" y2="14"></line>
+                        <line x1="23" y1="11" x2="17" y2="11"></line>
+                    </svg>
+                    Criar Conta
+                </button>
+            </div>
+        </div>
+
+        <!-- Link Voltar -->
+        <div class="back-link">
+            <a href="landing.html">
+                ← Voltar para página inicial
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Verificar se já está logado
+        const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
+        if (token) {
+            // Já está logado, redirecionar para dashboard
+            window.location.href = 'dashboard.html';
+        }
+    </script>
+</body>
+</html>

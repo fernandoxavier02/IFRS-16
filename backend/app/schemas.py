@@ -68,6 +68,7 @@ class RegisterRequest(BaseModel):
     name: str = Field(..., min_length=2, max_length=255, description="Nome completo")
     email: EmailStr = Field(..., description="Email do usuário")
     password: str = Field(..., min_length=8, description="Senha (mínimo 8 caracteres)")
+    company_name: Optional[str] = Field(None, max_length=255, description="Nome da empresa (opcional)")
     
     @field_validator('password')
     @classmethod
@@ -149,6 +150,7 @@ class UserResponse(BaseModel):
     id: UUID
     email: str
     name: str
+    company_name: Optional[str] = None
     is_active: bool
     email_verified: bool
     created_at: datetime

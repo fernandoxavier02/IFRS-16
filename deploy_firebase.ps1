@@ -105,10 +105,10 @@ try {
 }
 
 Write-Host ""
-Write-Host "🎉 Deploy concluído!" -ForegroundColor Green
+Write-Host "Deploy concluido!" -ForegroundColor Green
 Write-Host ""
-Write-Host "📋 Próximos passos:" -ForegroundColor Cyan
+Write-Host "Proximos passos:" -ForegroundColor Cyan
 Write-Host "1. Verificar frontend: https://$ProjectId.web.app" -ForegroundColor Yellow
 Write-Host "2. Verificar backend: gcloud run services describe $ServiceName --region $Region --project $ProjectId" -ForegroundColor Yellow
-Write-Host "3. Configurar variáveis de ambiente no Cloud Run" -ForegroundColor Yellow
-Write-Host "4. Atualizar URLs no código" -ForegroundColor Yellow
+Write-Host "3. Configurar variaveis de ambiente no Cloud Run" -ForegroundColor Yellow
+Write-Host "4. Atualizar URLs no codigo" -ForegroundColor Yellow

@@ -161,7 +161,115 @@ function renderizarCPLP() {
 
 function renderizarLancamentos() {
     const d = dadosCalculados;
-    let rows = d.contabilizacao.slice(1).map((item, idx) => `<tr><td class="text-center">${item.mes}</td><td class="text-center">${item.data}</td><td class="text-right font-mono text-xs text-rose-400">${formatMoney(item.despJuros)}</td><td class="text-right font-mono text-xs text-emerald-400">${formatMoney(item.despJuros)}</td><td class="text-right font-mono text-xs text-rose-400">${formatMoney(item.despDeprec)}</td><td class="text-right font-mono text-xs text-emerald-400">${formatMoney(item.despDeprec)}</td><td class="text-right font-mono text-xs text-rose-400">${formatMoney(item.pagamento)}</td><td class="text-right font-mono text-xs text-emerald-400">${formatMoney(item.pagamento)}</td></tr>`).join('');
+    const itensMes = d.contabilizacao.slice(1);
+    const parseDateAny = (value) => {
+        if (!value) return null;
+        if (value instanceof Date && !Number.isNaN(value.getTime())) return value;
+        if (typeof value !== 'string') return null;
+        const iso = value.match(/^\d{4}-\d{2}-\d{2}$/);
+        if (iso) {
+            const dt = new Date(value + 'T00:00:00');
+            return Number.isNaN(dt.getTime()) ? null : dt;
+        }
+        const mesAno = value.match(/^(\d{2})\/(\d{4})$/);
+        if (mesAno) {
+            const dt = new Date(`${mesAno[2]}-${mesAno[1]}-01T00:00:00`);
+            return Number.isNaN(dt.getTime()) ? null : dt;
+        }
+        const br = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+        if (br) {
+            const dt = new Date(`${br[3]}-${br[2]}-${br[1]}T00:00:00`);
+            return Number.isNaN(dt.getTime()) ? null : dt;
+        }
+        const dt = new Date(value);
+        return Number.isNaN(dt.getTime()) ? null : dt;
+    };
+
+    const getCompetenciasCliente = () => {
+        let contratos = [];
+        if (Array.isArray(window.contractsData)) {
+            contratos = window.contractsData;
+        } else if (typeof contractsData !== 'undefined' && Array.isArray(contractsData)) {
+            contratos = contractsData;
+        }
+        const ranges = contratos
+            .map(c => c?.last_version)
+            .filter(v => v && v.data_inicio && v.prazo_meses);
+
+        if (!ranges.length) return [];
+
+        let minStart = null;
+        let maxEnd = null;
+
+        for (const v of ranges) {
+            const start = parseDateAny(v.data_inicio);
+            const prazo = parseInt(v.prazo_meses, 10);
+            if (!start || !prazo || prazo < 1) continue;
+            const startMonth = new Date(start);
+            startMonth.setDate(1);
+            const endMonth = new Date(startMonth);
+            endMonth.setMonth(endMonth.getMonth() + prazo - 1);
+            if (!minStart || startMonth < minStart) minStart = startMonth;
+            if (!maxEnd || endMonth > maxEnd) maxEnd = endMonth;
+        }
+
+        if (!minStart || !maxEnd) return [];
+
+        const out = [];
+        const cursor = new Date(minStart);
+        cursor.setDate(1);
+        const end = new Date(maxEnd);
+        end.setDate(1);
+        while (cursor <= end) {
+            out.push(formatDataMes(cursor));
+            cursor.setMonth(cursor.getMonth() + 1);
+        }
+        return out;
+    };
+
+    const competenciasContratoAtual = Array.from(new Set(itensMes.map(i => i.data)));
+    const competencias = getCompetenciasCliente();
+    const competenciasFinal = competencias.length ? competencias : competenciasContratoAtual;
+
+    const defaultCompetencia = competenciasContratoAtual[0] || competenciasFinal[0] || '';
+    const competenciaSelecionada = (window.lancamentosCompetencia && competenciasFinal.includes(window.lancamentosCompetencia))
+        ? window.lancamentosCompetencia
+        : defaultCompetencia;
+
+    const itemSel = itensMes.find(i => i.data === competenciaSelecionada);
+    const valorJuros = itemSel ? (itemSel.despJuros ?? 0) : 0;
+    const valorDeprec = itemSel ? (itemSel.despDeprec ?? 0) : 0;
+    const valorPagamento = itemSel ? (itemSel.pagamento ?? 0) : 0;
+    const temLancamentosNoContratoAtual = Boolean(itemSel);
+
+    const competenciaPertenceAlgumContratoCadastrado = (() => {
+        let contratos = [];
+        if (Array.isArray(window.contractsData)) {
+            contratos = window.contractsData;
+        } else if (typeof contractsData !== 'undefined' && Array.isArray(contractsData)) {
+            contratos = contractsData;
+        }
+        if (!contratos.length) return true;
+
+        const comp = parseDateAny(competenciaSelecionada);
+        if (!comp) return true;
+        comp.setDate(1);
+
+        for (const c of contratos) {
+            const v = c?.last_version;
+            if (!v?.data_inicio || !v?.prazo_meses) continue;
+            const start = parseDateAny(v.data_inicio);
+            const prazo = parseInt(v.prazo_meses, 10);
+            if (!start || !prazo || prazo < 1) continue;
+            const startMonth = new Date(start);
+            startMonth.setDate(1);
+            const endMonth = new Date(startMonth);
+            endMonth.setMonth(endMonth.getMonth() + prazo - 1);
+            if (comp >= startMonth && comp <= endMonth) return true;
+        }
+        return false;
+    })();
+    let rows = itensMes.map((item, idx) => `<tr><td class="text-center">${item.mes}</td><td class="text-center">${item.data}</td><td class="text-right font-mono text-xs text-rose-400">${formatMoney(item.despJuros)}</td><td class="text-right font-mono text-xs text-emerald-400">${formatMoney(item.despJuros)}</td><td class="text-right font-mono text-xs text-rose-400">${formatMoney(item.despDeprec)}</td><td class="text-right font-mono text-xs text-emerald-400">${formatMoney(item.despDeprec)}</td><td class="text-right font-mono text-xs text-rose-400">${formatMoney(item.pagamento)}</td><td class="text-right font-mono text-xs text-emerald-400">${formatMoney(item.pagamento)}</td></tr>`).join('');
     document.getElementById('conteudo-lancamentos').innerHTML = `
         <div class="glass-card-light rounded-xl p-4 mb-6">
             <p class="text-primary-400 font-semibold mb-2">Lançamentos Mensais:</p>
@@ -171,5 +279,56 @@ function renderizarLancamentos() {
                 <p>3) Pagamento: <span class="text-rose-400">D-Passivo</span> / <span class="text-emerald-400">C-Caixa</span></p>
             </div>
         </div>
+        <div class="glass-card-light rounded-xl p-4 mb-6">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div>
+                    <p class="text-dark-300 text-sm">Competência</p>
+                    <p class="text-white font-semibold">${competenciaSelecionada || '-'}</p>
+                </div>
+                <div class="min-w-[220px]">
+                    <select id="selectCompetenciaLancamentos" class="w-full bg-dark-900/60 border border-dark-700 rounded-lg px-3 py-2 text-white text-sm">
+                        ${competenciasFinal.map(c => `<option value="${c}" ${c === competenciaSelecionada ? 'selected' : ''}>${c}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            ${!competenciaPertenceAlgumContratoCadastrado
+                ? `<p class="text-rose-300 text-sm mt-3">Competência não corresponde a nenhum contrato cadastrado.</p>`
+                : (temLancamentosNoContratoAtual ? '' : `<p class="text-amber-300 text-sm mt-3">Sem lançamentos para esta competência no contrato selecionado.</p>`)
+            }
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-primary-400 font-semibold mb-2">1) Juros</p>
+                    <div class="text-dark-300 text-sm space-y-1">
+                        <p><span class="text-rose-400">D-Despesa Financeira</span> <span class="text-dark-500">(R$)</span></p>
+                        <p><span class="text-emerald-400">C-Passivo</span> <span class="text-dark-500">(R$)</span></p>
+                    </div>
+                    <p class="mt-3 text-white font-mono text-lg">R$ ${formatMoney(valorJuros)}</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-primary-400 font-semibold mb-2">2) Depreciação</p>
+                    <div class="text-dark-300 text-sm space-y-1">
+                        <p><span class="text-rose-400">D-Despesa Depreciação</span> <span class="text-dark-500">(R$)</span></p>
+                        <p><span class="text-emerald-400">C-Deprec.Acumulada</span> <span class="text-dark-500">(R$)</span></p>
+                    </div>
+                    <p class="mt-3 text-white font-mono text-lg">R$ ${formatMoney(valorDeprec)}</p>
+                </div>
+                <div class="glass-card rounded-xl p-4">
+                    <p class="text-primary-400 font-semibold mb-2">3) Pagamento</p>
+                    <div class="text-dark-300 text-sm space-y-1">
+                        <p><span class="text-rose-400">D-Passivo</span> <span class="text-dark-500">(R$)</span></p>
+                        <p><span class="text-emerald-400">C-Caixa</span> <span class="text-dark-500">(R$)</span></p>
+                    </div>
+                    <p class="mt-3 text-white font-mono text-lg">R$ ${formatMoney(valorPagamento)}</p>
+                </div>
+            </div>
+        </div>
         <div class="overflow-x-auto"><table class="table-dark w-full rounded-lg overflow-hidden text-sm"><thead><tr><th class="text-center">Mês</th><th class="text-center">Data</th><th class="text-right">D-Desp.Fin.</th><th class="text-right">C-Passivo</th><th class="text-right">D-Deprec.</th><th class="text-right">C-Dep.Ac.</th><th class="text-right">D-Passivo</th><th class="text-right">C-Caixa</th></tr></thead><tbody>${rows}<tr class="!bg-primary-900/20"><td colspan="2" class="font-bold text-white">TOTAIS</td><td class="text-right font-mono text-xs font-bold">${formatMoney(d.totalJuros)}</td><td class="text-right font-mono text-xs font-bold">${formatMoney(d.totalJuros)}</td><td class="text-right font-mono text-xs font-bold">${formatMoney(d.totalDeprec)}</td><td class="text-right font-mono text-xs font-bold">${formatMoney(d.totalDeprec)}</td><td class="text-right font-mono text-xs font-bold">${formatMoney(d.totalPagamentos)}</td><td class="text-right font-mono text-xs font-bold">${formatMoney(d.totalPagamentos)}</td></tr></tbody></table></div>`;
+
+    const select = document.getElementById('selectCompetenciaLancamentos');
+    if (select) {
+        select.addEventListener('change', (e) => {
+            window.lancamentosCompetencia = e.target.value;
+            renderizarLancamentos();
+        });
+    }
 }

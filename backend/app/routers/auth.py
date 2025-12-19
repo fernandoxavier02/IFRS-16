@@ -211,6 +211,7 @@ async def register_user(
         email=body.email.lower(),
         name=body.name,
         password_hash=hash_password(body.password),
+        company_name=body.company_name,
         is_active=True,
         email_verified=False  # TODO: Implementar verificação de email
     )

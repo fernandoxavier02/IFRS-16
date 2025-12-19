@@ -106,6 +106,7 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False, index=True)
     name = Column(String(255), nullable=False)
     password_hash = Column(String(255), nullable=False)
+    company_name = Column(String(255), nullable=True)
     
     # Stripe
     stripe_customer_id = Column(String(100), unique=True, nullable=True)

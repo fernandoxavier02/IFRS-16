@@ -100,6 +100,10 @@
                     <input type="email" id="email" required class="input-neon" placeholder="seu@email.com">
                 </div>
                 <div class="input-group">
+                    <label class="label-neon">Nome da Empresa (opcional)</label>
+                    <input type="text" id="companyName" class="input-neon" placeholder="Nome da sua empresa">
+                </div>
+                <div class="input-group">
                     <label class="label-neon">Senha</label>
                     <input type="password" id="password" required minlength="8" class="input-neon" placeholder="••••••••" oninput="checkPasswordStrength(this.value)">
                     <div class="strength-container">
@@ -188,6 +192,7 @@
             
             const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
+            const companyName = document.getElementById('companyName').value;
             const password = document.getElementById('password').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
             const errorMsg = document.getElementById('errorMsg');
@@ -218,7 +223,12 @@
                 const response = await fetch(`${API_URL}/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, email, password })
+                    body: JSON.stringify({ 
+                        name, 
+                        email, 
+                        password,
+                        company_name: companyName || null
+                    })
                 });
 
                 const data = await response.json();

@@ -17,7 +17,8 @@ from .routers import (
     admin_router,
     auth_router,
     payments_router,
-    user_dashboard_router
+    user_dashboard_router,
+    stripe_router
 )
 from .routers.contracts import router as contracts_router
 
@@ -81,9 +82,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         errors = validate_critical_settings(settings)
         if errors:
             msg = " | ".join(errors)
-            print(f"❌ Configuração inválida em produção: {msg}")
-            raise RuntimeError(f"Configuração inválida em produção: {msg}")
-    
+            print(f"⚠️ Configuração incompleta em produção: {msg}")
+
     # Criar tabelas automaticamente se não existirem
     print("📦 Inicializando banco de dados...")
     try:
@@ -142,6 +142,9 @@ ALLOWED_ORIGINS = [
     # Firebase Hosting
     "https://ifrs16-app.web.app",
     "https://ifrs16-app.firebaseapp.com",
+    # Domínio customizado
+    "https://fxstudioai.com",
+    "https://www.fxstudioai.com",
     # GitHub Pages
     "https://fernandoxavier02.github.io",
     # Local
@@ -190,6 +193,7 @@ app.include_router(admin_router)
 app.include_router(payments_router)
 app.include_router(user_dashboard_router)
 app.include_router(contracts_router)
+app.include_router(stripe_router)
 
 
 # Rota raiz

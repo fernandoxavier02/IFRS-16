@@ -213,12 +213,10 @@
 
                     // Redirecionar
                     if (data.user_type === 'admin') {
-                        // Admin pode escolher: ir para admin.html ou calculadora
-                        // Por padrão, vai para calculadora (que agora aceita admin)
                         window.location.href = 'Calculadora_IFRS16_Deploy.html';
                     } else {
-                        // Redirecionar para a calculadora principal
-                        window.location.href = 'Calculadora_IFRS16_Deploy.html';
+                        // Usuário vai para o dashboard
+                        window.location.href = 'dashboard.html';
                     }
                 } else {
                     errorMsg.textContent = data.detail || 'Erro ao fazer login';

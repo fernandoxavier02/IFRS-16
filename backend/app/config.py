@@ -45,6 +45,11 @@ class Settings(BaseSettings):
     FRONTEND_URL: str = "http://localhost:3000"
     API_URL: str = "http://localhost:8000"
     
+    # Cloud SQL (Produção)
+    CLOUD_SQL_USER: Optional[str] = None
+    CLOUD_SQL_PASSWORD: Optional[str] = None
+    DATABASE_URL_PROD: Optional[str] = None
+    
     # Email SMTP
     SMTP_HOST: str = "smtp.zoho.com"
     SMTP_PORT: int = 587

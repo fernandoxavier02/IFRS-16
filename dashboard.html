@@ -273,18 +273,12 @@
             <div class="glass-card" style="padding: 24px;">
                 <h2 class="section-title">Gerenciar Assinatura</h2>
                 <div class="actions-row">
-                    <button onclick="openPortal()" id="portalBtn" class="btn-neon-outline btn-neon-sm">
+                    <button onclick="openPortal()" id="portalBtn" class="btn-neon-outline btn-neon-sm" style="display: none;">
                         Gerenciar Pagamento
                     </button>
-                    <button onclick="cancelSubscription()" id="cancelBtn" class="btn-danger" style="display: none;">
-                        Cancelar Assinatura
+                    <button onclick="subscribeToPlan()" id="upgradeBtn" class="btn-neon btn-neon-sm" style="display: none;">
+                        Assinar Plano
                     </button>
-                    <button onclick="reactivateSubscription()" id="reactivateBtn" class="btn-neon btn-neon-sm" style="display: none;">
-                        Manter Assinatura Ativa
-                    </button>
-                    <a href="landing.html#pricing" id="upgradeBtn" class="btn-neon btn-neon-sm" style="display: none;">
-                        Fazer Upgrade
-                    </a>
                 </div>
             </div>
         </div>
@@ -317,24 +311,38 @@
             }
 
             try {
-                const response = await fetch(`${API_URL}/api/user/dashboard-summary`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                // Carregar perfil do usuário
+                const profileResponse = await fetch(`${API_URL}/api/user/profile`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                if (response.status === 401) {
+                if (profileResponse.status === 401) {
                     localStorage.removeItem('ifrs16_auth_token');
                     window.location.href = 'login.html';
                     return;
                 }
 
-                dashboardData = await response.json();
+                const profile = await profileResponse.json();
+
+                // Carregar assinatura
+                const subscriptionResponse = await fetch(`${API_URL}/api/user/subscription`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const subscription = subscriptionResponse.ok ? await subscriptionResponse.json() : null;
+
+                dashboardData = {
+                    user: profile,
+                    subscription: subscription,
+                    license: subscription?.license || null,
+                    stats: { total_validations: 0 }
+                };
+
                 renderDashboard();
             } catch (error) {
                 console.error('Erro:', error);
                 document.getElementById('loading').innerHTML = `
-                    <p class="text-red-400">Erro ao carregar dados. <button onclick="loadDashboard()" class="text-primary-500 underline">Tentar novamente</button></p>
+                    <p style="color: var(--error);">Erro ao carregar dados. <button onclick="loadDashboard()" class="btn-neon-outline btn-neon-sm">Tentar novamente</button></p>
                 `;
             }
         }
@@ -347,27 +355,32 @@
             document.getElementById('userName').textContent = dashboardData.user.name;
             document.getElementById('userEmail').textContent = dashboardData.user.email;
 
+            // Adicionar empresa se existir
+            if (dashboardData.user.company_name) {
+                const emailItem = document.querySelector('#userEmail').parentElement;
+                const companyItem = document.createElement('div');
+                companyItem.className = 'info-item';
+                companyItem.innerHTML = `
+                    <p class="label">Empresa</p>
+                    <p class="value">${dashboardData.user.company_name}</p>
+                `;
+                emailItem.parentElement.appendChild(companyItem);
+            }
+
             // Stats
             document.getElementById('totalValidations').textContent = dashboardData.stats.total_validations;
 
             // Subscription
-            if (dashboardData.subscription && dashboardData.subscription.active) {
+            if (dashboardData.subscription && dashboardData.subscription.status === 'active') {
                 const sub = dashboardData.subscription;
                 document.getElementById('subStatus').textContent = 'Ativa';
-                document.getElementById('subPlan').textContent = `Plano ${sub.plan.charAt(0).toUpperCase() + sub.plan.slice(1)}`;
+                document.getElementById('subPlan').textContent = `Plano ${sub.plan_type}`;
                 
-                if (sub.period_end) {
-                    const endDate = new Date(sub.period_end);
+                if (sub.current_period_end) {
+                    const endDate = new Date(sub.current_period_end);
                     document.getElementById('subRenewal').textContent = endDate.toLocaleDateString('pt-BR');
                 } else {
                     document.getElementById('subRenewal').textContent = 'Vitalício';
-                }
-
-                if (sub.cancel_at_period_end) {
-                    document.getElementById('subCancelNote').style.display = 'block';
-                    document.getElementById('reactivateBtn').style.display = 'inline-flex';
-                } else {
-                    document.getElementById('cancelBtn').style.display = 'inline-flex';
                 }
 
                 document.getElementById('portalBtn').style.display = 'inline-flex';
@@ -415,65 +428,26 @@
             const token = localStorage.getItem('ifrs16_auth_token');
             
             try {
-                const response = await fetch(`${API_URL}/api/payments/portal`, {
+                const response = await fetch(`${API_URL}/api/stripe/create-portal-session`, {
+                    method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    window.open(data.portal_url, '_blank');
+                    window.location.href = data.url;
                 } else {
-                    alert('Erro ao abrir portal de pagamento');
+                    const error = await response.json();
+                    alert(error.detail || 'Erro ao abrir portal de pagamento');
                 }
             } catch (error) {
                 alert('Erro de conexão');
             }
         }
 
-        async function cancelSubscription() {
-            if (!confirm('Tem certeza que deseja cancelar sua assinatura? Ela permanecerá ativa até o fim do período pago.')) {
-                return;
-            }
-
-            const token = localStorage.getItem('ifrs16_auth_token');
-            
-            try {
-                const response = await fetch(`${API_URL}/api/user/cancel-subscription`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    alert('Assinatura marcada para cancelamento');
-                    loadDashboard();
-                } else {
-                    const data = await response.json();
-                    alert(data.detail || 'Erro ao cancelar');
-                }
-            } catch (error) {
-                alert('Erro de conexão');
-            }
-        }
-
-        async function reactivateSubscription() {
-            const token = localStorage.getItem('ifrs16_auth_token');
-            
-            try {
-                const response = await fetch(`${API_URL}/api/user/reactivate-subscription`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.ok) {
-                    alert('Assinatura reativada com sucesso!');
-                    loadDashboard();
-                } else {
-                    const data = await response.json();
-                    alert(data.detail || 'Erro ao reativar');
-                }
-            } catch (error) {
-                alert('Erro de conexão');
-            }
+        async function subscribeToPlan() {
+            // Redirecionar para página de preços
+            window.location.href = 'landing.html#pricing';
         }
 
         function logout() {

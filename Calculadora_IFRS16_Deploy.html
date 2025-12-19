@@ -311,26 +311,28 @@
                 <p class="text-dark-400">Entre com sua conta</p>
             </div>
             
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-dark-300 mb-2">Email</label>
-                <input type="email" id="loginEmail" placeholder="seu@email.com"
-                    class="w-full input-dark rounded-xl px-5 py-4">
-            </div>
-            
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-dark-300 mb-2">Senha</label>
-                <input type="password" id="loginPassword" placeholder="Digite sua senha"
-                    class="w-full input-dark rounded-xl px-5 py-4">
-                <p id="loginError" class="text-rose-400 text-sm mt-3 hidden text-center"></p>
-            </div>
-            
-            <button onclick="fazerLogin()" id="btnLogin"
-                class="w-full btn-primary text-white py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3">
-                <span id="btnLoginText">Entrar</span>
-                <svg id="btnLoginSpinner" class="w-5 h-5 spinner hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                </svg>
-            </button>
+            <form onsubmit="event.preventDefault(); fazerLogin();">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-dark-300 mb-2">Email</label>
+                    <input type="email" id="loginEmail" placeholder="seu@email.com"
+                        class="w-full input-dark rounded-xl px-5 py-4">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-dark-300 mb-2">Senha</label>
+                    <input type="password" id="loginPassword" placeholder="Digite sua senha"
+                        class="w-full input-dark rounded-xl px-5 py-4">
+                    <p id="loginError" class="text-rose-400 text-sm mt-3 hidden text-center"></p>
+                </div>
+                
+                <button type="submit" id="btnLogin"
+                    class="w-full btn-primary text-white py-4 rounded-xl font-semibold text-lg flex items-center justify-center gap-3">
+                    <span id="btnLoginText">Entrar</span>
+                    <svg id="btnLoginSpinner" class="w-5 h-5 spinner hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </form>
 
             <div class="mt-6 text-center space-y-3">
                 <a href="#" onclick="mostrarTelaLicenca()" class="block text-primary-400 hover:text-primary-300 text-sm transition-colors">
@@ -846,7 +848,7 @@
                     </svg>
                     Alterar Senha
                 </h3>
-                <div class="glass-card-light rounded-xl p-4 space-y-4">
+                <form class="glass-card-light rounded-xl p-4 space-y-4" onsubmit="event.preventDefault(); alterarSenha();">
                     <div>
                         <label class="block text-sm font-medium text-dark-300 mb-2">Senha Atual</label>
                         <input type="password" id="currentPassword" placeholder="Digite sua senha atual"
@@ -864,10 +866,10 @@
                     </div>
                     <p id="passwordError" class="text-rose-400 text-sm hidden"></p>
                     <p id="passwordSuccess" class="text-emerald-400 text-sm hidden"></p>
-                    <button onclick="alterarSenha()" class="w-full btn-secondary py-3 rounded-lg text-white font-medium">
+                    <button type="submit" class="w-full btn-secondary py-3 rounded-lg text-white font-medium">
                         Alterar Senha
                     </button>
-                </div>
+                </form>
             </div>
 
             <!-- Botão Sair -->

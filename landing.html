@@ -6,14 +6,10 @@
     <title>Engine IFRS 16 | A Revolução na Gestão de Arrendamentos</title>
     <meta name="description" content="Transforme complexidade em potência. A plataforma de IA mais avançada para conformidade IFRS 16 / CPC 06 (R2). Automatize, elimine erros e acelere sua auditoria.">
     
-    <!-- Preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
     
     <style>
@@ -50,7 +46,6 @@
             overflow-x: hidden;
         }
 
-        /* ===== ANIMATED BACKGROUND ===== */
         .animated-bg {
             position: fixed;
             top: 0;
@@ -121,7 +116,6 @@
             66% { transform: translate(-50px, 50px) scale(0.9); }
         }
 
-        /* ===== NAVIGATION ===== */
         nav {
             position: fixed;
             top: 0;
@@ -142,7 +136,7 @@
         .nav-container {
             max-width: 1400px;
             margin: 0 auto;
-            padding: 1.5rem 2rem;
+            padding: 1rem 2rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -152,22 +146,31 @@
             display: flex;
             align-items: center;
             gap: 1rem;
+            text-decoration: none;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.4));
+        }
+
+        .logo-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo-text h1 {
             font-size: 1.5rem;
             font-weight: 800;
             font-family: 'Space Grotesk', sans-serif;
             color: var(--text-primary);
-            text-decoration: none;
+            line-height: 1;
         }
 
-        .logo-icon {
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
+        .logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
         }
 
         .nav-links {
@@ -220,7 +223,6 @@
             box-shadow: 0 6px 30px rgba(0, 212, 255, 0.5);
         }
 
-        /* ===== HERO SECTION ===== */
         .hero {
             position: relative;
             min-height: 100vh;
@@ -370,7 +372,6 @@
             pointer-events: none;
         }
 
-        /* ===== FEATURES SECTION ===== */
         .features {
             position: relative;
             padding: 8rem 2rem;
@@ -461,9 +462,15 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
             margin-bottom: 1.5rem;
             box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+        }
+
+        .feature-icon svg {
+            width: 35px;
+            height: 35px;
+            stroke: white;
+            fill: none;
         }
 
         .feature-card h3 {
@@ -490,7 +497,6 @@
             transform: scale(1.05);
         }
 
-        /* ===== DEMO SECTION ===== */
         .demo-section {
             position: relative;
             padding: 8rem 2rem;
@@ -517,7 +523,6 @@
             display: block;
         }
 
-        /* ===== SCREENSHOTS GALLERY ===== */
         .gallery {
             position: relative;
             padding: 8rem 2rem;
@@ -582,7 +587,6 @@
             font-size: 0.9rem;
         }
 
-        /* ===== PRICING SECTION ===== */
         .pricing {
             position: relative;
             padding: 8rem 2rem;
@@ -662,14 +666,13 @@
             color: var(--text-secondary);
         }
 
-        .pricing-features li::before {
-            content: '✓';
-            color: var(--success);
-            font-weight: bold;
-            font-size: 1.25rem;
+        .pricing-features li svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--success);
+            flex-shrink: 0;
         }
 
-        /* ===== CTA SECTION ===== */
         .cta-section {
             position: relative;
             padding: 8rem 2rem;
@@ -701,7 +704,6 @@
             margin-bottom: 3rem;
         }
 
-        /* ===== FOOTER ===== */
         footer {
             position: relative;
             padding: 4rem 2rem 2rem;
@@ -715,12 +717,36 @@
             text-align: center;
         }
 
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .footer-logo img {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 0 10px rgba(0, 212, 255, 0.4));
+        }
+
+        .footer-logo-text h2 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            font-family: 'Space Grotesk', sans-serif;
+        }
+
+        .footer-logo-text p {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
         .footer-container p {
             color: var(--text-secondary);
             margin-top: 2rem;
         }
 
-        /* ===== ANIMATIONS ===== */
         @keyframes fade-in-up {
             from {
                 opacity: 0;
@@ -736,7 +762,6 @@
             animation: fade-in-up 0.8s ease-out;
         }
 
-        /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
             .hero-container {
                 grid-template-columns: 1fr;
@@ -777,7 +802,6 @@
             }
         }
 
-        /* ===== SCROLL REVEAL ===== */
         .reveal {
             opacity: 0;
             transform: translateY(50px);
@@ -791,19 +815,20 @@
     </style>
 </head>
 <body>
-    <!-- Animated Background -->
     <div class="animated-bg">
         <div class="gradient-orb orb-1"></div>
         <div class="gradient-orb orb-2"></div>
         <div class="gradient-orb orb-3"></div>
     </div>
 
-    <!-- Navigation -->
     <nav id="navbar">
         <div class="nav-container">
             <a href="#" class="logo">
-                <div class="logo-icon">⚡</div>
-                <span>Engine IFRS 16</span>
+                <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
+                <div class="logo-text">
+                    <h1>Engine IFRS 16</h1>
+                    <p>by FX Studio AI</p>
+                </div>
             </a>
             <ul class="nav-links">
                 <li><a href="#features">Recursos</a></li>
@@ -815,7 +840,6 @@
         </div>
     </nav>
 
-    <!-- Hero Section -->
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
@@ -867,7 +891,6 @@
         </div>
     </section>
 
-    <!-- Features Section -->
     <section id="features" class="features">
         <div class="section-header reveal">
             <span class="section-badge">Recursos Poderosos</span>
@@ -877,42 +900,66 @@
 
         <div class="features-grid">
             <div class="feature-card reveal">
-                <div class="feature-icon">🧮</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/>
+                    </svg>
+                </div>
                 <h3>Cálculo Automático</h3>
                 <p>Processamento instantâneo de valor presente, depreciação e juros conforme IFRS 16. Resultados precisos em segundos.</p>
                 <img src="media/screenshots/Captura de tela 2025-12-19 183315.png" alt="Cálculo Automático" class="feature-image">
             </div>
 
             <div class="feature-card reveal">
-                <div class="feature-icon">📊</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/>
+                    </svg>
+                </div>
                 <h3>Dashboard Intuitivo</h3>
                 <p>Visualize todos os seus contratos em um painel centralizado. Acompanhe status, vencimentos e valores em tempo real.</p>
                 <img src="media/screenshots/Captura de tela 2025-12-19 183409.png" alt="Dashboard" class="feature-image">
             </div>
 
             <div class="feature-card reveal">
-                <div class="feature-icon">📄</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                    </svg>
+                </div>
                 <h3>Relatórios Profissionais</h3>
                 <p>Gere relatórios detalhados em PDF com todos os cálculos, tabelas de amortização e demonstrações contábeis.</p>
                 <img src="media/screenshots/Captura de tela 2025-12-19 183427.png" alt="Relatórios" class="feature-image">
             </div>
 
             <div class="feature-card reveal">
-                <div class="feature-icon">📈</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+                    </svg>
+                </div>
                 <h3>Análise Avançada</h3>
                 <p>Gráficos interativos para análise de evolução de passivos, ativos de direito de uso e impactos no balanço.</p>
                 <img src="media/screenshots/Captura de tela 2025-12-19 183500.png" alt="Análise" class="feature-image">
             </div>
 
             <div class="feature-card reveal">
-                <div class="feature-icon">📊</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </div>
                 <h3>Exportação Excel</h3>
                 <p>Exporte todos os dados para Excel com formatação profissional. Integração perfeita com seu ERP.</p>
                 <img src="media/screenshots/Captura de tela 2025-12-19 183517.png" alt="Excel" class="feature-image">
             </div>
 
             <div class="feature-card reveal">
-                <div class="feature-icon">🔄</div>
+                <div class="feature-icon">
+                    <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
                 <h3>Histórico Completo</h3>
                 <p>Rastreabilidade total de todas as alterações. Auditoria facilitada e compliance garantido.</p>
                 <img src="media/screenshots/Captura de tela 2025-12-19 184112.png" alt="Histórico" class="feature-image">
@@ -920,7 +967,6 @@
         </div>
     </section>
 
-    <!-- Demo Section -->
     <section id="demo" class="demo-section">
         <div class="demo-container">
             <div class="section-header reveal">
@@ -937,7 +983,6 @@
         </div>
     </section>
 
-    <!-- Gallery Section -->
     <section id="gallery" class="gallery">
         <div class="section-header reveal">
             <span class="section-badge">Interface Moderna</span>
@@ -972,7 +1017,6 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
     <section id="pricing" class="pricing">
         <div class="section-header reveal">
             <span class="section-badge">Planos Flexíveis</span>
@@ -985,11 +1029,26 @@
                 <h3>Basic</h3>
                 <div class="pricing-price">R$ 99<span>/mês</span></div>
                 <ul class="pricing-features">
-                    <li>Até 10 contratos</li>
-                    <li>Cálculos automáticos</li>
-                    <li>Relatórios em PDF</li>
-                    <li>Exportação Excel</li>
-                    <li>Suporte por email</li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Até 10 contratos
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Cálculos automáticos
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Relatórios em PDF
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Exportação Excel
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Suporte por email
+                    </li>
                 </ul>
                 <a href="register.html" class="btn-primary" style="width: 100%; justify-content: center;">Começar Agora</a>
             </div>
@@ -999,12 +1058,30 @@
                 <h3>Pro</h3>
                 <div class="pricing-price">R$ 299<span>/mês</span></div>
                 <ul class="pricing-features">
-                    <li>Contratos ilimitados</li>
-                    <li>Todos os recursos Basic</li>
-                    <li>Análises avançadas</li>
-                    <li>API de integração</li>
-                    <li>Suporte prioritário</li>
-                    <li>Histórico completo</li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Contratos ilimitados
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Todos os recursos Basic
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Análises avançadas
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        API de integração
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Suporte prioritário
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Histórico completo
+                    </li>
                 </ul>
                 <a href="register.html" class="btn-primary" style="width: 100%; justify-content: center;">Começar Agora</a>
             </div>
@@ -1013,19 +1090,36 @@
                 <h3>Enterprise</h3>
                 <div class="pricing-price">Custom</div>
                 <ul class="pricing-features">
-                    <li>Tudo do Pro</li>
-                    <li>Múltiplos usuários</li>
-                    <li>White label</li>
-                    <li>Treinamento dedicado</li>
-                    <li>SLA garantido</li>
-                    <li>Gerente de conta</li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Tudo do Pro
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Múltiplos usuários
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        White label
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Treinamento dedicado
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        SLA garantido
+                    </li>
+                    <li>
+                        <svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        Gerente de conta
+                    </li>
                 </ul>
                 <a href="mailto:contato@fxstudioai.com" class="btn-primary" style="width: 100%; justify-content: center;">Falar com Vendas</a>
             </div>
         </div>
     </section>
 
-    <!-- CTA Section -->
     <section class="cta-section">
         <div class="cta-container reveal">
             <h2>Pronto para revolucionar sua gestão de arrendamentos?</h2>
@@ -1042,19 +1136,20 @@
         </div>
     </section>
 
-    <!-- Footer -->
     <footer>
         <div class="footer-container">
-            <div class="logo" style="justify-content: center; margin-bottom: 2rem;">
-                <div class="logo-icon">⚡</div>
-                <span>Engine IFRS 16</span>
+            <div class="footer-logo">
+                <img src="logo/Gemini_Generated_Image_rvkfr5rvkfr5rvkf.png" alt="FX Studio AI">
+                <div class="footer-logo-text">
+                    <h2>Engine IFRS 16</h2>
+                    <p>by FX Studio AI</p>
+                </div>
             </div>
             <p>&copy; 2025 FX Studio AI. Todos os direitos reservados.</p>
         </div>
     </footer>
 
     <script>
-        // Navbar scroll effect
         window.addEventListener('scroll', () => {
             const navbar = document.getElementById('navbar');
             if (window.scrollY > 50) {
@@ -1064,7 +1159,6 @@
             }
         });
 
-        // Scroll reveal animation
         const reveals = document.querySelectorAll('.reveal');
         
         const revealOnScroll = () => {
@@ -1079,9 +1173,8 @@
         };
 
         window.addEventListener('scroll', revealOnScroll);
-        revealOnScroll(); // Initial check
+        revealOnScroll();
 
-        // Smooth scroll for anchor links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();

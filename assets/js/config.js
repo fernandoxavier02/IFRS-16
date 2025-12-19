@@ -27,9 +27,11 @@ const CONFIG = {
     CHECK_INTERVAL: 300000, // Verificar a cada 5 minutos (era 1 hora)
 };
 
-// Log da versão no console
-console.log(`🧮 Calculadora IFRS 16 v${CONFIG.VERSION} (Build ${CONFIG.BUILD})`);
-console.log(`📡 API: ${CONFIG.API_URL}`);
+// Log da versão no console (apenas em desenvolvimento)
+if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    console.log(`🧮 Calculadora IFRS 16 v${CONFIG.VERSION} (Build ${CONFIG.BUILD})`);
+    console.log(`📡 API: ${CONFIG.API_URL}`);
+}
 
 // Estado global
 let licencaAtiva = null;

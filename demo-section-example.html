@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seção de Demonstração - IFRS 16</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --neon-blue: #00d4ff;
+            --neon-cyan: #00fff7;
+            --neon-purple: #b829dd;
+            --dark-bg: #0a0e17;
+            --dark-card: #0d1321;
+            --dark-border: #1a2332;
+            --text-primary: #ffffff;
+            --text-secondary: #8892a4;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 40px 20px;
+        }
+
+        /* ===== SEÇÃO 1: GALERIA DE FUNCIONALIDADES ===== */
+        .features-showcase {
+            max-width: 1400px;
+            margin: 0 auto 100px;
+            padding: 80px 20px;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+        }
+
+        .section-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.2);
+        }
+
+        .feature-image {
+            width: 100%;
+            height: 250px;
+            background: linear-gradient(135deg, #1a2332, #0d1321);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            opacity: 0.1;
+        }
+
+        .feature-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover .feature-image img {
+            transform: scale(1.05);
+        }
+
+        .feature-placeholder {
+            font-size: 4rem;
+            opacity: 0.3;
+        }
+
+        .feature-content {
+            padding: 30px;
+        }
+
+        .feature-content h3 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            color: var(--neon-cyan);
+        }
+
+        .feature-content p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+        }
+
+        .feature-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid var(--neon-blue);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--neon-blue);
+            margin-top: 15px;
+        }
+
+        /* ===== SEÇÃO 2: COMO FUNCIONA (STEP BY STEP) ===== */
+        .how-it-works {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            padding: 80px 20px;
+        }
+
+        .steps-container {
+            display: flex;
+            flex-direction: column;
+            gap: 60px;
+            margin-top: 60px;
+        }
+
+        .step {
+            display: grid;
+            grid-template-columns: 100px 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+
+        .step:nth-child(even) {
+            direction: rtl;
+        }
+
+        .step:nth-child(even) > * {
+            direction: ltr;
+        }
+
+        .step-number-wrapper {
+            position: relative;
+        }
+
+        .step-number {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+            position: relative;
+        }
+
+        .step-number::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 60px;
+            background: linear-gradient(180deg, var(--neon-blue), transparent);
+        }
+
+        .step:last-child .step-number::after {
+            display: none;
+        }
+
+        .step-content {
+            background: var(--dark-card);
+            border: 1px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .step-content:hover {
+            border-color: var(--neon-blue);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.15);
+        }
+
+        .step-content h3 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            color: var(--neon-cyan);
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .step-media {
+            width: 100%;
+            height: 300px;
+            background: linear-gradient(135deg, #1a2332, #0d1321);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 20px;
+            overflow: hidden;
+        }
+
+        .step-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ===== SEÇÃO 3: VÍDEO DEMO ===== */
+        .video-demo {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            padding: 80px 20px;
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-bottom: 56.25%; /* 16:9 */
+            background: var(--dark-card);
+            border: 2px solid var(--dark-border);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-container video,
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .video-placeholder {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a2332, #0d1321);
+        }
+
+        .play-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--neon-blue);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.5);
+        }
+
+        .play-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.7);
+        }
+
+        .play-button::after {
+            content: '▶';
+            font-size: 2rem;
+            color: white;
+            margin-left: 8px;
+        }
+
+        /* ===== SEÇÃO 4: COMPARAÇÃO ANTES/DEPOIS ===== */
+        .before-after {
+            max-width: 1200px;
+            margin: 0 auto 100px;
+            padding: 80px 20px;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-top: 60px;
+        }
+
+        .comparison-side {
+            background: var(--dark-card);
+            border: 2px solid var(--dark-border);
+            border-radius: 16px;
+            padding: 40px;
+            transition: all 0.3s ease;
+        }
+
+        .comparison-side.before {
+            border-color: #ff4444;
+        }
+
+        .comparison-side.after {
+            border-color: var(--neon-blue);
+        }
+
+        .comparison-side:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .comparison-label {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .comparison-side.before .comparison-label {
+            background: rgba(255, 68, 68, 0.2);
+            color: #ff4444;
+        }
+
+        .comparison-side.after .comparison-label {
+            background: rgba(0, 212, 255, 0.2);
+            color: var(--neon-blue);
+        }
+
+        .comparison-side h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+        }
+
+        .comparison-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .comparison-list li {
+            padding: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            color: var(--text-secondary);
+        }
+
+        .comparison-list li::before {
+            content: '✗';
+            position: absolute;
+            left: 0;
+            color: #ff4444;
+            font-weight: bold;
+        }
+
+        .comparison-side.after .comparison-list li::before {
+            content: '✓';
+            color: var(--neon-blue);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 768px) {
+            .section-header h2 {
+                font-size: 2rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .step {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .step-number::after {
+                display: none;
+            }
+
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* ===== CTA BUTTON ===== */
+        .cta-button {
+            display: inline-block;
+            padding: 16px 40px;
+            background: linear-gradient(135deg, var(--neon-blue), var(--neon-purple));
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+            margin-top: 30px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0, 212, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- SEÇÃO 1: GALERIA DE FUNCIONALIDADES -->
+    <section class="features-showcase">
+        <div class="section-header">
+            <h2>Funcionalidades Principais</h2>
+            <p>Descubra como a Engine IFRS 16 transforma sua gestão de arrendamentos</p>
+        </div>
+
+        <div class="features-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card">
+                <div class="feature-image">
+                    <span class="feature-placeholder">📊</span>
+                    <!-- Substitua por: <img src="media/screenshots/dashboard.webp" alt="Dashboard" loading="lazy"> -->
+                </div>
+                <div class="feature-content">
+                    <h3>Dashboard Intuitivo</h3>
+                    <p>Visualize todos os seus contratos de arrendamento em um painel centralizado. Acompanhe status, vencimentos e valores de forma clara e organizada.</p>
+                    <span class="feature-badge">Gestão Centralizada</span>
+                </div>
+            </div>
+
+            <!-- Feature 2 -->
+            <div class="feature-card">
+                <div class="feature-image">
+                    <span class="feature-placeholder">🧮</span>
+                    <!-- Substitua por: <img src="media/gifs/calculo-automatico.gif" alt="Cálculo"> -->
+                </div>
+                <div class="feature-content">
+                    <h3>Cálculo Automático</h3>
+                    <p>Processamento instantâneo conforme IFRS 16 / CPC 06 (R2). Valor presente, depreciação e juros calculados automaticamente.</p>
+                    <span class="feature-badge">100% Conforme</span>
+                </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="feature-card">
+                <div class="feature-image">
+                    <span class="feature-placeholder">📄</span>
+                    <!-- Substitua por: <img src="media/screenshots/relatorios.webp" alt="Relatórios"> -->
+                </div>
+                <div class="feature-content">
+                    <h3>Relatórios Profissionais</h3>
+                    <p>Gere relatórios detalhados em PDF com todos os cálculos, tabelas de amortização e demonstrações contábeis prontas para auditoria.</p>
+                    <span class="feature-badge">Export PDF/Excel</span>
+                </div>
+            </div>
+
+            <!-- Feature 4 -->
+            <div class="feature-card">
+                <div class="feature-image">
+                    <span class="feature-placeholder">📈</span>
+                    <!-- Substitua por: <img src="media/screenshots/graficos.webp" alt="Gráficos"> -->
+                </div>
+                <div class="feature-content">
+                    <h3>Visualizações Gráficas</h3>
+                    <p>Gráficos interativos para análise de evolução de passivos, ativos de direito de uso e impactos no balanço patrimonial.</p>
+                    <span class="feature-badge">Análise Visual</span>
+                </div>
+            </div>
+
+            <!-- Feature 5 -->
+            <div class="feature-card">
+                <div class="feature-image">
+                    <span class="feature-placeholder">📊</span>
+                    <!-- Substitua por: <img src="media/gifs/exportacao-excel.gif" alt="Excel"> -->
+                </div>
+                <div class="feature-content">
+                    <h3>Exportação Excel</h3>
+                    <p>Exporte todos os dados para Excel com formatação profissional. Tabelas prontas para integração com seu ERP.</p>
+                    <span class="feature-badge">Integração ERP</span>
+                </div>
+            </div>
+
+            <!-- Feature 6 -->
+            <div class="feature-card">
+                <div class="feature-image">
+                    <span class="feature-placeholder">🔄</span>
+                    <!-- Substitua por: <img src="media/screenshots/historico.webp" alt="Histórico"> -->
+                </div>
+                <div class="feature-content">
+                    <h3>Histórico de Versões</h3>
+                    <p>Mantenha registro completo de todas as alterações nos contratos. Rastreabilidade total para compliance e auditoria.</p>
+                    <span class="feature-badge">Auditável</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SEÇÃO 2: COMO FUNCIONA -->
+    <section class="how-it-works">
+        <div class="section-header">
+            <h2>Como Funciona</h2>
+            <p>Em 3 passos simples, você tem seus cálculos IFRS 16 completos</p>
+        </div>
+
+        <div class="steps-container">
+            <!-- Step 1 -->
+            <div class="step">
+                <div class="step-number-wrapper">
+                    <div class="step-number">1</div>
+                </div>
+                <div class="step-content">
+                    <h3>Cadastre o Contrato</h3>
+                    <p>Insira os dados básicos do contrato: valor, prazo, taxa de desconto e pagamentos. Nossa interface intuitiva guia você em cada campo.</p>
+                    <div class="step-media">
+                        <span class="feature-placeholder">📝</span>
+                        <!-- Substitua por: <img src="media/screenshots/step1-cadastro.png" alt="Cadastro"> -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="step">
+                <div class="step-number-wrapper">
+                    <div class="step-number">2</div>
+                </div>
+                <div class="step-content">
+                    <h3>Cálculo Instantâneo</h3>
+                    <p>Nossa engine processa automaticamente todos os cálculos conforme IFRS 16: valor presente, depreciação linear, juros sobre o passivo e tabela de amortização completa.</p>
+                    <div class="step-media">
+                        <span class="feature-placeholder">⚡</span>
+                        <!-- Substitua por: <img src="media/gifs/step2-calculo.gif" alt="Cálculo"> -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step">
+                <div class="step-number-wrapper">
+                    <div class="step-number">3</div>
+                </div>
+                <div class="step-content">
+                    <h3>Exporte os Resultados</h3>
+                    <p>Gere relatórios profissionais em PDF ou exporte para Excel. Todos os dados prontos para sua contabilidade e auditoria.</p>
+                    <div class="step-media">
+                        <span class="feature-placeholder">📥</span>
+                        <!-- Substitua por: <img src="media/screenshots/step3-relatorio.png" alt="Relatório"> -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="register.html" class="cta-button">Começar Agora - Grátis</a>
+        </div>
+    </section>
+
+    <!-- SEÇÃO 3: VÍDEO DEMO -->
+    <section class="video-demo">
+        <div class="section-header">
+            <h2>Veja em Ação</h2>
+            <p>Assista uma demonstração completa da calculadora em 2 minutos</p>
+        </div>
+
+        <div class="video-container">
+            <div class="video-placeholder">
+                <div class="play-button" onclick="alert('Adicione seu vídeo aqui!')"></div>
+                <p style="margin-top: 20px; color: var(--text-secondary);">Clique para assistir a demo</p>
+            </div>
+            <!-- Substitua por:
+            <video controls poster="media/thumbnails/demo-thumb.jpg">
+                <source src="media/videos/demo-completa.mp4" type="video/mp4">
+            </video>
+            -->
+        </div>
+    </section>
+
+    <!-- SEÇÃO 4: ANTES vs DEPOIS -->
+    <section class="before-after">
+        <div class="section-header">
+            <h2>Antes vs Depois</h2>
+            <p>Veja a diferença que a automação faz</p>
+        </div>
+
+        <div class="comparison-container">
+            <!-- Antes -->
+            <div class="comparison-side before">
+                <span class="comparison-label">❌ Sem a Engine IFRS 16</span>
+                <h3>Processo Manual</h3>
+                <ul class="comparison-list">
+                    <li>Horas de cálculos em planilhas</li>
+                    <li>Alto risco de erros humanos</li>
+                    <li>Dificuldade em auditorias</li>
+                    <li>Retrabalho constante</li>
+                    <li>Falta de padronização</li>
+                    <li>Relatórios inconsistentes</li>
+                </ul>
+            </div>
+
+            <!-- Depois -->
+            <div class="comparison-side after">
+                <span class="comparison-label">✓ Com a Engine IFRS 16</span>
+                <h3>Processo Automatizado</h3>
+                <ul class="comparison-list">
+                    <li>Cálculos em segundos</li>
+                    <li>Precisão de 100%</li>
+                    <li>Auditoria facilitada</li>
+                    <li>Atualização instantânea</li>
+                    <li>Padrão IFRS 16 garantido</li>
+                    <li>Relatórios profissionais</li>
+                </ul>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 60px;">
+            <a href="register.html" class="cta-button">Experimente Gratuitamente</a>
+        </div>
+    </section>
+
+</body>
+</html>

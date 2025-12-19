@@ -100,7 +100,7 @@ async def get_subscription(
     """
     user = user_data["user"]
     
-    # Buscar assinatura ativa
+    # Buscar assinatura ativa (pega a mais recente se houver múltiplas)
     result = await db.execute(
         select(Subscription)
         .where(
@@ -114,7 +114,7 @@ async def get_subscription(
         .options(selectinload(Subscription.license))
         .order_by(Subscription.created_at.desc())
     )
-    subscription = result.scalar_one_or_none()
+    subscription = result.scalars().first()
     
     if not subscription:
         return None

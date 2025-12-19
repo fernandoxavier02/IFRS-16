@@ -11,6 +11,11 @@
         "source": "/index.html",
         "destination": "/landing.html",
         "type": 302
+      },
+      {
+        "source": "/favicon.ico",
+        "destination": "/assets/logo.png",
+        "type": 301
       }
     ],
     "ignore": [
@@ -39,6 +44,15 @@
     "cleanUrls": true,
     "trailingSlash": false,
     "headers": [
+      {
+        "source": "/Calculadora_IFRS16_Deploy",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
       {
         "source": "**/*.html",
         "headers": [

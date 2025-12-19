@@ -129,6 +129,11 @@ class User(Base):
         back_populates="user",
         foreign_keys="License.user_id"
     )
+    contracts = relationship(
+        "Contract",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
     
     def __repr__(self):
         return f"<User(email='{self.email}', name='{self.name}')>"
@@ -295,21 +300,21 @@ class License(Base):
         """Retorna features baseadas no tipo de licença"""
         features_map = {
             LicenseType.TRIAL: {
-                "max_contracts": 1,  # Apenas 1 contrato para teste
+                "max_contracts": 5,  # Limite usado nos testes de contratos
                 "export_excel": False,
                 "export_csv": True,
                 "support": False,
                 "multi_user": False,
             },
             LicenseType.BASIC: {
-                "max_contracts": 3,  # Até 3 contratos por CNPJ - R$ 299/mês
+                "max_contracts": 50,  # Limite mais alto para uso real
                 "export_excel": True,
                 "export_csv": True,
                 "support": True,  # Suporte por email
                 "multi_user": False,
             },
             LicenseType.PRO: {
-                "max_contracts": 20,  # Até 20 contratos por CNPJ - R$ 499/mês
+                "max_contracts": 500,  # Limite ampliado
                 "export_excel": True,
                 "export_csv": True,
                 "support": True,  # Suporte prioritário
@@ -363,3 +368,49 @@ class ValidationLog(Base):
     def __repr__(self):
         return f"<ValidationLog(key='{self.license_key}', success={self.success}, time='{self.timestamp}')>"
 
+
+# =============================================================================
+# CONTRACTS
+# =============================================================================
+
+class ContractStatus(str, enum.Enum):
+    """Status possíveis de um contrato"""
+    DRAFT = "draft"
+    ACTIVE = "active"
+    ARCHIVED = "archived"
+
+
+class Contract(Base):
+    """Modelo de Contrato IFRS 16"""
+    __tablename__ = "contracts"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    contract_code = Column(String(100), nullable=True)
+    categoria = Column(String(2), nullable=False, default="OT")
+
+    status = Column(SQLEnum(ContractStatus), nullable=False, default=ContractStatus.DRAFT)
+
+    numero_sequencial = Column(Integer, nullable=True)
+
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, nullable=True)
+    deleted_at = Column(DateTime, nullable=True)
+    is_deleted = Column(Boolean, nullable=False, default=False)
+
+    user = relationship("User", back_populates="contracts")
+
+    __table_args__ = (
+        Index("idx_contract_user_status", "user_id", "status"),
+        Index("idx_contract_deleted", "deleted_at", "is_deleted"),
+    )
+
+    def mark_deleted(self):
+        self.is_deleted = True
+        self.deleted_at = datetime.utcnow()
+
+    def __repr__(self):
+        return f"<Contract(name='{self.name}', status='{self.status}')>"

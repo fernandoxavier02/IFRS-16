@@ -10,7 +10,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .config import get_settings
+from .config import Settings, get_settings
 from .database import init_db, close_db
 from .routers import (
     licenses_router,
@@ -22,6 +22,47 @@ from .routers import (
 from .routers.contracts import router as contracts_router
 
 settings = get_settings()
+
+
+def validate_critical_settings(current_settings: Settings) -> list[str]:
+    """
+    Retorna lista de erros de configuração crítica.
+    Usado para fail-fast em produção e para testes automatizados.
+    """
+    errors = []
+
+    stripe_key = (getattr(current_settings, "STRIPE_SECRET_KEY", "") or "").strip()
+    webhook_secret = (getattr(current_settings, "STRIPE_WEBHOOK_SECRET", "") or "").strip()
+
+    smtp_user = (getattr(current_settings, "SMTP_USER", "") or "").strip()
+    smtp_pass = (getattr(current_settings, "SMTP_PASSWORD", "") or "").strip()
+    smtp_host = (getattr(current_settings, "SMTP_HOST", "") or "").strip()
+    smtp_port = getattr(current_settings, "SMTP_PORT", None)
+
+    jwt_secret = (getattr(current_settings, "JWT_SECRET_KEY", "") or "").strip()
+    admin_token = (getattr(current_settings, "ADMIN_TOKEN", "") or "").strip()
+
+    if not stripe_key or stripe_key.endswith("...") or stripe_key.startswith("sk_test_"):
+        errors.append("STRIPE_SECRET_KEY inválida/placeholder")
+    if not webhook_secret or webhook_secret.endswith("...") or not webhook_secret.startswith("whsec_"):
+        errors.append("STRIPE_WEBHOOK_SECRET inválida/placeholder")
+
+    if not smtp_host:
+        errors.append("SMTP_HOST ausente")
+    if not smtp_port:
+        errors.append("SMTP_PORT ausente")
+    if not smtp_user:
+        errors.append("SMTP_USER ausente")
+    if not smtp_pass:
+        errors.append("SMTP_PASSWORD ausente")
+
+    if not jwt_secret or "sua-chave-secreta" in jwt_secret:
+        errors.append("JWT_SECRET_KEY fraca/placeholder")
+
+    if not admin_token or "admin-token-super-secreto" in admin_token:
+        errors.append("ADMIN_TOKEN fraco/placeholder")
+
+    return errors
 
 
 @asynccontextmanager
@@ -37,30 +78,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
     # Fail-fast em produção: evita deploy com placeholders (sk_live_...) e SMTP incompleto
     if settings.ENVIRONMENT == "production":
-        stripe_key = (getattr(settings, "STRIPE_SECRET_KEY", "") or "").strip()
-        webhook_secret = (getattr(settings, "STRIPE_WEBHOOK_SECRET", "") or "").strip()
-
-        smtp_user = (getattr(settings, "SMTP_USER", "") or "").strip()
-        smtp_pass = (getattr(settings, "SMTP_PASSWORD", "") or "").strip()
-        smtp_host = (getattr(settings, "SMTP_HOST", "") or "").strip()
-        smtp_port = getattr(settings, "SMTP_PORT", None)
-
-        errors = []
-
-        if not stripe_key or stripe_key.endswith("...") or not stripe_key.startswith("sk_"):
-            errors.append("STRIPE_SECRET_KEY inválida/placeholder")
-        if not webhook_secret or webhook_secret.endswith("...") or not webhook_secret.startswith("whsec_"):
-            errors.append("STRIPE_WEBHOOK_SECRET inválida/placeholder")
-
-        if not smtp_host:
-            errors.append("SMTP_HOST ausente")
-        if not smtp_port:
-            errors.append("SMTP_PORT ausente")
-        if not smtp_user:
-            errors.append("SMTP_USER ausente")
-        if not smtp_pass:
-            errors.append("SMTP_PASSWORD ausente")
-
+        errors = validate_critical_settings(settings)
         if errors:
             msg = " | ".join(errors)
             print(f"❌ Configuração inválida em produção: {msg}")
@@ -155,15 +173,14 @@ async def global_exception_handler(request: Request, exc: Exception):
     error_trace = traceback.format_exc()
     print(f"❌ Erro não tratado: {exc}")
     print(f"📋 Traceback:\n{error_trace}")
-    # Mostrar erro detalhado sempre para debug (remover em produção final)
-    return JSONResponse(
-        status_code=500,
-        content={
-            "detail": "Erro interno do servidor",
+
+    content = {"detail": "Erro interno do servidor"}
+    if settings.DEBUG or settings.ENVIRONMENT != "production":
+        content.update({
             "error": str(exc),
             "type": type(exc).__name__
-        }
-    )
+        })
+    return JSONResponse(status_code=500, content=content)
 
 
 # Incluir routers
@@ -211,4 +228,3 @@ if __name__ == "__main__":
         port=8000,
         reload=settings.DEBUG
     )
-

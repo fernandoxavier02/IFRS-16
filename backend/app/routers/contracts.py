@@ -5,18 +5,18 @@ Versões são imutáveis - apenas delete permitido
 """
 
 from typing import Optional, List
-from uuid import UUID
+from uuid import UUID, uuid4
 from datetime import datetime, date
 import json
 
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
+from sqlalchemy import select, func
 from pydantic import BaseModel
 
 from ..database import get_db
 from ..auth import get_current_user
-from ..models import User, License, LicenseStatus
+from ..models import User, License, LicenseStatus, Contract, ContractStatus
 
 
 router = APIRouter(prefix="/api/contracts", tags=["Contratos"])
@@ -121,6 +121,20 @@ async def get_active_license(db: AsyncSession, user: User) -> Optional[License]:
     return user_license
 
 
+def serialize_contract(contract: Contract) -> dict:
+    """Converte contrato ORM em dict serializável"""
+    return {
+        "id": str(contract.id),
+        "user_id": str(contract.user_id),
+        "name": contract.name,
+        "description": contract.description,
+        "contract_code": contract.contract_code,
+        "status": contract.status.value if isinstance(contract.status, ContractStatus) else contract.status,
+        "created_at": contract.created_at.isoformat() if contract.created_at else None,
+        "updated_at": contract.updated_at.isoformat() if contract.updated_at else None,
+    }
+
+
 # =============================================================================
 # ENDPOINTS - CONTRATOS
 # =============================================================================
@@ -135,6 +149,7 @@ async def list_contracts(
     search_code: Optional[str] = Query(None, description="Filtrar por código"),
     start_date: Optional[str] = Query(None, description="Data início"),
     end_date: Optional[str] = Query(None, description="Data fim"),
+    include_deleted: bool = Query(False, description="Incluir contratos deletados"),
     user_data: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -148,67 +163,26 @@ async def list_contracts(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Você precisa de uma licença ativa para gerenciar contratos"
         )
-    
-    # Query com última versão usando LEFT JOIN e subquery
-    query = """
-        SELECT c.id, c.user_id, c.name, c.description, c.contract_code, c.status, 
-               c.created_at, c.updated_at, c.categoria, c.numero_sequencial,
-               v.version_number, v.version_id, v.data_inicio, v.prazo_meses, v.total_vp
-        FROM contracts c
-        LEFT JOIN LATERAL (
-            SELECT version_number, version_id, data_inicio, prazo_meses, total_vp
-            FROM contract_versions
-            WHERE contract_id = c.id
-            ORDER BY version_number DESC
-            LIMIT 1
-        ) v ON true
-        WHERE c.user_id = :user_id AND c.is_deleted = FALSE
-    """
-    params = {"user_id": str(user.id)}
-    
-    # Aplicar filtros
+
+    query = select(Contract).where(Contract.user_id == user.id)
+
+    if not include_deleted:
+        query = query.where(Contract.deleted_at.is_(None), Contract.is_deleted == False)  # noqa: E712
+
     if search_name:
-        query += " AND LOWER(c.name) LIKE :search_name"
-        params["search_name"] = f"%{search_name.lower()}%"
-    
+        query = query.where(func.lower(Contract.name).like(f"%{search_name.lower()}%"))
     if search_code:
-        query += " AND LOWER(c.contract_code) LIKE :search_code"
-        params["search_code"] = f"%{search_code.lower()}%"
-    
-    query += " ORDER BY c.created_at DESC"
-    
-    result = await db.execute(text(query), params)
-    rows = result.fetchall()
-    
-    contracts = []
-    for row in rows:
-        contract = {
-            "id": str(row[0]),
-            "user_id": str(row[1]),
-            "name": row[2],
-            "description": row[3],
-            "contract_code": row[4],
-            "status": row[5],
-            "created_at": row[6].isoformat() if row[6] else None,
-            "updated_at": row[7].isoformat() if row[7] else None,
-            "categoria": row[8] or "OT",
-            "numero_sequencial": row[9],
-            "last_version": None
-        }
-        
-        # Adicionar última versão se existir
-        if row[10] is not None:
-            contract["last_version"] = {
-                "version_number": row[10],
-                "version_id": row[11],
-                "data_inicio": str(row[12]) if row[12] else None,
-                "prazo_meses": row[13],
-                "total_vp": float(row[14]) if row[14] else None
-            }
-        
-        contracts.append(contract)
-    
-    return {"contracts": contracts}
+        query = query.where(func.lower(Contract.contract_code).like(f"%{search_code.lower()}%"))
+
+    query = query.order_by(Contract.created_at.desc())
+
+    result = await db.execute(query)
+    contracts = result.scalars().all()
+
+    return {
+        "total": len(contracts),
+        "contracts": [serialize_contract(c) for c in contracts]
+    }
 
 
 @router.post(
@@ -238,67 +212,41 @@ async def create_contract(
     max_contracts = features.get("max_contracts", 0)
     
     if max_contracts != -1:
-        # Contar contratos ativos
-        count_result = await db.execute(
-            text("SELECT COUNT(*) FROM contracts WHERE user_id = :user_id AND is_deleted = FALSE"),
-            {"user_id": str(user.id)}
+        current_count = await db.scalar(
+            select(func.count()).select_from(Contract).where(
+                Contract.user_id == user.id,
+                Contract.deleted_at.is_(None),
+                Contract.is_deleted == False  # noqa: E712
+            )
         )
-        current_count = count_result.scalar()
-        
-        if current_count >= max_contracts:
+        if current_count and current_count >= max_contracts:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail=f"Limite de contratos excedido. Seu plano permite até {max_contracts} contratos."
             )
     
-    # Validar categoria
-    categoria = data.categoria.upper() if data.categoria else "OT"
-    if categoria not in CATEGORIAS_VALIDAS:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Categoria inválida. Use: {', '.join(CATEGORIAS_VALIDAS.keys())}"
-        )
-    
-    # Obter próximo número sequencial para a categoria
-    seq_result = await db.execute(
-        text(f"SELECT nextval('seq_contrato_{categoria.lower()}')")
+    contract = Contract(
+        id=uuid4(),
+        user_id=user.id,
+        name=data.name,
+        description=data.description,
+        contract_code=data.contract_code,
+        status=ContractStatus(data.status) if data.status else ContractStatus.DRAFT,
+        categoria=(data.categoria or "OT").upper(),
+        numero_sequencial=None
     )
-    numero_sequencial = seq_result.scalar()
-    
-    # Inserir contrato no banco
-    insert_query = """
-        INSERT INTO contracts (user_id, name, description, contract_code, status, categoria, numero_sequencial)
-        VALUES (:user_id, :name, :description, :contract_code, :status, :categoria, :numero_sequencial)
-        RETURNING id, user_id, name, description, contract_code, status, created_at, updated_at, categoria, numero_sequencial
-    """
-    
-    result = await db.execute(
-        text(insert_query),
-        {
-            "user_id": str(user.id),
-            "name": data.name,
-            "description": data.description,
-            "contract_code": data.contract_code,
-            "status": data.status,
-            "categoria": categoria,
-            "numero_sequencial": numero_sequencial
-        }
+
+    # Atribuir número sequencial simples (contagem + 1) apenas para rastreamento local
+    existing_count = await db.scalar(
+        select(func.count()).select_from(Contract).where(Contract.user_id == user.id)
     )
-    row = result.fetchone()
+    contract.numero_sequencial = (existing_count or 0) + 1
+
+    db.add(contract)
     await db.commit()
+    await db.refresh(contract)
     
-    return {
-        "id": str(row[0]),
-        "user_id": str(row[1]),
-        "name": row[2],
-        "description": row[3],
-        "contract_code": row[4],
-        "status": row[5],
-        "created_at": row[6].isoformat() if row[6] else None,
-        "updated_at": row[7].isoformat() if row[7] else None,
-        "categoria": row[8],
-        "numero_sequencial": row[9]
-    }
+    return serialize_contract(contract)
 
 
 @router.get(
@@ -313,33 +261,29 @@ async def get_contract(
 ):
     """Obtém um contrato específico"""
     user = user_data["user"]
+
+    try:
+        contract_uuid = UUID(contract_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contrato não encontrado")
     
     result = await db.execute(
-        text("""
-            SELECT id, user_id, name, description, contract_code, status, created_at, updated_at
-            FROM contracts 
-            WHERE id = :contract_id AND user_id = :user_id AND is_deleted = FALSE
-        """),
-        {"contract_id": contract_id, "user_id": str(user.id)}
+        select(Contract).where(
+            Contract.id == contract_uuid,
+            Contract.user_id == user.id,
+            Contract.deleted_at.is_(None),
+            Contract.is_deleted == False  # noqa: E712
+        )
     )
-    row = result.fetchone()
+    contract = result.scalar_one_or_none()
     
-    if not row:
+    if not contract:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Contrato não encontrado"
         )
     
-    return {
-        "id": str(row[0]),
-        "user_id": str(row[1]),
-        "name": row[2],
-        "description": row[3],
-        "contract_code": row[4],
-        "status": row[5],
-        "created_at": row[6].isoformat() if row[6] else None,
-        "updated_at": row[7].isoformat() if row[7] else None
-    }
+    return serialize_contract(contract)
 
 
 @router.put(
@@ -355,58 +299,43 @@ async def update_contract(
 ):
     """Atualiza um contrato"""
     user = user_data["user"]
+
+    try:
+        contract_uuid = UUID(contract_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contrato não encontrado")
     
-    # Verificar se contrato existe
-    check_result = await db.execute(
-        text("SELECT id FROM contracts WHERE id = :contract_id AND user_id = :user_id AND is_deleted = FALSE"),
-        {"contract_id": contract_id, "user_id": str(user.id)}
+    result = await db.execute(
+        select(Contract).where(
+            Contract.id == contract_uuid,
+            Contract.user_id == user.id,
+            Contract.deleted_at.is_(None),
+            Contract.is_deleted == False  # noqa: E712
+        )
     )
-    if not check_result.fetchone():
+    contract = result.scalar_one_or_none()
+
+    if not contract:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Contrato não encontrado"
         )
     
-    # Construir query de update dinamicamente
-    updates = []
-    params = {"contract_id": contract_id, "user_id": str(user.id)}
-    
     if data.name is not None:
-        updates.append("name = :name")
-        params["name"] = data.name
+        contract.name = data.name
     if data.description is not None:
-        updates.append("description = :description")
-        params["description"] = data.description
+        contract.description = data.description
     if data.contract_code is not None:
-        updates.append("contract_code = :contract_code")
-        params["contract_code"] = data.contract_code
+        contract.contract_code = data.contract_code
     if data.status is not None:
-        updates.append("status = :status")
-        params["status"] = data.status
-    
-    updates.append("updated_at = NOW()")
-    
-    update_query = f"""
-        UPDATE contracts 
-        SET {', '.join(updates)}
-        WHERE id = :contract_id AND user_id = :user_id
-        RETURNING id, user_id, name, description, contract_code, status, created_at, updated_at
-    """
-    
-    result = await db.execute(text(update_query), params)
-    row = result.fetchone()
+        contract.status = ContractStatus(data.status)
+
+    contract.updated_at = datetime.utcnow()
+
     await db.commit()
+    await db.refresh(contract)
     
-    return {
-        "id": str(row[0]),
-        "user_id": str(row[1]),
-        "name": row[2],
-        "description": row[3],
-        "contract_code": row[4],
-        "status": row[5],
-        "created_at": row[6].isoformat() if row[6] else None,
-        "updated_at": row[7].isoformat() if row[7] else None
-    }
+    return serialize_contract(contract)
 
 
 @router.delete(
@@ -422,23 +351,29 @@ async def delete_contract(
 ):
     """Exclui um contrato (soft delete)"""
     user = user_data["user"]
+
+    try:
+        contract_uuid = UUID(contract_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contrato não encontrado")
     
     result = await db.execute(
-        text("""
-            UPDATE contracts 
-            SET is_deleted = TRUE, deleted_at = NOW()
-            WHERE id = :contract_id AND user_id = :user_id AND is_deleted = FALSE
-            RETURNING id
-        """),
-        {"contract_id": contract_id, "user_id": str(user.id)}
+        select(Contract).where(
+            Contract.id == contract_uuid,
+            Contract.user_id == user.id,
+            Contract.deleted_at.is_(None),
+            Contract.is_deleted == False  # noqa: E712
+        )
     )
-    
-    if not result.fetchone():
+    contract = result.scalar_one_or_none()
+
+    if not contract:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Contrato não encontrado"
         )
     
+    contract.mark_deleted()
     await db.commit()
     return None
 

@@ -7,6 +7,56 @@
 
 ## Changelog
 
+### 2025-12-30 — Correções Críticas de Segurança (Fase 1)
+
+**Agent:** Windsurf Cascade  
+**Task:** Auditoria de segurança + correção de 4 vulnerabilidades críticas  
+**Branch:** Ajustes
+
+**Arquivos criados:**
+- `backend/.env.example` — Template completo com todas as variáveis de ambiente e checklist de segurança
+
+**Arquivos modificados:**
+- `backend/requirements.txt` — Adicionado `slowapi>=0.1.9` para rate limiting
+- `backend/app/main.py` — Validação crítica de secrets + configuração do limiter
+- `backend/app/routers/payments.py` — Rate limiting no webhook + endpoint de teste removido
+- `backend/app/routers/contracts.py` — Sanitização de queries LIKE
+
+**Correções implementadas:**
+
+1. **CRÍTICO-01: Validação de Secrets em Produção**
+   - App agora falha no startup se detectar placeholders em produção
+   - Previne deploy com JWT_SECRET_KEY, ADMIN_TOKEN ou STRIPE keys inválidas
+   - Arquivo: `backend/app/main.py:80-86`
+
+2. **CRÍTICO-02: Rate Limiting em Webhook Stripe**
+   - Webhook `/api/payments/webhook` limitado a 100 requisições/minuto por IP
+   - Previne DoS e criação fraudulenta de licenças
+   - Arquivos: `backend/app/main.py:12-14,108,166-167` + `backend/app/routers/payments.py:9-10,28,157`
+
+3. **CRÍTICO-03: Sanitização de Queries LIKE**
+   - Escape de caracteres especiais (`%`, `_`, `\`) em buscas de contratos
+   - Previne bypass de filtros e SQL injection via LIKE
+   - Arquivo: `backend/app/routers/contracts.py:172-179`
+
+4. **CRÍTICO-04: Remoção de Endpoint de Teste**
+   - Endpoint `/api/payments/test-email` removido completamente
+   - Previne exposição de configuração SMTP e spam
+   - Arquivo: `backend/app/routers/payments.py:259-289` (deletado)
+
+**Verificação:**
+- [x] Código compila sem erros
+- [x] Imports resolvidos
+- [x] Nenhum secret exposto
+- [x] Commit realizado na branch Ajustes
+
+**Próximos passos:**
+- Fase 2: Correções de prioridade ALTA (validação de senha, bcrypt, logs)
+- Instalar dependência: `pip install slowapi>=0.1.9`
+- Rodar testes: `cd backend && pytest -v`
+
+---
+
 ### 2025-12-30 — Sistema de Contexto Multi-Ambiente Completo
 
 **Agent:** Windsurf Cascade  

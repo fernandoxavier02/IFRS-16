@@ -6,6 +6,8 @@ import stripe
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Header
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from ..database import get_db
 from ..auth import get_current_user
@@ -23,6 +25,7 @@ from ..config import get_settings
 settings = get_settings()
 
 router = APIRouter(prefix="/api/payments", tags=["Pagamentos"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 @router.post(
@@ -151,6 +154,7 @@ async def list_invoices(
     description="Endpoint para receber webhooks do Stripe",
     include_in_schema=False  # Não mostrar na documentação
 )
+@limiter.limit("100/minute")
 async def stripe_webhook(
     request: Request,
     stripe_signature: str = Header(None, alias="Stripe-Signature")
@@ -250,39 +254,6 @@ async def stripe_webhook(
                 )
     
     return {"received": True}
-
-
-# Endpoint de teste de email (temporário - remover em produção)
-@router.post(
-    "/test-email",
-    summary="Testar Envio de Email",
-    description="Endpoint para testar configuração SMTP"
-)
-async def test_email(email: str):
-    """Testa o envio de email"""
-    from ..services.email_service import EmailService
-
-    # Segurança: não expor endpoint de envio de email em produção
-    if settings.ENVIRONMENT == "production":
-        raise HTTPException(status_code=404, detail="Not Found")
-    
-    try:
-        result = await EmailService.send_welcome_email(
-            to_email=email,
-            user_name="Teste",
-            temp_password="TESTE123",
-            license_key="FX-TEST-KEY-12345",
-            plan_name="Plano Teste"
-        )
-        return {
-            "success": result,
-            "message": "Email enviado!" if result else "Falha ao enviar email - verifique logs"
-        }
-    except Exception as e:
-        return {
-            "success": False,
-            "error": str(e)
-        }
 
 
 # Endpoint público para obter preços (sem autenticação)

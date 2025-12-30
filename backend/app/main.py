@@ -9,6 +9,9 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from .config import Settings, get_settings
 from .database import init_db, close_db
@@ -82,7 +85,8 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         errors = validate_critical_settings(settings)
         if errors:
             msg = " | ".join(errors)
-            print(f"⚠️ Configuração incompleta em produção: {msg}")
+            print(f"❌ ERRO CRÍTICO: Configuração incompleta em produção: {msg}")
+            raise RuntimeError(f"Secrets inválidos em produção: {msg}")
 
     # Criar tabelas automaticamente se não existirem
     print("📦 Inicializando banco de dados...")
@@ -101,6 +105,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
 
 
 # Criar aplicação FastAPI
+limiter = Limiter(key_func=get_remote_address)
 app = FastAPI(
     title="IFRS 16 License API",
     description="""
@@ -157,6 +162,9 @@ ALLOWED_ORIGINS = [
 ]
 # Adicionar origens da config se existirem
 ALLOWED_ORIGINS.extend([o for o in settings.cors_origins_list if o not in ALLOWED_ORIGINS])
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,

@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
-> **Last updated:** 2025-12-27  
-> **Version:** 1.0.0  
+> **Last updated:** 2025-12-30  
+> **Version:** 1.1.0  
 > **Maintainer:** AI Context Pack
 
 ---

@@ -170,9 +170,13 @@ async def list_contracts(
         query = query.where(Contract.deleted_at.is_(None), Contract.is_deleted == False)  # noqa: E712
 
     if search_name:
-        query = query.where(func.lower(Contract.name).like(f"%{search_name.lower()}%"))
+        # Escapar caracteres especiais do LIKE para prevenir bypass de filtros
+        search_escaped = search_name.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        query = query.where(func.lower(Contract.name).like(f"%{search_escaped.lower()}%", escape='\\'))
     if search_code:
-        query = query.where(func.lower(Contract.contract_code).like(f"%{search_code.lower()}%"))
+        # Escapar caracteres especiais do LIKE para prevenir bypass de filtros
+        search_escaped = search_code.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        query = query.where(func.lower(Contract.contract_code).like(f"%{search_escaped.lower()}%", escape='\\'))
 
     query = query.order_by(Contract.created_at.desc())
 

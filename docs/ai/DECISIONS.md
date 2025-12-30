@@ -66,6 +66,31 @@ Plus tool-specific wiring:
 
 ---
 
+### DEC-005: Sistema de Contexto Multi-Ambiente (2025-12-30)
+
+**Context:** Necessidade de contexto persistente e regras padronizadas para 4 ambientes de IA: Codex, Claude, Cursor e Windsurf.
+
+**Decision:** Criar estrutura de arquivos de contexto:
+- `docs/ai/PROJECT_CONTEXT.md` — Fonte da verdade canônica
+- `docs/ai/DECISIONS.md` — Log de decisões
+- `docs/ai/CHANGELOG_AI.md` — Log de mudanças por AI
+- `AGENTS.md` — Config para Codex
+- `CLAUDE.md` + `.claude/rules/` — Config para Claude
+- `.cursor/rules/` — Config para Cursor
+- `.windsurf/workflows/` — Workflows para Windsurf
+
+**Rationale:**
+- Cada ferramenta tem seu próprio formato de configuração
+- Fonte da verdade única evita inconsistências
+- Regra das 2 tentativas reduz loops de correção
+- Recuperação ativa de contexto melhora precisão
+
+**Trade-offs:**
+- Mais arquivos para manter sincronizados
+- Workflow `/atualiza-contexto` criado para facilitar manutenção
+
+---
+
 *Add new decisions below this line. Use format: DEC-XXX: Title (YYYY-MM-DD)*
 
 ---

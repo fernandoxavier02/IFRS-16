@@ -20,7 +20,7 @@ from ..schemas import (
 )
 from ..models import PlanType
 from ..services.stripe_service import StripeService
-from ..config import get_settings
+from ..config import get_settings, LICENSE_LIMITS
 
 settings = get_settings()
 
@@ -267,8 +267,8 @@ async def get_prices():
     Retorna informações dos planos disponíveis.
     
     Preços por CNPJ:
-    - Básico: R$ 299/mês ou R$ 3.229,20/ano (10% desc) - até 3 contratos
-    - Pro: R$ 499/mês ou R$ 5.389,20/ano (10% desc) - até 20 contratos
+    - Básico: R$ 299/mês ou R$ 3.229,20/ano (10% desc) - até 50 contratos
+    - Pro: R$ 499/mês ou R$ 5.389,20/ano (10% desc) - até 500 contratos
     - Enterprise: R$ 999/mês ou R$ 10.789,20/ano (10% desc) - ilimitado
     """
     def with_price_id(plan: dict, price_id: Optional[str]):
@@ -282,9 +282,9 @@ async def get_prices():
             "price": 299.00,
             "currency": "brl",
             "interval": "month",
-            "max_contracts": 3,
+            "max_contracts": LICENSE_LIMITS["basic"]["max_contracts"],
             "features": [
-                "Até 3 contratos por CNPJ",
+                f"Até {LICENSE_LIMITS['basic']['max_contracts']} contratos por CNPJ",
                 "Exportação Excel e CSV",
                 "Suporte por email"
             ]
@@ -295,9 +295,9 @@ async def get_prices():
             "price": 3229.20,
             "currency": "brl",
             "interval": "year",
-            "max_contracts": 3,
+            "max_contracts": LICENSE_LIMITS["basic"]["max_contracts"],
             "features": [
-                "Até 3 contratos por CNPJ",
+                f"Até {LICENSE_LIMITS['basic']['max_contracts']} contratos por CNPJ",
                 "Exportação Excel e CSV",
                 "Suporte por email",
                 "Economia de R$ 358,80"
@@ -309,9 +309,9 @@ async def get_prices():
             "price": 499.00,
             "currency": "brl",
             "interval": "month",
-            "max_contracts": 20,
+            "max_contracts": LICENSE_LIMITS["pro"]["max_contracts"],
             "features": [
-                "Até 20 contratos por CNPJ",
+                f"Até {LICENSE_LIMITS['pro']['max_contracts']} contratos por CNPJ",
                 "Exportação Excel e CSV",
                 "Suporte prioritário",
                 "Multi-usuário (até 5)",
@@ -324,9 +324,9 @@ async def get_prices():
             "price": 5389.20,
             "currency": "brl",
             "interval": "year",
-            "max_contracts": 20,
+            "max_contracts": LICENSE_LIMITS["pro"]["max_contracts"],
             "features": [
-                "Até 20 contratos por CNPJ",
+                f"Até {LICENSE_LIMITS['pro']['max_contracts']} contratos por CNPJ",
                 "Exportação Excel e CSV",
                 "Suporte prioritário",
                 "Multi-usuário (até 5)",

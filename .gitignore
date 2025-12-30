@@ -56,3 +56,11 @@ backend/hash_master.txt
 backend/temp_db_url.txt
 backend/*.json
 backend/*.db
+
+# Binários e executáveis
+*.exe
+cloud-sql-proxy*
+cloud_sql_proxy*
+
+# Backups de venv
+backend/venv_bak_*/

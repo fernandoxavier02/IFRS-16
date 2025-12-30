@@ -1,6 +1,15 @@
-$API_URL = "https://ifrs16-backend-1051753255664.us-central1.run.app"
-$EMAIL = "fernandocostaxavier@gmail.com"
-$PASSWORD = "Master@2025!"
+$API_URL = $env:API_URL
+if (-not $API_URL) { $API_URL = "https://ifrs16-backend-1051753255664.us-central1.run.app" }
+
+$EMAIL = $env:ADMIN_EMAIL
+$PASSWORD = $env:ADMIN_PASSWORD
+
+if (-not $EMAIL -or -not $PASSWORD) {
+    Write-Host "❌ ERRO: Variáveis de ambiente não definidas!" -ForegroundColor Red
+    Write-Host "   Defina: ADMIN_EMAIL, ADMIN_PASSWORD" -ForegroundColor Yellow
+    Write-Host "   Exemplo: `$env:ADMIN_EMAIL='admin@empresa.com'; `$env:ADMIN_PASSWORD='SuaSenha'" -ForegroundColor Yellow
+    exit 1
+}
 
 Write-Host "-------------------------------------------"
 Write-Host "LISTAR USUARIOS ATIVOS (Cloud Run)"

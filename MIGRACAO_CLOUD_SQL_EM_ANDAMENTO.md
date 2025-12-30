@@ -21,7 +21,7 @@
 
 4. ✅ **Usuário criado:**
    - Username: `ifrs16_user`
-   - Senha: `ihU40nPKL38tCzTFvfNM` (salva em `CLOUD_SQL_PASSWORD_NEW.txt`)
+   - Senha: `<CLOUD_SQL_PASSWORD>` *(obtenha via Cloud Console)*
 
 5. ✅ **Cloud Run configurado:**
    - Cloud SQL connection adicionada via Unix socket
@@ -67,11 +67,11 @@ Se houver dados importantes no Render que precisam ser migrados:
 
 ```powershell
 # Exportar do Render
-$renderUrl = "postgresql://ifrs16_database_user:DmgbPA9jjyA587ot8Rc4Kt4fnAr0opM7@dpg-d4qvp9ggjchc73bk1rvg-a.virginia-postgres.render.com/ifrs16_database"
+$renderUrl = "<RENDER_DATABASE_URL>"
 pg_dump $renderUrl > backup_render.sql
 
 # Importar no Cloud SQL (via IP público temporário)
-$cloudSqlUrl = "postgresql://ifrs16_user:ihU40nPKL38tCzTFvfNM@136.112.221.225:5432/ifrs16_licenses"
+$cloudSqlUrl = "<CLOUD_SQL_DATABASE_URL>"
 psql $cloudSqlUrl < backup_render.sql
 ```
 
@@ -80,7 +80,7 @@ psql $cloudSqlUrl < backup_render.sql
 Após o deploy, testar:
 
 ```powershell
-$body = @{ email = "fernandocostaxavier@gmail.com"; password = "Master@2025!" } | ConvertTo-Json
+$body = @{ email = "<ADMIN_EMAIL>"; password = "<ADMIN_PASSWORD>" } | ConvertTo-Json
 Invoke-RestMethod -Uri "https://ifrs16-backend-1051753255664.us-central1.run.app/api/auth/admin/login" -Method Post -ContentType "application/json" -Body $body
 ```
 
@@ -94,18 +94,18 @@ Invoke-RestMethod -Uri "https://ifrs16-backend-1051753255664.us-central1.run.app
 | **IP Público** | `136.112.221.225` |
 | **Database** | `ifrs16_licenses` |
 | **User** | `ifrs16_user` |
-| **Password** | `ihU40nPKL38tCzTFvfNM` (salva em `CLOUD_SQL_PASSWORD_NEW.txt`) |
+| **Password** | `<CLOUD_SQL_PASSWORD>` *(obtenha via Cloud Console)* |
 
 ### DATABASE_URL para Cloud Run (Unix Socket)
 
 ```
-postgresql://ifrs16_user:ihU40nPKL38tCzTFvfNM@/ifrs16_licenses?host=/cloudsql/ifrs16-app:us-central1:ifrs16-database
+postgresql://ifrs16_user:<CLOUD_SQL_PASSWORD>@/ifrs16_licenses?host=/cloudsql/ifrs16-app:us-central1:ifrs16-database
 ```
 
 ### DATABASE_URL para Conexão Direta (IP)
 
 ```
-postgresql://ifrs16_user:ihU40nPKL38tCzTFvfNM@136.112.221.225:5432/ifrs16_licenses
+postgresql://ifrs16_user:<CLOUD_SQL_PASSWORD>@<CLOUD_SQL_IP>:5432/ifrs16_licenses
 ```
 
 ---

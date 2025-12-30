@@ -18,6 +18,7 @@ from ..schemas import (
     AdminActionResponse,
     GenerateLicenseResponse,
     LicenseStatusEnum,
+    LicenseTypeEnum,
 )
 from ..auth import get_current_admin, get_superadmin
 from .. import crud
@@ -487,7 +488,7 @@ async def delete_user(
 )
 async def grant_license_to_user(
     user_id: str,
-    license_type: LicenseStatusEnum = Query(LicenseStatusEnum.ACTIVE),
+    license_type: LicenseTypeEnum = Query(LicenseTypeEnum.PRO, description="Tipo da licença: trial, basic, pro, enterprise"),
     duration_months: Optional[int] = Query(None, ge=1, le=120),
     admin_data: dict = Depends(get_current_admin),
     db: AsyncSession = Depends(get_db)
@@ -525,16 +526,25 @@ async def grant_license_to_user(
     if duration_months:
         expires_at = datetime.utcnow() + timedelta(days=duration_months * 30)
     
-    # Criar licença
+    # Mapear LicenseTypeEnum para LicenseType e definir max_activations por tipo
+    license_type_map = {
+        LicenseTypeEnum.TRIAL: (LicenseType.TRIAL, 1),
+        LicenseTypeEnum.BASIC: (LicenseType.BASIC, 2),
+        LicenseTypeEnum.PRO: (LicenseType.PRO, 3),
+        LicenseTypeEnum.ENTERPRISE: (LicenseType.ENTERPRISE, 10),
+    }
+    mapped_type, default_activations = license_type_map.get(license_type, (LicenseType.PRO, 3))
+    
+    # Criar licença com o tipo solicitado
     license = License(
         key=key,
         user_id=user.id,
         customer_name=user.name,
         email=user.email,
-        license_type=LicenseType.PRO,  # Licenças manuais são PRO por padrão
+        license_type=mapped_type,
         status=LicenseStatus.ACTIVE,
         expires_at=expires_at,
-        max_activations=3,
+        max_activations=default_activations,
     )
     
     db.add(license)

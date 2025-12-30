@@ -298,38 +298,11 @@ class License(Base):
     
     @property
     def features(self) -> dict:
-        """Retorna features baseadas no tipo de licença"""
-        features_map = {
-            LicenseType.TRIAL: {
-                "max_contracts": 5,  # Limite usado nos testes de contratos
-                "export_excel": False,
-                "export_csv": True,
-                "support": False,
-                "multi_user": False,
-            },
-            LicenseType.BASIC: {
-                "max_contracts": 50,  # Limite mais alto para uso real
-                "export_excel": True,
-                "export_csv": True,
-                "support": True,  # Suporte por email
-                "multi_user": False,
-            },
-            LicenseType.PRO: {
-                "max_contracts": 500,  # Limite ampliado
-                "export_excel": True,
-                "export_csv": True,
-                "support": True,  # Suporte prioritário
-                "multi_user": True,  # Até 5 usuários
-            },
-            LicenseType.ENTERPRISE: {
-                "max_contracts": -1,  # Ilimitado - R$ 999/mês
-                "export_excel": True,
-                "export_csv": True,
-                "support": True,  # Suporte dedicado
-                "multi_user": True,  # Usuários ilimitados
-            },
-        }
-        return features_map.get(self.license_type, features_map[LicenseType.TRIAL])
+        """Retorna features baseadas no tipo de licença (usa LICENSE_LIMITS como fonte única)"""
+        from .config import LICENSE_LIMITS
+        
+        license_key = self.license_type.value if self.license_type else "trial"
+        return LICENSE_LIMITS.get(license_key, LICENSE_LIMITS["trial"])
 
 
 class ValidationLog(Base):

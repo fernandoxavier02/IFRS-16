@@ -2,7 +2,7 @@
 Service para regras de negócio de contratos
 """
 
-from typing import List, Optional
+from typing import List, Optional, Any
 from uuid import UUID
 from datetime import datetime
 
@@ -11,7 +11,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from ..models import User, License, LicenseStatus, Contract
-from ..schemas import ContractCreate, ContractUpdate
 from ..repositories.contracts import ContractRepository
 
 
@@ -55,7 +54,7 @@ class ContractService:
     async def create_contract(
         db: AsyncSession,
         user: User,
-        data: ContractCreate
+        data: Any
     ) -> Contract:
         """
         Cria um novo contrato para o usuário, validando limite da licença.
@@ -158,7 +157,7 @@ class ContractService:
         db: AsyncSession,
         user: User,
         contract_id: UUID,
-        data: ContractUpdate
+        data: Any
     ) -> Contract:
         """
         Atualiza um contrato do usuário.

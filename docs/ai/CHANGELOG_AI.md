@@ -7,6 +7,141 @@
 
 ## Changelog
 
+### 2025-12-30 — Validação de Dependências, MCPs e CLIs (Firebase/Stripe)
+
+**Agent:** Windsurf Cascade  
+**Task:** Verificar/instalar dependências e validar MCPs + CLIs (Firebase/Stripe)
+
+**Arquivos modificados:**
+
+- `docs/ai/CHANGELOG_AI.md` — Registro das validações executadas
+
+**Ações executadas (ambiente local):**
+
+- `backend/venv` recriado com Python 3.12 (substituiu venv quebrado que apontava para Python 3.14 inexistente; backup criado como `backend/venv_bak_<timestamp>`)
+- Dependências instaladas:
+  - `pip install -r backend/requirements.txt`
+  - `pip install -r mcp/requirements.txt`
+
+**Verificação:**
+
+- [x] `backend/venv`: `pip check` => **No broken requirements found**
+- [x] Backend: `cd backend && pytest -v` => **194 passed**
+- [x] MCP (imports): `import mcp, firebase_admin, stripe` => **OK**
+- [x] MCP tests: `cd mcp && pytest -v -m "not integration" --ignore=tests/test_production_via_api.py` => **119 passed**
+- [x] Firebase CLI: `firebase --version` => **15.1.0**
+- [x] Stripe CLI: `stripe version` => **1.33.2**
+
+**Observação:**
+
+- `mcp/tests/test_production_via_api.py` requer `aiohttp`, que não está em `mcp/requirements.txt` e por isso falha na coleta se não for ignorado.
+
+### 2025-12-30 — Correções de Qualidade (Fase 4)
+
+**Agent:** Windsurf Cascade  
+**Task:** Melhorias de qualidade e manutenibilidade
+
+**Arquivos modificados:**
+
+- `backend/requirements.txt` — Versões fixadas para reprodutibilidade (fastapi==0.128.0, sqlalchemy==2.0.41, etc.)
+
+**Verificação:**
+
+- [x] Todas as dependências com versões exatas
+- [x] App importa corretamente
+
+---
+
+### 2025-12-30 — Correções Médias (Fase 3)
+
+**Agent:** Windsurf Cascade  
+**Task:** Corrigir funcionalidades médias e imports quebrados
+
+**Arquivos criados:**
+
+- `backend/app/repositories/__init__.py` — Módulo de repositories
+- `backend/app/repositories/contracts.py` — ContractRepository com operações CRUD
+
+**Arquivos modificados:**
+
+- `backend/app/routers/contracts.py` — Adicionada validação robusta de status/categoria (retorna 422 em vez de 500)
+- `backend/app/services/contracts_service.py` — Corrigido import quebrado (ContractCreate/ContractUpdate → Any)
+- `backend/app/main.py` — init_db condicionado apenas para ambiente de desenvolvimento
+
+**Correções implementadas:**
+
+1. **Validação de status/categoria** — Retorna 422 com mensagem clara para valores inválidos
+2. **ContractRepository criado** — Resolve ImportError em contracts_service.py
+3. **init_db apenas em dev** — Em produção, usar Alembic migrations
+
+**Verificação:**
+
+- [x] App importa corretamente
+- [x] ContractRepository e ContractService importam OK
+- [x] Validação de status/categoria funciona
+
+---
+
+### 2025-12-30 — Correções de Segurança ALTA (Fase 2)
+
+**Agent:** Windsurf Cascade  
+**Task:** Corrigir bugs de segurança de prioridade ALTA
+
+**Arquivos modificados:**
+
+- `backend/app/crud.py` — Corrigido controle de ativações: agora incrementa contador quando nova máquina é usada
+- `backend/app/routers/admin.py` — Corrigido grant_license: usa LicenseTypeEnum em vez de LicenseStatusEnum; respeita tipo solicitado
+- `backend/app/config.py` — Adicionado LICENSE_LIMITS como fonte única de verdade para limites de licença
+- `backend/app/models.py` — Atualizado features() para usar LICENSE_LIMITS centralizado
+- `backend/app/routers/payments.py` — Atualizado get_prices() para usar LICENSE_LIMITS (basic=50, pro=500 contratos)
+- `backend/app/routers/auth.py` — Adicionado rate limit 5/min no login admin
+- `backend/app/routers/licenses.py` — Adicionado rate limit 30/min na validação de licença
+
+**Correções implementadas:**
+
+1. **Controle de ativações por dispositivo** — Contador agora incrementa corretamente para novas máquinas
+2. **Concessão manual de licença** — Usa enum correto e respeita tipo solicitado (trial/basic/pro/enterprise)
+3. **Limites de contratos unificados** — Fonte única em LICENSE_LIMITS (trial=5, basic=50, pro=500, enterprise=ilimitado)
+4. **Rate limiting** — Login admin: 5/min, Validação licença: 30/min
+
+**Verificação:**
+
+- [x] App importa corretamente
+- [x] Todos os routers importam OK
+- [x] LICENSE_LIMITS disponível: ['trial', 'basic', 'pro', 'enterprise']
+
+---
+
+### 2025-12-30 — Remoção de Credenciais Expostas (Fase 1 - Críticos)
+
+**Agent:** Windsurf Cascade  
+**Task:** Remover credenciais reais de docs/scripts e exigir env vars
+
+**Arquivos modificados:**
+
+- `DEPLOY_FINAL_STATUS.md` — Substituídas credenciais reais por placeholders
+- `FINALIZAR_FIREBASE.md` — Substituídas JWT_SECRET_KEY e STRIPE_SECRET_KEY por placeholders
+- `MIGRACAO_CLOUD_SQL_EM_ANDAMENTO.md` — Substituídas senhas DB, URLs e credenciais admin por placeholders
+- `backend/criar_master_job.py` — Removidas credenciais hardcoded; exige CLOUD_SQL_USER, CLOUD_SQL_PASSWORD, ADMIN_EMAIL, ADMIN_USERNAME, ADMIN_PASSWORD; não loga senhas
+- `backend/init_production_db.py` — Removida senha padrão; exige ADMIN_EMAIL e ADMIN_PASSWORD; não loga senha
+- `listar_usuarios_ativos.ps1` — Removida senha hardcoded; exige ADMIN_EMAIL e ADMIN_PASSWORD via env vars
+- `.gitignore` — Adicionados padrões para binários (*.exe, cloud-sql-proxy*) e backups de venv
+
+**Verificação:**
+
+- [x] App importa corretamente: `from app.main import app` => OK
+- [x] `criar_master_job.py` falha sem env vars (exit code 1)
+- [x] `listar_usuarios_ativos.ps1` falha sem env vars (exit code 1)
+- [x] Arquivos sensíveis não tracked no Git
+- [x] `.gitignore` atualizado
+
+**Próximos passos:**
+
+- **MANUAL:** Rotacionar segredos em produção (JWT, Stripe, DB) nos dashboards
+- Fase 2: Correções de segurança (senha temporária, token admin, ativações, limites)
+
+---
+
 ### 2025-12-30 — Correções Críticas de Segurança (Fase 1)
 
 **Agent:** Windsurf Cascade  

@@ -88,14 +88,17 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             print(f"❌ ERRO CRÍTICO: Configuração incompleta em produção: {msg}")
             raise RuntimeError(f"Secrets inválidos em produção: {msg}")
 
-    # Criar tabelas automaticamente se não existirem
-    print("📦 Inicializando banco de dados...")
-    try:
-        await init_db()
-        print("✅ Banco de dados inicializado com sucesso!")
-    except Exception as e:
-        print(f"⚠️ Erro ao inicializar banco: {e}")
-        # Continuar mesmo com erro - tabelas podem já existir
+    # Criar tabelas automaticamente apenas em desenvolvimento
+    # Em produção, usar Alembic migrations para evitar drift
+    if settings.ENVIRONMENT != "production":
+        print("📦 Inicializando banco de dados (dev mode)...")
+        try:
+            await init_db()
+            print("✅ Banco de dados inicializado com sucesso!")
+        except Exception as e:
+            print(f"⚠️ Erro ao inicializar banco: {e}")
+    else:
+        print("📦 Produção: init_db desabilitado (use Alembic migrations)")
     
     yield
     

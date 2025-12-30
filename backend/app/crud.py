@@ -291,10 +291,18 @@ async def update_license_validation(
     license.last_validation = datetime.utcnow()
     license.last_validation_ip = ip_address
     
-    # Atualizar machine_id se for primeira ativação
-    if machine_id and not license.machine_id:
-        license.machine_id = machine_id
-        license.current_activations = 1
+    # Controle de ativações por dispositivo
+    if machine_id:
+        # Primeira ativação
+        if not license.machine_id:
+            license.machine_id = machine_id
+            license.current_activations = 1
+        # Nova máquina diferente da registrada - incrementar contador
+        elif license.machine_id != machine_id:
+            # Verificar se ainda há slots disponíveis antes de incrementar
+            if license.max_activations is None or license.current_activations < license.max_activations:
+                license.current_activations = (license.current_activations or 0) + 1
+                license.machine_id = machine_id  # Atualizar para última máquina ativa
     
     await db.flush()
     await db.refresh(license)

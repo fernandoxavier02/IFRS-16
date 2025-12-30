@@ -8,6 +8,8 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from ..database import get_db
 from ..models import AdminUser, User, AdminRole, License, LicenseStatus
@@ -38,6 +40,7 @@ from ..config import get_settings
 settings = get_settings()
 
 router = APIRouter(prefix="/api/auth", tags=["Autenticação"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 # =============================================================================
@@ -50,6 +53,7 @@ router = APIRouter(prefix="/api/auth", tags=["Autenticação"])
     summary="Login de Administrador",
     description="Autentica um administrador e retorna token JWT"
 )
+@limiter.limit("5/minute")  # Rate limit: 5 tentativas por minuto por IP
 async def admin_login(
     body: LoginRequest,
     request: Request,

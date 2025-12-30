@@ -140,8 +140,8 @@ Após obter a URL do Cloud Run, configure as variáveis:
 ```bash
 gcloud run services update ifrs16-backend \
     --update-env-vars "DATABASE_URL=postgresql://user:pass@/db?host=/cloudsql/[CONNECTION_STRING]" \
-    --update-env-vars "JWT_SECRET_KEY=vj7s-Zlyd4OYlejHDC22UEmCSSblzH1Pn7mowJulEAk" \
-    --update-env-vars "STRIPE_SECRET_KEY=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" \
+    --update-env-vars "JWT_SECRET_KEY=<JWT_SECRET_KEY>" \
+    --update-env-vars "STRIPE_SECRET_KEY=<STRIPE_SECRET_KEY>" \
     --update-env-vars "FRONTEND_URL=https://ifrs16-app.web.app" \
     --update-env-vars "API_URL=https://[SUA-URL-CLOUD-RUN]" \
     --update-env-vars "CORS_ORIGINS=https://ifrs16-app.web.app,https://ifrs16-app.firebaseapp.com" \

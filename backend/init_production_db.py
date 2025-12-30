@@ -49,12 +49,21 @@ async def init_production_db():
             print(f"✅ Superadmin já existe: {existing.username} ({existing.email})")
             return
         
-        # Criar admin padrão se não existir
-        print("👤 Criando superadmin padrão...")
+        # Criar admin - EXIGE variáveis de ambiente
+        admin_email = os.getenv("ADMIN_EMAIL")
+        admin_password = os.getenv("ADMIN_PASSWORD")
+        
+        if not admin_email or not admin_password:
+            print("❌ ERRO: Variáveis de ambiente obrigatórias não definidas!")
+            print("   Defina: ADMIN_EMAIL, ADMIN_PASSWORD")
+            print("   Exemplo: $env:ADMIN_EMAIL='admin@empresa.com'; $env:ADMIN_PASSWORD='SenhaSegura123!'")
+            return
+        
+        print("👤 Criando superadmin...")
         admin = AdminUser(
-            username="admin",
-            email=os.getenv("ADMIN_EMAIL", "admin@ifrs16.local"),
-            password_hash=hash_password(os.getenv("ADMIN_PASSWORD", "Admin123!")),
+            username=os.getenv("ADMIN_USERNAME", "admin"),
+            email=admin_email,
+            password_hash=hash_password(admin_password),
             role=AdminRole.SUPERADMIN,
             is_active=True
         )
@@ -70,9 +79,8 @@ async def init_production_db():
         print()
         print(f"   👤 Username: {admin.username}")
         print(f"   📧 Email: {admin.email}")
-        print(f"   🔑 Senha: {os.getenv('ADMIN_PASSWORD', 'Admin123!')}")
         print()
-        print("⚠️  IMPORTANTE: Altere a senha após o primeiro login!")
+        print("⚠️  IMPORTANTE: A senha foi definida via variável de ambiente.")
         print()
 
 

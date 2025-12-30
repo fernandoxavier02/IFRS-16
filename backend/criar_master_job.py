@@ -17,10 +17,17 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 # mas o asyncpg geralmente aceita se for postgres://.
 # Vamos reconstruir a string de conexao para garantir, usando os dados atomicamente se disponiveis.
 
-DB_USER = os.getenv("CLOUD_SQL_USER", "ifrs16_user")
-DB_PASS = os.getenv("CLOUD_SQL_PASSWORD", "bBMOLk2HURjQAvDiPNYE")
-DB_NAME = "ifrs16_licenses"
-INSTANCE_CONNECTION_NAME = "ifrs16-app:us-central1:ifrs16-database"
+# Variáveis de ambiente OBRIGATÓRIAS
+DB_USER = os.getenv("CLOUD_SQL_USER")
+DB_PASS = os.getenv("CLOUD_SQL_PASSWORD")
+DB_NAME = os.getenv("CLOUD_SQL_DATABASE", "ifrs16_licenses")
+INSTANCE_CONNECTION_NAME = os.getenv("CLOUD_SQL_INSTANCE", "ifrs16-app:us-central1:ifrs16-database")
+
+# Validar variáveis obrigatórias
+if not DB_USER or not DB_PASS:
+    print("❌ ERRO: Variáveis de ambiente obrigatórias não definidas!")
+    print("   Defina: CLOUD_SQL_USER, CLOUD_SQL_PASSWORD")
+    sys.exit(1)
 
 # No Cloud Run, conectamos via Unix Socket: /cloudsql/INSTANCE_CONNECTION_NAME
 DSN = f"postgresql://{DB_USER}:{DB_PASS}@/{DB_NAME}?host=/cloudsql/{INSTANCE_CONNECTION_NAME}"
@@ -41,11 +48,16 @@ async def run():
         return
 
     try:
-        # Dados do usuário
-        email = "fernandocostaxavier@gmail.com"
-        username = "fernando.costa"
-        raw_password = "Fcxv020781@"
-        role = "SUPERADMIN"
+        # Dados do usuário via variáveis de ambiente
+        email = os.getenv("ADMIN_EMAIL")
+        username = os.getenv("ADMIN_USERNAME")
+        raw_password = os.getenv("ADMIN_PASSWORD")
+        role = os.getenv("ADMIN_ROLE", "SUPERADMIN")
+        
+        if not email or not username or not raw_password:
+            print("❌ ERRO: Variáveis de ambiente do admin não definidas!")
+            print("   Defina: ADMIN_EMAIL, ADMIN_USERNAME, ADMIN_PASSWORD")
+            return
         
         # Gerar Hash
         salt = bcrypt.gensalt()
@@ -73,7 +85,7 @@ async def run():
         
         print(f"✅ Usuário processado com sucesso! ID: {result_id}")
         print(f"   Email: {email}")
-        print(f"   Senha: {raw_password}")
+        print(f"   Username: {username}")
         
     except Exception as e:
         print(f"❌ Erro ao criar usuário: {e}")

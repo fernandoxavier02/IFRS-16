@@ -60,7 +60,7 @@ O backend precisa que os enums sejam criados **manualmente no banco de dados** a
 ```bash
 gcloud sql connect ifrs16-database --user=ifrs16_user --database=ifrs16_licenses
 ```
-**Senha**: `ihU40nPKL38tCzTFvfNM`
+**Senha**: `<CLOUD_SQL_PASSWORD>` *(obtenha via Cloud Console ou variável de ambiente)*
 
 ### Passo 3: Executar SQL
 Cole e execute o SQL do arquivo `SOLUCAO_FINAL_BACKEND.md` (linhas 31-82)
@@ -75,7 +75,7 @@ gcloud run deploy ifrs16-backend \
   --allow-unauthenticated \
   --timeout=300 \
   --memory=512Mi \
-  --set-env-vars="DATABASE_URL=postgresql://ifrs16_user:ihU40nPKL38tCzTFvfNM@/ifrs16_licenses?host=/cloudsql/ifrs16-app:us-central1:ifrs16-database,JWT_SECRET_KEY=vj7s-Zlyd4OYlejHDC22UEmCSSblzH1Pn7mowJulEAk,JWT_ALGORITHM=HS256,ACCESS_TOKEN_EXPIRE_MINUTES=1440,ENVIRONMENT=production,DEBUG=false,FRONTEND_URL=https://ifrs16-app.web.app,API_URL=https://ifrs16-backend-1051753255664.us-central1.run.app,CORS_ORIGINS=https://ifrs16-app.web.app https://ifrs16-app.firebaseapp.com,STRIPE_SECRET_KEY=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,STRIPE_WEBHOOK_SECRET=whsec_kD9pIvJnLXxPVJHCVBCHCt9qKrTaqJV8" \
+  --set-env-vars="DATABASE_URL=<DATABASE_URL>,JWT_SECRET_KEY=<JWT_SECRET_KEY>,JWT_ALGORITHM=HS256,ACCESS_TOKEN_EXPIRE_MINUTES=1440,ENVIRONMENT=production,DEBUG=false,FRONTEND_URL=https://ifrs16-app.web.app,API_URL=https://ifrs16-backend-1051753255664.us-central1.run.app,CORS_ORIGINS=https://ifrs16-app.web.app https://ifrs16-app.firebaseapp.com,STRIPE_SECRET_KEY=<STRIPE_SECRET_KEY>,STRIPE_WEBHOOK_SECRET=<STRIPE_WEBHOOK_SECRET>" \
   --add-cloudsql-instances="ifrs16-app:us-central1:ifrs16-database"
 ```
 

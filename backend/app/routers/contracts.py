@@ -55,6 +55,35 @@ CATEGORIAS_VALIDAS = {
     "OT": "Outros"
 }
 
+# Status válidos
+STATUS_VALIDOS = {"draft", "active", "completed", "cancelled"}
+
+
+def validate_status(status_value: str) -> str:
+    """Valida e normaliza o status do contrato"""
+    if not status_value:
+        return "draft"
+    normalized = status_value.lower().strip()
+    if normalized not in STATUS_VALIDOS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Status inválido: '{status_value}'. Valores permitidos: {', '.join(sorted(STATUS_VALIDOS))}"
+        )
+    return normalized
+
+
+def validate_categoria(categoria_value: str) -> str:
+    """Valida e normaliza a categoria do contrato"""
+    if not categoria_value:
+        return "OT"
+    normalized = categoria_value.upper().strip()
+    if normalized not in CATEGORIAS_VALIDAS:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Categoria inválida: '{categoria_value}'. Valores permitidos: {', '.join(sorted(CATEGORIAS_VALIDAS.keys()))}"
+        )
+    return normalized
+
 
 class ContractResponse(ContractBase):
     id: str
@@ -235,8 +264,8 @@ async def create_contract(
         name=data.name,
         description=data.description,
         contract_code=data.contract_code,
-        status=ContractStatus(data.status) if data.status else ContractStatus.DRAFT,
-        categoria=(data.categoria or "OT").upper(),
+        status=ContractStatus(validate_status(data.status)),
+        categoria=validate_categoria(data.categoria),
         numero_sequencial=None
     )
 
@@ -332,7 +361,9 @@ async def update_contract(
     if data.contract_code is not None:
         contract.contract_code = data.contract_code
     if data.status is not None:
-        contract.status = ContractStatus(data.status)
+        contract.status = ContractStatus(validate_status(data.status))
+    if data.categoria is not None:
+        contract.categoria = validate_categoria(data.categoria)
 
     contract.updated_at = datetime.utcnow()
 

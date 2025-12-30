@@ -87,6 +87,45 @@ class Settings(BaseSettings):
         case_sensitive = True
 
 
+# =============================================================================
+# LIMITES DE LICENÇA (Fonte única de verdade)
+# =============================================================================
+LICENSE_LIMITS = {
+    "trial": {
+        "max_contracts": 5,
+        "max_activations": 1,
+        "export_excel": False,
+        "export_csv": True,
+        "support": False,
+        "multi_user": False,
+    },
+    "basic": {
+        "max_contracts": 50,
+        "max_activations": 2,
+        "export_excel": True,
+        "export_csv": True,
+        "support": True,
+        "multi_user": False,
+    },
+    "pro": {
+        "max_contracts": 500,
+        "max_activations": 3,
+        "export_excel": True,
+        "export_csv": True,
+        "support": True,
+        "multi_user": True,
+    },
+    "enterprise": {
+        "max_contracts": -1,  # Ilimitado
+        "max_activations": 10,
+        "export_excel": True,
+        "export_csv": True,
+        "support": True,
+        "multi_user": True,
+    },
+}
+
+
 @lru_cache()
 def get_settings() -> Settings:
     """

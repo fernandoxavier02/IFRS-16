@@ -7,6 +7,8 @@ from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from ..database import get_db
 from ..models import LicenseStatus
@@ -23,6 +25,7 @@ from ..auth import create_access_token, get_current_license
 from .. import crud
 
 router = APIRouter(prefix="/api", tags=["Licenses"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 def get_client_ip(request: Request) -> str:
@@ -44,6 +47,7 @@ def get_client_ip(request: Request) -> str:
     summary="Validar chave de licença",
     description="Valida uma chave de licença e retorna um token JWT para autenticação"
 )
+@limiter.limit("30/minute")  # Rate limit: 30 validações por minuto por IP
 async def validate_license(
     request: Request,
     body: LicenseValidateRequest,

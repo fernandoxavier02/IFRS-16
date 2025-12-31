@@ -426,16 +426,17 @@
 
         async function openPortal() {
             const token = localStorage.getItem('ifrs16_auth_token');
-            
+
             try {
-                const response = await fetch(`${API_URL}/api/stripe/create-portal-session`, {
-                    method: 'POST',
+                // ✓ ATUALIZADO: usar /api/payments/portal ao invés de /api/stripe/create-portal-session
+                const response = await fetch(`${API_URL}/api/payments/portal`, {
+                    method: 'GET',
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
                 if (response.ok) {
                     const data = await response.json();
-                    window.location.href = data.url;
+                    window.location.href = data.portal_url;  // ✓ ATUALIZADO: portal_url ao invés de url
                 } else {
                     const error = await response.json();
                     alert(error.detail || 'Erro ao abrir portal de pagamento');

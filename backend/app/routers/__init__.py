@@ -7,7 +7,6 @@ from .admin import router as admin_router
 from .auth import router as auth_router
 from .payments import router as payments_router
 from .user_dashboard import router as user_dashboard_router
-from .stripe import router as stripe_router
 
 __all__ = [
     "licenses_router",
@@ -15,6 +14,5 @@ __all__ = [
     "auth_router",
     "payments_router",
     "user_dashboard_router",
-    "stripe_router"
 ]
 

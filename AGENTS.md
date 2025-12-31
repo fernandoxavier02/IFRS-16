@@ -1,123 +1,52 @@
 # AGENTS.md
 
-> **For:** OpenAI Codex  
-> **Project:** IFRS 16 License Management System
-
----
+> **For:** OpenAI Codex | **Project:** IFRS 16
 
 ## Quick Start
 
-1. **Read context first:** `docs/ai/PROJECT_CONTEXT.md`
-2. **Check recent changes:** `docs/ai/CHANGELOG_AI.md`
-3. **List files before editing**
-4. **Run tests after changes**
-
----
-
-## Repository Overview
-
-- **Backend:** `backend/` — Python 3.11 + FastAPI
-- **Frontend:** `*.html` files in root — Static HTML/JS/CSS
-- **Tests:** `backend/tests/` — pytest + pytest-asyncio
-- **Migrations:** `backend/alembic/` — Alembic migrations
-
----
-
-## Commands
-
-### Backend (from `backend/` directory)
-
 ```bash
-# Install dependencies
-pip install -r requirements.txt
+# 1. Leia o contexto
+cat docs/ai/00-INDEX.md
 
-# Run dev server
-uvicorn app.main:app --reload --port 8000
+# 2. Antes de editar: liste arquivos
 
-# Run tests
-pytest -v
-
-# Run tests with coverage
-pytest -v --cov=app --cov-report=html
-
-# Run migrations
-alembic upgrade head
+# 3. Após editar: teste
+cd backend && pytest -v
 ```
 
-### Deploy (from project root)
+## Context Pack → `docs/ai/`
 
-```powershell
-# Deploy frontend to Firebase
-firebase deploy --only hosting --project ifrs16-app
+| Arquivo | Conteúdo |
+|---------|----------|
+| `00-INDEX.md` | Índice e quick start |
+| `10-STACK.md` | Stack, comandos, URLs |
+| `20-ARCHITECTURE.md` | Diagramas e fluxos |
+| `30-DATA_BACKEND.md` | Models, API, schemas |
+| `40-FRONTEND_APP.md` | Páginas, deploy |
+| `90-OPEN_QUESTIONS.md` | TODOs e questões |
+| `CHANGELOG_AI.md` | Log de mudanças AI |
 
-# Full deploy script
-.\deploy_firebase.ps1
+## Guardrails
 
-# E2E tests
-.\testar_sistema_completo.ps1
-```
+1. **Nunca commitar segredos**
+2. **Regra das 2 tentativas** — Se falhar 2x, pare e analise
+3. **Sempre testar** — `pytest -v` antes de concluir
+4. **Atualizar CHANGELOG_AI.md** após mudanças
 
----
+## Comandos Essenciais
 
-## Key Files
-
-| Purpose | Path |
-|---------|------|
-| Backend entry | `backend/app/main.py` |
-| Models | `backend/app/models.py` |
-| Schemas | `backend/app/schemas.py` |
-| Config | `backend/app/config.py` |
-| Routes | `backend/app/routers/*.py` |
-| Tests | `backend/tests/test_*.py` |
-| Test fixtures | `backend/tests/conftest.py` |
-
----
-
-## Constraints
-
-1. **Never commit secrets** — `.env` files are gitignored
-2. **Always run tests** before completing a task
-3. **Use Alembic** for database schema changes in production
-4. **Preserve existing code style** — Match indentation, naming conventions
-5. **Update CHANGELOG_AI.md** after making changes
-
----
-
-## Verification
-
-After any code change, run:
-
-```bash
-cd backend
-pytest -v
-```
-
-For frontend changes, run:
-
-```powershell
-.\testar_sistema_completo.ps1
-```
-
----
-
-## Architecture
-
-```
-Browser → Firebase Hosting (static HTML/JS)
-           ↓ API calls
-       Cloud Run (FastAPI)
-           ↓ asyncpg + SSL
-       PostgreSQL (Render)
-```
-
----
+| Ação | Comando |
+|------|---------|
+| Testes backend | `cd backend && pytest -v` |
+| Deploy frontend | `firebase deploy --only hosting --project ifrs16-app` |
+| E2E tests | `.\testar_sistema_completo.ps1` |
 
 ## Stop Rules
 
-- **After 2 failed fix attempts:** Stop and analyze root cause
-- **If tests fail unexpectedly:** Read the failing test file first
-- **If unsure about architecture:** Read `docs/ai/PROJECT_CONTEXT.md`
+- Após 2 falhas → análise de causa raiz
+- Testes falhando → leia o arquivo de teste primeiro
+- Dúvida de arquitetura → leia `docs/ai/20-ARCHITECTURE.md`
 
 ---
 
-*See `docs/ai/PROJECT_CONTEXT.md` for complete documentation.*
+*Detalhes completos em `docs/ai/`*

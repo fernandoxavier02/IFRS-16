@@ -33,7 +33,7 @@ class EmailService:
         """
         if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
             print(
-                "⚠️ SMTP não configurado - email não enviado "
+                "[WARN] SMTP nao configurado - email nao enviado "
                 f"(SMTP_USER={'OK' if settings.SMTP_USER else 'MISSING'}, "
                 f"SMTP_PASSWORD={'OK' if settings.SMTP_PASSWORD else 'MISSING'})"
             )
@@ -62,7 +62,7 @@ class EmailService:
             use_starttls = bool(getattr(settings, 'SMTP_USE_STARTTLS', True))
 
             print(
-                "📧 Enviando email via SMTP "
+                "[EMAIL] Enviando email via SMTP "
                 f"host={settings.SMTP_HOST} port={settings.SMTP_PORT} ssl={use_ssl} starttls={use_starttls} "
                 f"from={from_email} to={to_email}"
             )
@@ -88,12 +88,12 @@ class EmailService:
                     server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                     server.sendmail(from_email, [to_email], message.as_string())
 
-            print(f"✅ Email enviado para: {to_email}")
+            print(f"[OK] Email enviado para: {to_email}")
             return True
             
         except Exception as e:
             print(
-                "❌ Erro ao enviar email via SMTP "
+                "[ERROR] Erro ao enviar email via SMTP "
                 f"host={settings.SMTP_HOST} port={settings.SMTP_PORT} "
                 f"to={to_email}: {e}"
             )
@@ -493,6 +493,351 @@ Você pode gerenciar sua assinatura a qualquer momento através do portal do cli
 Atenciosamente,
 Equipe IFRS 16
         """
-        
+
         return await cls.send_email(to_email, subject, html_content, text_content)
+
+    @classmethod
+    async def send_payment_failed_email(
+        cls,
+        to_email: str,
+        user_name: str,
+        plan_name: str,
+        retry_date: str
+    ) -> bool:
+        """
+        Envia email de alerta de falha de pagamento.
+        """
+        subject = "Atencao: Falha no Pagamento - IFRS 16"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">[ALERTA] Falha no Pagamento</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                Ola, <strong>{user_name}</strong>,
+                            </p>
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                Nao conseguimos processar o pagamento da sua assinatura do plano <strong style="color: #dc2626;">{plan_name}</strong>.
+                            </p>
+                            <table role="presentation" style="width: 100%; background-color: #fef2f2; border-left: 4px solid #dc2626; border-radius: 0 8px 8px 0; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="color: #991b1b; font-size: 14px; margin: 0 0 10px 0;">
+                                            <strong>O que isso significa?</strong>
+                                        </p>
+                                        <p style="color: #991b1b; font-size: 14px; margin: 0;">
+                                            Sua assinatura esta marcada como pendente. Tentaremos processar o pagamento novamente em <strong>{retry_date}</strong>.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                <strong>O que voce pode fazer:</strong>
+                            </p>
+                            <ul style="color: #4a5568; font-size: 15px; line-height: 1.8;">
+                                <li>Verifique se ha saldo suficiente no seu cartao</li>
+                                <li>Atualize seu metodo de pagamento no portal do cliente</li>
+                                <li>Entre em contato com sua operadora de cartao</li>
+                            </ul>
+                            <table role="presentation" style="width: 100%; margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{settings.FRONTEND_URL}/dashboard.html"
+                                           style="display: inline-block; background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                                            Atualizar Pagamento
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color: #718096; font-size: 14px;">
+                                Se voce nao atualizar seu metodo de pagamento, sua assinatura sera cancelada e voce perdera o acesso ao sistema.
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 20px; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                                (c) 2025 IFRS 16 - Sistema de Gestao de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        """
+
+        text_content = f"""
+Ola, {user_name},
+
+Nao conseguimos processar o pagamento da sua assinatura do plano {plan_name}.
+
+O que isso significa?
+Sua assinatura esta marcada como pendente. Tentaremos processar o pagamento novamente em {retry_date}.
+
+O que voce pode fazer:
+- Verifique se ha saldo suficiente no seu cartao
+- Atualize seu metodo de pagamento no portal do cliente: {settings.FRONTEND_URL}/dashboard.html
+- Entre em contato com sua operadora de cartao
+
+Se voce nao atualizar seu metodo de pagamento, sua assinatura sera cancelada e voce perdera o acesso ao sistema.
+
+Atenciosamente,
+Equipe IFRS 16
+        """
+
+        return await cls.send_email(to_email, subject, html_content, text_content)
+
+    @classmethod
+    async def send_subscription_cancelled_email(
+        cls,
+        to_email: str,
+        user_name: str,
+        plan_name: str,
+        cancel_reason: str = "Solicitacao do cliente"
+    ) -> bool:
+        """
+        Envia email de despedida quando assinatura e cancelada.
+        """
+        subject = "Sua assinatura foi cancelada - IFRS 16"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #64748b 0%, #94a3b8 100%); padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Assinatura Cancelada</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                Ola, <strong>{user_name}</strong>,
+                            </p>
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                Sua assinatura do plano <strong>{plan_name}</strong> foi cancelada.
+                            </p>
+                            <table role="presentation" style="width: 100%; background-color: #f1f5f9; border-radius: 8px; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="color: #475569; font-size: 14px; margin: 0;">
+                                            <strong>Motivo:</strong> {cancel_reason}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                Sentimos muito em ve-lo partir. Se voce tiver algum feedback sobre o motivo do cancelamento, adorariamos ouvir de voce.
+                            </p>
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                <strong>Voce sempre pode voltar!</strong>
+                            </p>
+                            <p style="color: #4a5568; font-size: 15px; line-height: 1.6;">
+                                Seus dados serao mantidos por 90 dias. Se voce decidir renovar sua assinatura neste periodo, tudo estara esperando por voce.
+                            </p>
+                            <table role="presentation" style="width: 100%; margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{settings.FRONTEND_URL}/pricing.html"
+                                           style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                                            Renovar Assinatura
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            <p style="color: #718096; font-size: 14px; text-align: center;">
+                                Obrigado por ter usado o IFRS 16. Esperamos ve-lo novamente em breve!
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 20px; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                                (c) 2025 IFRS 16 - Sistema de Gestao de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        """
+
+        text_content = f"""
+Ola, {user_name},
+
+Sua assinatura do plano {plan_name} foi cancelada.
+
+Motivo: {cancel_reason}
+
+Sentimos muito em ve-lo partir. Se voce tiver algum feedback sobre o motivo do cancelamento, adorariamos ouvir de voce.
+
+Voce sempre pode voltar!
+
+Seus dados serao mantidos por 90 dias. Se voce decidir renovar sua assinatura neste periodo, tudo estara esperando por voce.
+
+Renovar assinatura: {settings.FRONTEND_URL}/pricing.html
+
+Obrigado por ter usado o IFRS 16. Esperamos ve-lo novamente em breve!
+
+Atenciosamente,
+Equipe IFRS 16
+        """
+
+        return await cls.send_email(to_email, subject, html_content, text_content)
+
+    @classmethod
+    async def send_admin_new_subscription_notification(
+        cls,
+        customer_name: str,
+        customer_email: str,
+        plan_name: str,
+        license_key: str,
+        amount: str = "N/A"
+    ) -> bool:
+        """
+        Envia notificacao ao administrador quando ha nova assinatura.
+        """
+        admin_email = "contato@fxstudioai.com"
+        subject = f"[NOVA ASSINATURA] {customer_name} - {plan_name}"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 40px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px;">Nova Assinatura Recebida!</h1>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 40px;">
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                <strong>Uma nova assinatura foi criada no sistema IFRS 16!</strong>
+                            </p>
+
+                            <table role="presentation" style="width: 100%; background-color: #f0fdf4; border-left: 4px solid #10b981; border-radius: 0 8px 8px 0; margin: 20px 0;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="color: #065f46; font-size: 14px; margin: 0 0 10px 0;">
+                                            <strong>Dados do Cliente:</strong>
+                                        </p>
+                                        <p style="color: #065f46; font-size: 14px; margin: 5px 0;">
+                                            <strong>Nome:</strong> {customer_name}
+                                        </p>
+                                        <p style="color: #065f46; font-size: 14px; margin: 5px 0;">
+                                            <strong>Email:</strong> {customer_email}
+                                        </p>
+                                        <p style="color: #065f46; font-size: 14px; margin: 5px 0;">
+                                            <strong>Plano:</strong> {plan_name}
+                                        </p>
+                                        <p style="color: #065f46; font-size: 14px; margin: 5px 0;">
+                                            <strong>Valor:</strong> {amount}
+                                        </p>
+                                        <p style="color: #065f46; font-size: 14px; margin: 5px 0;">
+                                            <strong>Chave de Licenca:</strong> <code style="background-color: #dcfce7; padding: 2px 6px; border-radius: 4px;">{license_key}</code>
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6;">
+                                <strong>Acoes realizadas automaticamente:</strong>
+                            </p>
+                            <ul style="color: #4a5568; font-size: 15px; line-height: 1.8;">
+                                <li>Usuario criado no sistema</li>
+                                <li>Licenca gerada e ativada</li>
+                                <li>Email de boas-vindas enviado para o cliente</li>
+                                <li>Senha temporaria gerada (cliente sera forcado a alterar)</li>
+                            </ul>
+
+                            <table role="presentation" style="width: 100%; margin: 30px 0;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{settings.FRONTEND_URL}/dashboard.html"
+                                           style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600;">
+                                            Ver Dashboard
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <p style="color: #718096; font-size: 14px; text-align: center;">
+                                Esta e uma notificacao automatica do sistema IFRS 16
+                            </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 20px; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                                (c) 2025 IFRS 16 - Sistema de Gestao de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        """
+
+        text_content = f"""
+NOVA ASSINATURA RECEBIDA!
+
+Uma nova assinatura foi criada no sistema IFRS 16!
+
+Dados do Cliente:
+- Nome: {customer_name}
+- Email: {customer_email}
+- Plano: {plan_name}
+- Valor: {amount}
+- Chave de Licenca: {license_key}
+
+Acoes realizadas automaticamente:
+- Usuario criado no sistema
+- Licenca gerada e ativada
+- Email de boas-vindas enviado para o cliente
+- Senha temporaria gerada (cliente sera forcado a alterar)
+
+Ver Dashboard: {settings.FRONTEND_URL}/dashboard.html
+
+---
+Esta e uma notificacao automatica do sistema IFRS 16
+        """
+
+        return await cls.send_email(admin_email, subject, html_content, text_content)
 

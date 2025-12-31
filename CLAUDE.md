@@ -1,97 +1,51 @@
 # CLAUDE.md
 
-> **For:** Claude Code  
-> **Project:** IFRS 16 License Management System
+> **For:** Claude Code | **Project:** IFRS 16
 
----
+## Protocolo de Sessão
 
-## Session Protocol
+1. **Ler:** `docs/ai/00-INDEX.md` → contexto completo
+2. **Listar arquivos** antes de editar
+3. **Testar:** `cd backend && pytest -v`
+4. **Logar:** atualizar `docs/ai/CHANGELOG_AI.md`
 
-1. **Read first:**
-   - `docs/ai/PROJECT_CONTEXT.md` — Full context
-   - `docs/ai/CHANGELOG_AI.md` — Recent changes
+## Context Pack → `docs/ai/`
 
-2. **Before editing:** List all files you will modify
+| Arquivo | Conteúdo |
+|---------|----------|
+| `00-INDEX.md` | Índice e quick start |
+| `10-STACK.md` | Stack, comandos, URLs |
+| `20-ARCHITECTURE.md` | Diagramas e fluxos |
+| `30-DATA_BACKEND.md` | Models, API, schemas |
+| `40-FRONTEND_APP.md` | Páginas, deploy |
+| `90-OPEN_QUESTIONS.md` | TODOs e questões |
 
-3. **After editing:** Run verification command
+## Guardrails
 
-4. **Log changes:** Update `docs/ai/CHANGELOG_AI.md`
+1. **Nunca commitar segredos**
+2. **Regra das 2 tentativas** — Se falhar 2x, pare e analise
+3. **Sempre testar** antes de concluir
+4. **Atualizar CHANGELOG_AI.md**
 
----
+## Comandos
 
-## Project Structure
-
-```
-IFRS 16/
-├── backend/                 # FastAPI backend (Python 3.11)
-│   ├── app/                 # Application code
-│   │   ├── main.py          # Entry point
-│   │   ├── models.py        # SQLAlchemy models
-│   │   ├── schemas.py       # Pydantic schemas
-│   │   ├── routers/         # API routes
-│   │   └── services/        # Business logic
-│   ├── tests/               # pytest tests
-│   └── alembic/             # DB migrations
-├── *.html                   # Frontend pages
-├── firebase.json            # Firebase config
-└── docs/ai/                 # AI context files
-```
-
----
-
-## Commands
-
-| Action | Command | Directory |
-|--------|---------|-----------|
-| Run backend | `uvicorn app.main:app --reload --port 8000` | `backend/` |
-| Run tests | `pytest -v` | `backend/` |
-| Run tests + coverage | `pytest -v --cov=app` | `backend/` |
-| Run migrations | `alembic upgrade head` | `backend/` |
-| Deploy frontend | `firebase deploy --only hosting` | root |
-| E2E tests | `.\testar_sistema_completo.ps1` | root |
-
----
-
-## Rules
-
-See `.claude/rules/` for detailed rules:
-
-- `00-core.md` — Core behavior rules
-- `10-repo-map.md` — Repository structure
-- `20-quality.md` — Quality standards
-
----
-
-## Key Invariants
-
-1. **License validation:** Always check `is_valid` property
-2. **CORS:** Explicit origins only (no wildcards with credentials)
-3. **SSL:** PostgreSQL requires `ssl='require'`
-4. **Secrets:** Never log or expose; validate at startup
-5. **Migrations:** Use Alembic in production
-
----
-
-## Verification Commands
-
-**Backend changes:**
 ```bash
+# Backend
 cd backend && pytest -v
-```
 
-**Frontend changes:**
-```powershell
+# Deploy
+firebase deploy --only hosting --project ifrs16-app
+
+# E2E
 .\testar_sistema_completo.ps1
 ```
 
----
-
 ## Stop Rules
 
-- After 2 failed fixes → deeper root cause analysis
-- If tests fail → read the test file first
-- If architecture unclear → read PROJECT_CONTEXT.md
+- 2 falhas → análise de causa raiz
+- Testes falhando → leia o teste primeiro
+- Dúvida → leia `docs/ai/`
 
 ---
 
-*Full documentation: `docs/ai/PROJECT_CONTEXT.md`*
+*Ver também: `AGENTS.md`, `docs/ai/00-INDEX.md`*

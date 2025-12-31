@@ -753,3 +753,181 @@ async def delete_admin(
         message=f"Administrador {username} excluído"
     )
 
+
+@router.post(
+    "/run-migration",
+    summary="Executar migration stripe_session_id",
+    description="Adiciona coluna stripe_session_id à tabela subscriptions (uso único)"
+)
+async def run_migration(
+    secret: str = Query(..., description="Admin token"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Executa migration para adicionar stripe_session_id.
+
+    Requer: ADMIN_TOKEN via query parameter
+    """
+    from sqlalchemy import text
+    from ..config import get_settings
+
+    settings = get_settings()
+    if secret != settings.ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Token inválido")
+
+    migrations_applied = []
+
+    # Migration 1: stripe_session_id em subscriptions
+    result = await db.execute(text("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='subscriptions' AND column_name='stripe_session_id'
+    """))
+    if not result.fetchone():
+        await db.execute(text("""
+            ALTER TABLE subscriptions
+            ADD COLUMN stripe_session_id VARCHAR(100)
+        """))
+        await db.execute(text("""
+            CREATE UNIQUE INDEX ix_subscriptions_stripe_session_id
+            ON subscriptions (stripe_session_id)
+            WHERE stripe_session_id IS NOT NULL
+        """))
+        migrations_applied.append("stripe_session_id em subscriptions")
+
+    # Migration 2: password_must_change em users
+    result = await db.execute(text("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='users' AND column_name='password_must_change'
+    """))
+    if not result.fetchone():
+        await db.execute(text("""
+            ALTER TABLE users
+            ADD COLUMN password_must_change BOOLEAN DEFAULT FALSE NOT NULL
+        """))
+        migrations_applied.append("password_must_change em users")
+
+    # Migration 3: password_changed_at em users
+    result = await db.execute(text("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='users' AND column_name='password_changed_at'
+    """))
+    if not result.fetchone():
+        await db.execute(text("""
+            ALTER TABLE users
+            ADD COLUMN password_changed_at TIMESTAMP
+        """))
+        migrations_applied.append("password_changed_at em users")
+
+    # Migration 4: company_name em users
+    result = await db.execute(text("""
+        SELECT column_name
+        FROM information_schema.columns
+        WHERE table_name='users' AND column_name='company_name'
+    """))
+    if not result.fetchone():
+        await db.execute(text("""
+            ALTER TABLE users
+            ADD COLUMN company_name VARCHAR(200)
+        """))
+        migrations_applied.append("company_name em users")
+
+    # Commit transação das migrations anteriores
+    await db.commit()
+
+    # Migration 5: Adicionar novos valores ao enum plantype
+    # IMPORTANTE: ALTER TYPE ADD VALUE deve ser executado FORA de transaction block
+    try:
+        # Verificar se os novos valores já existem
+        result = await db.execute(text("""
+            SELECT EXISTS (
+                SELECT 1 FROM pg_enum
+                WHERE enumlabel = 'basic_monthly'
+                AND enumtypid = 'plantype'::regtype
+            )
+        """))
+        enum_exists = result.scalar()
+
+        if not enum_exists:
+            print("[INFO] Adicionando novos valores ao enum plantype (em autocommit mode)...")
+
+            # Obter engine e executar fora de transação
+            from ..database import async_engine
+
+            # Criar conexão em autocommit mode
+            async with async_engine.connect() as conn:
+                # Executar em modo autocommit (isolation_level="AUTOCOMMIT")
+                await conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+                    text("ALTER TYPE plantype ADD VALUE IF NOT EXISTS 'basic_monthly'")
+                )
+                await conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+                    text("ALTER TYPE plantype ADD VALUE IF NOT EXISTS 'basic_yearly'")
+                )
+                await conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+                    text("ALTER TYPE plantype ADD VALUE IF NOT EXISTS 'pro_monthly'")
+                )
+                await conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+                    text("ALTER TYPE plantype ADD VALUE IF NOT EXISTS 'pro_yearly'")
+                )
+                await conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+                    text("ALTER TYPE plantype ADD VALUE IF NOT EXISTS 'enterprise_monthly'")
+                )
+                await conn.execution_options(isolation_level="AUTOCOMMIT").execute(
+                    text("ALTER TYPE plantype ADD VALUE IF NOT EXISTS 'enterprise_yearly'")
+                )
+
+            migrations_applied.append("novos valores em enum plantype")
+            print("[OK] Valores adicionados ao enum plantype com sucesso!")
+    except Exception as e:
+        print(f"[WARN] Erro ao adicionar valores ao enum: {e}")
+        import traceback
+        traceback.print_exc()
+        # Não faz raise para não quebrar o endpoint se enum já existir
+
+    if not migrations_applied:
+        return {"status": "ok", "message": "Todas as migrations já foram aplicadas"}
+
+    return {
+        "status": "success",
+        "message": f"Migrations executadas: {', '.join(migrations_applied)}"
+    }
+
+
+@router.get(
+    "/check-enum-values",
+    summary="Verificar valores do enum plantype",
+    description="Lista todos os valores atualmente no enum plantype"
+)
+async def check_enum_values(
+    secret: str = Query(..., description="Admin token"),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retorna lista de valores do enum plantype.
+
+    Requer: ADMIN_TOKEN via query parameter
+    """
+    from sqlalchemy import text
+    from ..config import get_settings
+
+    settings = get_settings()
+    if secret != settings.ADMIN_TOKEN:
+        raise HTTPException(status_code=403, detail="Token inválido")
+
+    # Buscar valores do enum
+    result = await db.execute(text("""
+        SELECT enumlabel
+        FROM pg_enum
+        WHERE enumtypid = 'plantype'::regtype
+        ORDER BY enumlabel
+    """))
+    enum_values = [row[0] for row in result.fetchall()]
+
+    return {
+        "enum_name": "plantype",
+        "values": enum_values,
+        "count": len(enum_values)
+    }
+

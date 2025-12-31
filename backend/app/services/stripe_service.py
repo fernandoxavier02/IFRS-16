@@ -12,7 +12,7 @@ import string
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
-from ..config import get_settings
+from ..config import get_settings, get_plan_by_price_id, get_plan_config
 from ..models import (
     User, License, Subscription,
     LicenseStatus, LicenseType, PlanType, SubscriptionStatus
@@ -26,72 +26,25 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class StripeService:
     """Serviço para integração com Stripe"""
-    
-    # Mapeamento de planos para tipos de licença
-    PLAN_LICENSE_MAP = {
-        "basic_monthly": LicenseType.BASIC,
-        "basic_yearly": LicenseType.BASIC,
-        "pro_monthly": LicenseType.PRO,
-        "pro_yearly": LicenseType.PRO,
-        "enterprise_monthly": LicenseType.ENTERPRISE,
-        "enterprise_yearly": LicenseType.ENTERPRISE,
-        # Compatibilidade com tipos antigos
-        PlanType.MONTHLY: LicenseType.BASIC,
-        PlanType.YEARLY: LicenseType.PRO,
-        PlanType.LIFETIME: LicenseType.ENTERPRISE,
-    }
-    
-    # Duração dos planos em meses (None = vitalício)
-    PLAN_DURATION = {
-        "basic_monthly": 1,
-        "basic_yearly": 12,
-        "pro_monthly": 1,
-        "pro_yearly": 12,
-        "enterprise_monthly": 1,
-        "enterprise_yearly": 12,
-        # Compatibilidade com tipos antigos
-        PlanType.MONTHLY: 1,
-        PlanType.YEARLY: 12,
-        PlanType.LIFETIME: None,
-    }
-    
-    # Limite de contratos por plano
-    PLAN_MAX_CONTRACTS = {
-        "basic_monthly": 3,
-        "basic_yearly": 3,
-        "pro_monthly": 20,
-        "pro_yearly": 20,
-        "enterprise_monthly": -1,  # ilimitado
-        "enterprise_yearly": -1,   # ilimitado
-    }
-    
-    # Máximo de ativações por tipo de licença
-    LICENSE_MAX_ACTIVATIONS = {
-        LicenseType.TRIAL: 1,
-        LicenseType.BASIC: 3,
-        LicenseType.PRO: 5,
-        LicenseType.ENTERPRISE: 10,  # Enterprise tem mais ativações
-    }
-    
+
+    # ✓ REMOVIDO: PLAN_LICENSE_MAP, PLAN_DURATION, PLAN_MAX_CONTRACTS
+    # ✓ CONSOLIDADO: Tudo agora vem de PLAN_CONFIG em config.py
+
     @staticmethod
     def get_price_id(plan_type) -> Optional[str]:
-        """Retorna o price_id do Stripe para o plano"""
+        """
+        Retorna o price_id do Stripe para o plano.
+        Usa PLAN_CONFIG como fonte única de verdade.
+        """
         # Converter para string se for enum
         plan_key = plan_type.value if hasattr(plan_type, 'value') else str(plan_type)
-        
-        price_map = {
-            "basic_monthly": settings.STRIPE_PRICE_BASIC_MONTHLY,
-            "basic_yearly": settings.STRIPE_PRICE_BASIC_YEARLY,
-            "pro_monthly": settings.STRIPE_PRICE_PRO_MONTHLY,
-            "pro_yearly": settings.STRIPE_PRICE_PRO_YEARLY,
-            "enterprise_monthly": settings.STRIPE_PRICE_ENTERPRISE_MONTHLY,
-            "enterprise_yearly": settings.STRIPE_PRICE_ENTERPRISE_YEARLY,
-            # Compatibilidade com tipos antigos
-            "monthly": settings.STRIPE_PRICE_BASIC_MONTHLY,
-            "yearly": settings.STRIPE_PRICE_PRO_YEARLY,
-            "lifetime": settings.STRIPE_PRICE_ENTERPRISE_YEARLY,
-        }
-        return price_map.get(plan_key)
+
+        try:
+            config = get_plan_config(plan_key)
+            return config.get("price_id")
+        except ValueError:
+            # Fallback para compatibilidade
+            return None
     
     @staticmethod
     def generate_license_key() -> str:
@@ -214,21 +167,15 @@ class StripeService:
         
         return session.url
     
-    # Mapeamento de price_id para tipo de plano
-    PRICE_TO_PLAN_MAP = {
-        # Esses valores serão preenchidos com os price_ids reais
-        "price_1Sbs0oGEyVmwHCe6P9IylBWe": ("basic_monthly", LicenseType.BASIC, 1),
-        "price_1SbrmCGEyVmwHCe6wlkuX7Z9": ("basic_yearly", LicenseType.BASIC, 12),
-        "price_1Sbs0pGEyVmwHCe6pRDe6BfP": ("pro_monthly", LicenseType.PRO, 1),
-        "price_1Sbs0qGEyVmwHCe6NbW9697S": ("pro_yearly", LicenseType.PRO, 12),
-        "price_1Sbs0sGEyVmwHCe6gRVChJI6": ("enterprise_monthly", LicenseType.ENTERPRISE, 1),
-        "price_1Sbs0uGEyVmwHCe6MHEVICw5": ("enterprise_yearly", LicenseType.ENTERPRISE, 12),
-    }
-    
+    # ✓ REMOVIDO: PRICE_TO_PLAN_MAP (agora usa get_plan_by_price_id de config.py)
+
     @classmethod
-    def get_plan_from_price_id(cls, price_id: str) -> tuple:
-        """Retorna (plan_name, license_type, duration_months) baseado no price_id"""
-        return cls.PRICE_TO_PLAN_MAP.get(price_id, ("basic_monthly", LicenseType.BASIC, 1))
+    def get_plan_from_price_id(cls, price_id: str) -> tuple[str, Dict[str, Any]]:
+        """
+        Retorna (plan_key, config) baseado no price_id.
+        Usa PLAN_CONFIG como fonte única de verdade.
+        """
+        return get_plan_by_price_id(price_id)
     
     @classmethod
     async def handle_checkout_completed(
@@ -239,14 +186,27 @@ class StripeService:
         """
         Processa o evento checkout.session.completed.
         Cria licença e subscription para o usuário.
-        
+
         Suporta dois fluxos:
         1. Checkout via API (com metadata user_id)
         2. Stripe Pricing Table (sem metadata, usa email do cliente)
         """
+        # ✓ NOVO: Verificar idempotência (se session_id já foi processado)
+        stripe_session_id = session.get("id")
+        if stripe_session_id:
+            result = await db.execute(
+                select(Subscription).where(
+                    Subscription.stripe_session_id == stripe_session_id
+                )
+            )
+            existing_sub = result.scalar_one_or_none()
+            if existing_sub:
+                print(f"[WARN] Webhook duplicado (session_id ja processado): {stripe_session_id}")
+                return existing_sub
+
         user_id = session.get("metadata", {}).get("user_id")
         plan_type_str = session.get("metadata", {}).get("plan_type")
-        
+
         # Obter email e nome do cliente da sessão
         customer_email = session.get("customer_email") or session.get("customer_details", {}).get("email")
         customer_name = session.get("customer_details", {}).get("name", "")
@@ -265,9 +225,9 @@ class StripeService:
                 # O retorno é um objeto Stripe, não um dict
                 if stripe_sub.items and stripe_sub.items.data:
                     price_id = stripe_sub.items.data[0].price.id
-                print(f"✅ Price ID obtido da subscription: {price_id}")
+                print(f"[OK] Price ID obtido da subscription: {price_id}")
             except Exception as e:
-                print(f"⚠️ Erro ao buscar subscription: {e}")
+                print(f"[WARN] Erro ao buscar subscription: {e}")
         
         user = None
         
@@ -294,14 +254,14 @@ class StripeService:
                 # Gerar senha temporária simples (8 chars = bem abaixo de 72 bytes)
                 temp_password = sec.token_hex(4)  # 8 caracteres hex
                 
-                print(f"🔑 Senha temporária: {temp_password} ({len(temp_password)} chars)")
-                
+                print(f"[KEY] Senha temporaria: {temp_password} ({len(temp_password)} chars)")
+
                 # Hash diretamente com bcrypt (sem passlib)
                 password_bytes = temp_password.encode('utf-8')
                 salt = bcrypt.gensalt()
                 password_hash = bcrypt.hashpw(password_bytes, salt).decode('utf-8')
-                
-                print(f"✅ Hash gerado diretamente com bcrypt")
+
+                print(f"[OK] Hash gerado diretamente com bcrypt")
                 
                 user = User(
                     email=customer_email,
@@ -309,48 +269,61 @@ class StripeService:
                     password_hash=password_hash,
                     is_active=True,
                     stripe_customer_id=stripe_customer_id,
+                    password_must_change=True,  # Forçar troca de senha no primeiro login
                 )
                 db.add(user)
                 await db.flush()
                 
-                print(f"✅ Novo usuário criado via Pricing Table: {customer_email}")
+                print(f"[OK] Novo usuario criado via Pricing Table: {customer_email}")
                 
                 # Enviar email com senha temporária (será enviado após criar a licença)
                 user._temp_password = temp_password  # Guardar para enviar no email
         
         if not user:
-            print(f"⚠️ Não foi possível identificar usuário para checkout: {session.get('id')}")
+            print(f"[WARN] Nao foi possivel identificar usuario para checkout: {session.get('id')}")
             return None
         
         # Atualizar stripe_customer_id se necessário
         if stripe_customer_id and not user.stripe_customer_id:
             user.stripe_customer_id = stripe_customer_id
         
-        # Determinar tipo de licença e duração
-        if plan_type_str:
-            # Fluxo via API
-            plan_type = PlanType(plan_type_str)
-            license_type = cls.PLAN_LICENSE_MAP.get(plan_type_str, LicenseType.BASIC)
-            duration_months = cls.PLAN_DURATION.get(plan_type_str, 1)
+        # ✓ ATUALIZADO: Determinar tipo de licença usando PLAN_CONFIG
+        if price_id:
+            # Fluxo principal: buscar config por price_id
+            plan_name, plan_config = cls.get_plan_from_price_id(price_id)
+        elif plan_type_str:
+            # Fluxo via API (raro, mas suportado)
             plan_name = plan_type_str
-        elif price_id:
-            # Fluxo via Pricing Table
-            plan_name, license_type, duration_months = cls.get_plan_from_price_id(price_id)
-            plan_type = PlanType.MONTHLY if "monthly" in plan_name else PlanType.YEARLY
+            plan_config = get_plan_config(plan_type_str)
         else:
             # Fallback
             plan_name = "basic_monthly"
-            license_type = LicenseType.BASIC
-            duration_months = 1
-            plan_type = PlanType.MONTHLY
-        
+            plan_config = get_plan_config("basic_monthly")
+
+        # Extrair configurações do plano
+        license_type = LicenseType[plan_config["license_type"].upper()]
+        duration_months = plan_config["duration_months"]
+        max_activations = plan_config["max_activations"]
+        # max_contracts = plan_config["max_contracts"]  # Usado em features
+
         # Calcular expiração
         expires_at = None
         if duration_months:
             expires_at = datetime.utcnow() + timedelta(days=duration_months * 30)
-        
-        # Determinar max_activations baseado no tipo de licença
-        max_activations = cls.LICENSE_MAX_ACTIVATIONS.get(license_type, 3)
+
+        # PlanType enum - usar valor exatamente como está no enum (case-sensitive)
+        # Os novos valores são lowercase: basic_monthly, pro_monthly, etc
+        # Os valores antigos são uppercase: MONTHLY, YEARLY, LIFETIME
+        try:
+            # Tentar primeiro com o valor exato (para novos valores lowercase)
+            plan_type = PlanType(plan_name)
+        except ValueError:
+            try:
+                # Se falhar, tentar uppercase (para valores antigos)
+                plan_type = PlanType[plan_name.upper()]
+            except KeyError:
+                # Fallback final para compatibilidade
+                plan_type = PlanType.MONTHLY if "monthly" in plan_name else PlanType.YEARLY
 
         # Criar/atualizar subscription de forma idempotente
         stripe_subscription_id = session.get("subscription")
@@ -363,6 +336,7 @@ class StripeService:
 
         if existing_subscription:
             existing_subscription.user_id = user.id
+            existing_subscription.stripe_session_id = stripe_session_id  # ✓ NOVO: salvar session_id
             existing_subscription.stripe_price_id = price_id
             existing_subscription.plan_type = plan_type
             existing_subscription.status = SubscriptionStatus.ACTIVE
@@ -398,7 +372,7 @@ class StripeService:
 
             await db.commit()
             print(
-                f"✅ Subscription atualizada (idempotente): {stripe_subscription_id} | "
+                f"[OK] Subscription atualizada (idempotente): {stripe_subscription_id} | "
                 f"Licença: {license.key} | {user.email} (Plano: {plan_name})"
             )
 
@@ -423,8 +397,21 @@ class StripeService:
                         plan_name=plan_name
                     )
                     print(f"📧 Email de licença ativada enviado para: {user.email}")
+
+                # Enviar notificação ao administrador
+                try:
+                    await EmailService.send_admin_new_subscription_notification(
+                        customer_name=user.name,
+                        customer_email=user.email,
+                        plan_name=plan_name,
+                        license_key=license.key,
+                        amount=f"R$ {session.get('amount_total', 0) / 100:.2f}"
+                    )
+                    print(f"📧 Notificacao de admin enviada para: contato@fxstudioai.com")
+                except Exception as e:
+                    print(f"[WARN] Erro ao enviar notificacao de admin: {e}")
             except Exception as e:
-                print(f"⚠️ Erro ao enviar email pós-checkout: {e}")
+                print(f"[WARN] Erro ao enviar email pos-checkout: {e}")
 
             return existing_subscription
 
@@ -446,6 +433,7 @@ class StripeService:
             user_id=user.id,
             license_id=license.id,
             stripe_subscription_id=stripe_subscription_id,
+            stripe_session_id=stripe_session_id,  # ✓ NOVO: para idempotência de webhooks
             stripe_price_id=price_id,
             plan_type=plan_type,
             status=SubscriptionStatus.ACTIVE,
@@ -455,7 +443,7 @@ class StripeService:
         db.add(subscription)
         await db.commit()
 
-        print(f"✅ Licença criada: {license.key} para {user.email} (Plano: {plan_name})")
+        print(f"[OK] Licenca criada: {license.key} para {user.email} (Plano: {plan_name})")
         
         # Enviar email de boas-vindas se usuário foi criado agora (tem senha temporária)
         temp_password = getattr(user, '_temp_password', None)
@@ -478,9 +466,22 @@ class StripeService:
                     plan_name=plan_name
                 )
                 print(f"📧 Email de licença ativada enviado para: {user.email}")
+
+            # Enviar notificação ao administrador
+            try:
+                await EmailService.send_admin_new_subscription_notification(
+                    customer_name=user.name,
+                    customer_email=user.email,
+                    plan_name=plan_name,
+                    license_key=license.key,
+                    amount=f"R$ {session.get('amount_total', 0) / 100:.2f}"
+                )
+                print(f"📧 Notificacao de admin enviada para: contato@fxstudioai.com")
+            except Exception as e:
+                print(f"[WARN] Erro ao enviar notificacao de admin: {e}")
         except Exception as e:
             print(f"⚠️ Erro ao enviar email pós-checkout: {e}")
-        
+
         return subscription
     
     @classmethod
@@ -507,18 +508,25 @@ class StripeService:
         subscription = result.scalar_one_or_none()
         
         if not subscription:
-            print(f"⚠️ Subscription não encontrada: {subscription_id}")
+            print(f"[WARN] Subscription nao encontrada: {subscription_id}")
             return False
-        
-        # Atualizar período
-        duration_months = cls.PLAN_DURATION.get(subscription.plan_type)
-        if duration_months:
-            subscription.current_period_start = datetime.utcnow()
-            subscription.current_period_end = datetime.utcnow() + timedelta(days=duration_months * 30)
+
+        # Atualizar período usando PLAN_CONFIG
+        plan_key = subscription.plan_type.value if hasattr(subscription.plan_type, 'value') else str(subscription.plan_type)
+        try:
+            plan_config = get_plan_config(plan_key)
+            duration_months = plan_config.get("duration_months")
+            if duration_months:
+                subscription.current_period_start = datetime.utcnow()
+                subscription.current_period_end = datetime.utcnow() + timedelta(days=duration_months * 30)
+        except ValueError as e:
+            print(f"[WARN] Erro ao obter configuracao do plano {plan_key}: {e}")
+            # Fallback: manter período atual
         
         subscription.status = SubscriptionStatus.ACTIVE
         
         # Atualizar licença
+        license = None
         if subscription.license_id:
             result = await db.execute(
                 select(License).where(License.id == subscription.license_id)
@@ -527,10 +535,37 @@ class StripeService:
             if license:
                 license.status = LicenseStatus.ACTIVE
                 license.expires_at = subscription.current_period_end
-        
+
         await db.commit()
-        print(f"✅ Subscription renovada: {subscription_id}")
-        
+        print(f"[OK] Subscription renovada: {subscription_id}")
+
+        # Enviar email de confirmação de renovação
+        if subscription.user_id and license:
+            result = await db.execute(
+                select(User).where(User.id == subscription.user_id)
+            )
+            user = result.scalar_one_or_none()
+
+            if user:
+                from .email_service import EmailService
+                try:
+                    # Formatar data de próxima cobrança
+                    next_billing_date = subscription.current_period_end.strftime("%d/%m/%Y") if subscription.current_period_end else "Não definido"
+
+                    # Obter nome do plano
+                    plan_config = get_plan_config(plan_key)
+                    plan_name = plan_config.get("display_name", plan_key)
+
+                    await EmailService.send_subscription_confirmation_email(
+                        to_email=user.email,
+                        user_name=user.name,
+                        plan_name=plan_name,
+                        next_billing_date=next_billing_date
+                    )
+                    print(f"[OK] Email de confirmacao de renovacao enviado para: {user.email}")
+                except Exception as e:
+                    print(f"[WARN] Erro ao enviar email de renovacao: {e}")
+
         return True
     
     @classmethod
@@ -559,11 +594,43 @@ class StripeService:
             return False
         
         subscription.status = SubscriptionStatus.PAST_DUE
-        
+
         # Não suspende a licença imediatamente, apenas marca
         await db.commit()
-        print(f"⚠️ Pagamento falhou: {subscription_id}")
-        
+        print(f"[WARN] Pagamento falhou: {subscription_id}")
+
+        # Enviar email de alerta de falha de pagamento
+        if subscription.user_id:
+            result = await db.execute(
+                select(User).where(User.id == subscription.user_id)
+            )
+            user = result.scalar_one_or_none()
+
+            if user:
+                from .email_service import EmailService
+                try:
+                    # Calcular data de próxima tentativa (normalmente Stripe tenta em 3-7 dias)
+                    from datetime import datetime, timedelta
+                    retry_date = (datetime.utcnow() + timedelta(days=3)).strftime("%d/%m/%Y")
+
+                    # Obter nome do plano
+                    plan_key = subscription.plan_type.value if hasattr(subscription.plan_type, 'value') else str(subscription.plan_type)
+                    try:
+                        plan_config = get_plan_config(plan_key)
+                        plan_name = plan_config.get("display_name", plan_key)
+                    except ValueError:
+                        plan_name = plan_key
+
+                    await EmailService.send_payment_failed_email(
+                        to_email=user.email,
+                        user_name=user.name,
+                        plan_name=plan_name,
+                        retry_date=retry_date
+                    )
+                    print(f"[OK] Email de falha de pagamento enviado para: {user.email}")
+                except Exception as e:
+                    print(f"[WARN] Erro ao enviar email de falha de pagamento: {e}")
+
         return True
     
     @classmethod
@@ -602,10 +669,45 @@ class StripeService:
                 license.revoked = True
                 license.revoked_at = datetime.utcnow()
                 license.revoke_reason = "Assinatura cancelada"
-        
+
         await db.commit()
-        print(f"❌ Subscription cancelada: {subscription_id}")
-        
+        print(f"[CANCEL] Subscription cancelada: {subscription_id}")
+
+        # Enviar email de despedida
+        if subscription.user_id:
+            result = await db.execute(
+                select(User).where(User.id == subscription.user_id)
+            )
+            user = result.scalar_one_or_none()
+
+            if user:
+                from .email_service import EmailService
+                try:
+                    # Obter nome do plano
+                    plan_key = subscription.plan_type.value if hasattr(subscription.plan_type, 'value') else str(subscription.plan_type)
+                    try:
+                        plan_config = get_plan_config(plan_key)
+                        plan_name = plan_config.get("display_name", plan_key)
+                    except ValueError:
+                        plan_name = plan_key
+
+                    # Determinar motivo do cancelamento
+                    cancel_reason = stripe_subscription.get("cancellation_details", {}).get("reason", "Solicitacao do cliente")
+                    if cancel_reason == "payment_failed":
+                        cancel_reason = "Falha no pagamento"
+                    elif cancel_reason == "cancellation_requested":
+                        cancel_reason = "Solicitacao do cliente"
+
+                    await EmailService.send_subscription_cancelled_email(
+                        to_email=user.email,
+                        user_name=user.name,
+                        plan_name=plan_name,
+                        cancel_reason=cancel_reason
+                    )
+                    print(f"[OK] Email de cancelamento enviado para: {user.email}")
+                except Exception as e:
+                    print(f"[WARN] Erro ao enviar email de cancelamento: {e}")
+
         return True
     
     @classmethod

@@ -7,6 +7,132 @@
 
 ## Changelog
 
+### 2025-12-31 — Limpeza completa do banco de dados
+
+**Agent:** Windsurf Cascade  
+**Task:** Remover todos os registros do banco de dados (manter estrutura)
+
+**Ações executadas:**
+
+- Script criado: `backend/limpar_todos_dados.py`
+- Banco: `ifrs16_licenses.db`
+- Tabelas mantidas: 6 (estrutura preservada)
+
+**Registros deletados:**
+
+- Usuários: 1
+- Licenças: 3
+- Logs de validação: 5
+- Admin users: 1
+- Assinaturas: 0
+- Contratos: 0
+- **Total:** 10 registros
+
+**Verificação:**
+
+- [x] Todos os registros removidos
+- [x] Estrutura das tabelas mantida
+- [x] Banco otimizado (VACUUM)
+- [x] Verificação confirmada (0 usuários)
+
+---
+
+### 2025-12-30 — Deploy para fxstudioai.com
+
+**Agent:** Windsurf Cascade  
+**Task:** Build e deploy do frontend para domínio customizado fxstudioai.com
+
+**Ações executadas:**
+
+- Deploy Firebase Hosting: 133 arquivos
+- Projeto: `ifrs16-app`
+- Domínio configurado: `fxstudioai.com` (DNS: 199.36.158.100)
+
+**URLs atualizadas:**
+
+- **Produção:** https://fxstudioai.com
+- Firebase (fallback): https://ifrs16-app.web.app
+- Backend API: https://ifrs16-backend-1051753255664.us-central1.run.app
+
+**Arquivos atualizados:**
+
+- `docs/ai/10-STACK.md` — URLs de produção
+
+**Verificação:**
+
+- [x] Deploy concluído (133 arquivos)
+- [x] DNS resolvendo corretamente
+- [x] Domínio customizado ativo
+- [ ] SSL/TLS (aguardar propagação se necessário)
+
+---
+
+### 2025-12-30 — Context Pack v2.0 (Modular)
+
+**Agent:** Windsurf Cascade  
+**Task:** Criar Context Pack enxuto e modular, compatível com Claude Code e Codex
+
+**Arquivos criados:**
+
+- `docs/ai/00-INDEX.md` — Índice do Context Pack
+- `docs/ai/10-STACK.md` — Stack tecnológica e comandos
+- `docs/ai/20-ARCHITECTURE.md` — Arquitetura e diagramas
+- `docs/ai/30-DATA_BACKEND.md` — Models, API, schemas
+- `docs/ai/40-FRONTEND_APP.md` — Frontend e deploy
+- `docs/ai/90-OPEN_QUESTIONS.md` — TODOs e questões em aberto
+- `.windsurf/rules/00-always-on.md` — Regras globais (always on)
+- `.windsurf/rules/10-backend-python.md` — Regras para backend Python
+- `.windsurf/rules/20-frontend.md` — Regras para frontend
+- `.windsurf/workflows/ifrs16-update-context.md` — Workflow de atualização
+- `.windsurf/workflows/atualiza-contexto-v2.md` — Comando `/atualiza-contexto` otimizado
+- `.claude/commands/ifrs16-update-context.md` — Comando Claude
+- `docs/ai/templates/codex-prompts/ifrs16-update-context.md` — Template Codex
+
+**Arquivos atualizados:**
+
+- `AGENTS.md` — Simplificado para ~50 linhas, aponta para docs/ai/
+- `CLAUDE.md` — Simplificado para ~50 linhas, aponta para docs/ai/
+
+**Estrutura final:**
+
+```
+docs/ai/
+├── 00-INDEX.md           # Índice
+├── 10-STACK.md           # Stack
+├── 20-ARCHITECTURE.md    # Arquitetura
+├── 30-DATA_BACKEND.md    # Backend/Data
+├── 40-FRONTEND_APP.md    # Frontend
+├── 90-OPEN_QUESTIONS.md  # TODOs
+├── CHANGELOG_AI.md       # Este arquivo
+├── DECISIONS.md          # Decisões
+├── PROJECT_CONTEXT.md    # Legacy (mantido)
+└── templates/codex-prompts/
+    └── ifrs16-update-context.md
+```
+
+**Verificação:**
+
+- [x] Arquivos criados sem duplicação
+- [x] AGENTS.md e CLAUDE.md < 60 linhas
+- [x] Rules e workflows configurados
+- [ ] Testes não afetados (mudança apenas em documentação)
+
+---
+
+### 2025-12-30 — Template seguro de backend/.env
+
+**Agent:** Windsurf Cascade  
+**Task:** Criar/ajustar `.env` local para o projeto (sem expor segredos)
+
+**Arquivos modificados:**
+
+- `backend/.env` — Padronizado com base em `backend/env.example`, removendo duplicações/indentação e **removendo credenciais sensíveis** que estavam em texto claro.
+- `docs/ai/CHANGELOG_AI.md` — Registro da alteração
+
+**Verificação:**
+
+- [ ] Testes não executados (mudança apenas em arquivo local `.env`)
+
 ### 2025-12-30 — Validação de Dependências, MCPs e CLIs (Firebase/Stripe)
 
 **Agent:** Windsurf Cascade  

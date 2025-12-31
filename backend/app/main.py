@@ -21,7 +21,6 @@ from .routers import (
     auth_router,
     payments_router,
     user_dashboard_router,
-    stripe_router
 )
 from .routers.contracts import router as contracts_router
 
@@ -69,6 +68,47 @@ def validate_critical_settings(current_settings: Settings) -> list[str]:
     return errors
 
 
+def validate_stripe_config() -> None:
+    """
+    Valida que todos os price IDs do Stripe estão configurados.
+    Fail-fast: lança RuntimeError se algum estiver ausente.
+
+    Valida os 6 planos:
+    - STRIPE_PRICE_BASIC_MONTHLY
+    - STRIPE_PRICE_BASIC_YEARLY
+    - STRIPE_PRICE_PRO_MONTHLY
+    - STRIPE_PRICE_PRO_YEARLY
+    - STRIPE_PRICE_ENTERPRISE_MONTHLY
+    - STRIPE_PRICE_ENTERPRISE_YEARLY
+    """
+    current_settings = get_settings()
+
+    required_prices = [
+        "STRIPE_PRICE_BASIC_MONTHLY",
+        "STRIPE_PRICE_BASIC_YEARLY",
+        "STRIPE_PRICE_PRO_MONTHLY",
+        "STRIPE_PRICE_PRO_YEARLY",
+        "STRIPE_PRICE_ENTERPRISE_MONTHLY",
+        "STRIPE_PRICE_ENTERPRISE_YEARLY",
+    ]
+
+    missing = []
+    for price_var in required_prices:
+        value = getattr(current_settings, price_var, None)
+        if not value or not value.strip():
+            missing.append(price_var)
+
+    if missing:
+        error_msg = (
+            f"[ERROR] Configuracao Stripe incompleta! Faltam variaveis de ambiente:\n"
+            + "\n".join(f"  - {var}" for var in missing)
+        )
+        print(error_msg)
+        raise RuntimeError(f"Price IDs não configurados: {', '.join(missing)}")
+
+    print("[OK] Configuracao Stripe validada com sucesso (6 price IDs)")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator:
     """
@@ -77,33 +117,40 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     - Fecha conexões ao encerrar
     """
     # Startup
-    print("🚀 Iniciando API de Licenciamento IFRS 16...")
-    print(f"📊 Ambiente: {settings.ENVIRONMENT}")
+    print("[STARTUP] Iniciando API de Licenciamento IFRS 16...")
+    print(f"[INFO] Ambiente: {settings.ENVIRONMENT}")
+
+    # Validar configuração Stripe (6 price IDs obrigatórios)
+    try:
+        validate_stripe_config()
+    except RuntimeError as e:
+        print(f"[ERROR] {e}")
+        raise
 
     # Fail-fast em produção: evita deploy com placeholders (sk_live_...) e SMTP incompleto
     if settings.ENVIRONMENT == "production":
         errors = validate_critical_settings(settings)
         if errors:
             msg = " | ".join(errors)
-            print(f"❌ ERRO CRÍTICO: Configuração incompleta em produção: {msg}")
+            print(f"[ERROR CRITICO] Configuracao incompleta em producao: {msg}")
             raise RuntimeError(f"Secrets inválidos em produção: {msg}")
 
     # Criar tabelas automaticamente apenas em desenvolvimento
     # Em produção, usar Alembic migrations para evitar drift
     if settings.ENVIRONMENT != "production":
-        print("📦 Inicializando banco de dados (dev mode)...")
+        print("[INFO] Inicializando banco de dados (dev mode)...")
         try:
             await init_db()
-            print("✅ Banco de dados inicializado com sucesso!")
+            print("[OK] Banco de dados inicializado com sucesso!")
         except Exception as e:
-            print(f"⚠️ Erro ao inicializar banco: {e}")
+            print(f"[WARN] Erro ao inicializar banco: {e}")
     else:
-        print("📦 Produção: init_db desabilitado (use Alembic migrations)")
+        print("[INFO] Producao: init_db desabilitado (use Alembic migrations)")
     
     yield
     
     # Shutdown
-    print("🛑 Encerrando API...")
+    print("[SHUTDOWN] Encerrando API...")
     await close_db()
 
 
@@ -131,10 +178,10 @@ Sistema de controle de licenças para a Calculadora IFRS 16.
 
 | Tipo | Contratos/CNPJ | Preço/mês | Excel | Multi-usuário |
 |------|----------------|-----------|-------|---------------|
-| Trial | 1 | Grátis | ❌ | ❌ |
-| Basic | 3 | R$ 299 | ✅ | ❌ |
-| Pro | 20 | R$ 499 | ✅ | ✅ (5) |
-| Enterprise | ∞ | R$ 999 | ✅ | ✅ (∞) |
+| Trial | 1 | Grátis | [ERROR] | [ERROR] |
+| Basic | 3 | R$ 299 | [OK] | [ERROR] |
+| Pro | 20 | R$ 499 | [OK] | [OK] (5) |
+| Enterprise | ∞ | R$ 999 | [OK] | [OK] (∞) |
 
 ---
 © 2025 Fernando Xavier - Todos os direitos reservados
@@ -185,8 +232,8 @@ async def global_exception_handler(request: Request, exc: Exception):
     """Handler global para exceções não tratadas"""
     import traceback
     error_trace = traceback.format_exc()
-    print(f"❌ Erro não tratado: {exc}")
-    print(f"📋 Traceback:\n{error_trace}")
+    print(f"[ERROR] Erro nao tratado: {exc}")
+    print(f"[TRACEBACK] {error_trace}")
 
     content = {"detail": "Erro interno do servidor"}
     if settings.DEBUG or settings.ENVIRONMENT != "production":
@@ -204,7 +251,7 @@ app.include_router(admin_router)
 app.include_router(payments_router)
 app.include_router(user_dashboard_router)
 app.include_router(contracts_router)
-app.include_router(stripe_router)
+# stripe_router removido - funcionalidade consolidada em payments_router
 
 
 # Rota raiz

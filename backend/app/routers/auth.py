@@ -187,19 +187,29 @@ async def admin_change_password(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Registro de Usuário",
-    description="Cria uma nova conta de usuário"
+    description="Cria uma nova conta de usuário com senha temporária"
 )
 async def register_user(
     body: RegisterRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Registra um novo usuário.
-    
+    Registra um novo usuário com senha temporária.
+
     - **name**: Nome completo
     - **email**: Email (único)
-    - **password**: Senha (mínimo 8 caracteres, 1 maiúscula, 1 minúscula, 1 número)
+    - **password**: Senha temporária será gerada automaticamente
+    - **company_name**: Nome da empresa (opcional)
+
+    O usuário receberá um email com:
+    - Email de login (username)
+    - Senha temporária
+    - Instruções para primeiro acesso
+
+    Ao fazer login, será obrigado a trocar a senha.
     """
+    import secrets
+
     # Verificar se email já existe
     result = await db.execute(
         select(User).where(User.email == body.email.lower())
@@ -209,21 +219,40 @@ async def register_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Este email já está cadastrado"
         )
-    
-    # Criar usuário
+
+    # Gerar senha temporária segura (12 caracteres: letras + números)
+    temp_password = secrets.token_urlsafe(9)[:12]  # 12 chars alfanuméricos
+
+    # Criar usuário com senha temporária e flag para forçar troca
     user = User(
         email=body.email.lower(),
         name=body.name,
-        password_hash=hash_password(body.password),
+        password_hash=hash_password(temp_password),
         company_name=body.company_name,
         is_active=True,
-        email_verified=False  # TODO: Implementar verificação de email
+        email_verified=False,
+        password_must_change=True,  # Força troca de senha no primeiro login
+        password_changed_at=None
     )
-    
+
     db.add(user)
     await db.commit()
     await db.refresh(user)
-    
+
+    # Enviar email com credenciais temporárias
+    from ..services.email_service import EmailService
+    try:
+        await EmailService.send_welcome_email(
+            to_email=user.email,
+            user_name=user.name,
+            temp_password=temp_password,
+            company_name=user.company_name or "Sua empresa"
+        )
+        print(f"[OK] Email de boas-vindas enviado para: {user.email}")
+    except Exception as e:
+        print(f"[WARN] Erro ao enviar email de boas-vindas: {e}")
+        # Não falha o registro se email falhar
+
     return UserResponse.model_validate(user)
 
 
@@ -267,14 +296,22 @@ async def user_login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou senha incorretos"
         )
-    
+
+    # SEGURANÇA: Verificar se precisa trocar senha
+    if user.password_must_change:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Você deve alterar sua senha temporária antes de continuar. "
+                   "Use o endpoint /api/auth/change-password com sua senha atual."
+        )
+
     # Atualizar último login
     user.last_login = datetime.utcnow()
     await db.commit()
-    
+
     # Gerar token
     token = create_user_token(user.id, user.email)
-    
+
     return TokenResponse(
         access_token=token,
         token_type="bearer",
@@ -409,14 +446,23 @@ async def user_change_password(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Senha atual incorreta"
         )
-    
-    # Atualizar senha
+
+    # Validar força da nova senha
+    if len(body.new_password) < 8:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="A nova senha deve ter no mínimo 8 caracteres"
+        )
+
+    # Atualizar senha e limpar flag de troca obrigatória
     user.password_hash = hash_password(body.new_password)
+    user.password_must_change = False  # Senha foi alterada, libera acesso
+    user.password_changed_at = datetime.utcnow()  # Registra data da troca
     await db.commit()
-    
+
     return {
         "success": True,
-        "message": "Senha alterada com sucesso"
+        "message": "Senha alterada com sucesso. Você já pode fazer login normalmente."
     }
 
 

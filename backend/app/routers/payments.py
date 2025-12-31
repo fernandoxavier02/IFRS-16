@@ -265,108 +265,87 @@ async def stripe_webhook(
 async def get_prices():
     """
     Retorna informações dos planos disponíveis.
-    
+
+    Usa PLAN_CONFIG como única fonte de verdade.
+
     Preços por CNPJ:
-    - Básico: R$ 299/mês ou R$ 3.229,20/ano (10% desc) - até 50 contratos
-    - Pro: R$ 499/mês ou R$ 5.389,20/ano (10% desc) - até 500 contratos
+    - Básico: R$ 299/mês ou R$ 3.229,20/ano (10% desc) - até 3 contratos
+    - Pro: R$ 499/mês ou R$ 5.389,20/ano (10% desc) - até 20 contratos
     - Enterprise: R$ 999/mês ou R$ 10.789,20/ano (10% desc) - ilimitado
     """
-    def with_price_id(plan: dict, price_id: Optional[str]):
-        plan["price_id"] = price_id
-        return plan
+    from ..config import PLAN_CONFIG, get_plan_config
 
-    plans = [
-        with_price_id({
-            "type": "basic_monthly",
-            "name": "Básico - Mensal",
-            "price": 299.00,
-            "currency": "brl",
-            "interval": "month",
-            "max_contracts": LICENSE_LIMITS["basic"]["max_contracts"],
-            "features": [
-                f"Até {LICENSE_LIMITS['basic']['max_contracts']} contratos por CNPJ",
-                "Exportação Excel e CSV",
-                "Suporte por email"
-            ]
-        }, settings.STRIPE_PRICE_BASIC_MONTHLY),
-        with_price_id({
-            "type": "basic_yearly",
-            "name": "Básico - Anual",
-            "price": 3229.20,
-            "currency": "brl",
-            "interval": "year",
-            "max_contracts": LICENSE_LIMITS["basic"]["max_contracts"],
-            "features": [
-                f"Até {LICENSE_LIMITS['basic']['max_contracts']} contratos por CNPJ",
-                "Exportação Excel e CSV",
-                "Suporte por email",
-                "Economia de R$ 358,80"
-            ]
-        }, settings.STRIPE_PRICE_BASIC_YEARLY),
-        with_price_id({
-            "type": "pro_monthly",
-            "name": "Pro - Mensal",
-            "price": 499.00,
-            "currency": "brl",
-            "interval": "month",
-            "max_contracts": LICENSE_LIMITS["pro"]["max_contracts"],
-            "features": [
-                f"Até {LICENSE_LIMITS['pro']['max_contracts']} contratos por CNPJ",
-                "Exportação Excel e CSV",
-                "Suporte prioritário",
-                "Multi-usuário (até 5)",
-                "API de integração"
-            ]
-        }, settings.STRIPE_PRICE_PRO_MONTHLY),
-        with_price_id({
-            "type": "pro_yearly",
-            "name": "Pro - Anual",
-            "price": 5389.20,
-            "currency": "brl",
-            "interval": "year",
-            "max_contracts": LICENSE_LIMITS["pro"]["max_contracts"],
-            "features": [
-                f"Até {LICENSE_LIMITS['pro']['max_contracts']} contratos por CNPJ",
-                "Exportação Excel e CSV",
-                "Suporte prioritário",
-                "Multi-usuário (até 5)",
-                "API de integração",
-                "Economia de R$ 598,80"
-            ]
-        }, settings.STRIPE_PRICE_PRO_YEARLY),
-        with_price_id({
-            "type": "enterprise_monthly",
-            "name": "Enterprise - Mensal",
-            "price": 999.00,
-            "currency": "brl",
-            "interval": "month",
-            "max_contracts": -1,
-            "features": [
-                "Contratos ilimitados por CNPJ",
-                "Exportação Excel e CSV",
-                "Suporte dedicado + SLA",
-                "Usuários ilimitados",
-                "API de integração",
-                "Treinamento incluído"
-            ]
-        }, settings.STRIPE_PRICE_ENTERPRISE_MONTHLY),
-        with_price_id({
-            "type": "enterprise_yearly",
-            "name": "Enterprise - Anual",
-            "price": 10789.20,
-            "currency": "brl",
-            "interval": "year",
-            "max_contracts": -1,
-            "features": [
-                "Contratos ilimitados por CNPJ",
-                "Exportação Excel e CSV",
-                "Suporte dedicado + SLA",
-                "Usuários ilimitados",
-                "API de integração",
-                "Treinamento incluído",
-                "Economia de R$ 1.198,80"
-            ]
-        }, settings.STRIPE_PRICE_ENTERPRISE_YEARLY)
-    ]
-    
+    plans = []
+    for plan_key in PLAN_CONFIG.keys():
+        try:
+            config = get_plan_config(plan_key)
+
+            # Montar lista de features baseada na config
+            features_list = []
+
+            # Contratos
+            max_contracts = config["max_contracts"]
+            if max_contracts == -1:
+                features_list.append("Contratos ilimitados por CNPJ")
+            else:
+                features_list.append(f"Até {max_contracts} contratos por CNPJ")
+
+            # Features do plano
+            plan_features = config.get("features", {})
+            if plan_features.get("export_excel") or plan_features.get("export_csv"):
+                features_list.append("Exportação Excel e CSV")
+
+            # Suporte
+            support_type = plan_features.get("support", "email")
+            if support_type == "email":
+                features_list.append("Suporte por email")
+            elif support_type == "priority":
+                features_list.append("Suporte prioritário")
+            elif support_type == "dedicated":
+                features_list.append("Suporte dedicado + SLA")
+
+            # Multi-user
+            if plan_features.get("multi_user"):
+                max_users = plan_features.get("max_users", 5)
+                if max_users == -1:
+                    features_list.append("Usuários ilimitados")
+                else:
+                    features_list.append(f"Multi-usuário (até {max_users})")
+
+            # API
+            if plan_features.get("api_access"):
+                features_list.append("API de integração")
+
+            # Treinamento
+            if plan_features.get("training"):
+                features_list.append("Treinamento incluído")
+
+            # Economia para planos anuais
+            if "yearly" in plan_key:
+                monthly_equivalent = config["amount"] / 12
+                yearly_price = config["amount"]
+                monthly_plan_key = plan_key.replace("yearly", "monthly")
+
+                if monthly_plan_key in PLAN_CONFIG:
+                    monthly_config = get_plan_config(monthly_plan_key)
+                    monthly_price = monthly_config["amount"]
+                    savings = (monthly_price * 12) - yearly_price
+                    if savings > 0:
+                        features_list.append(f"Economia de R$ {savings:,.2f}")
+
+            plans.append({
+                "type": plan_key,
+                "name": config["display_name"],
+                "price": float(config["amount"]),
+                "currency": config["currency"],
+                "interval": "year" if "yearly" in plan_key else "month",
+                "max_contracts": config["max_contracts"],
+                "price_id": config["price_id"],
+                "features": features_list
+            })
+
+        except ValueError as e:
+            print(f"⚠️ Erro ao carregar plano {plan_key}: {e}")
+            continue
+
     return {"plans": plans}

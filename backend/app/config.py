@@ -3,7 +3,8 @@ Configurações da aplicação usando Pydantic Settings
 """
 
 from functools import lru_cache
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+from decimal import Decimal
 from pydantic_settings import BaseSettings
 
 
@@ -28,16 +29,18 @@ class Settings(BaseSettings):
     STRIPE_SECRET_KEY: str = "sk_test_..."
     STRIPE_PUBLISHABLE_KEY: str = "pk_test_..."
     STRIPE_WEBHOOK_SECRET: str = "whsec_..."
-    
-    # Preços por plano - Básico (até 3 contratos)
+    STRIPE_PRICING_TABLE_ID: Optional[str] = None  # ID da Pricing Table do Stripe (usado no frontend)
+
+    # Preços por plano - Básico (até 5 contratos, 1 usuário)
     STRIPE_PRICE_BASIC_MONTHLY: Optional[str] = None
     STRIPE_PRICE_BASIC_YEARLY: Optional[str] = None
-    
-    # Preços por plano - Pro (até 20 contratos)
+
+    # Preços por plano - Pro (até 20 contratos, 1 usuário)
     STRIPE_PRICE_PRO_MONTHLY: Optional[str] = None
     STRIPE_PRICE_PRO_YEARLY: Optional[str] = None
-    
-    # Preços por plano - Enterprise (ilimitado)
+
+    # Preços por plano - Enterprise (ilimitado, 1 usuário)
+    # Multi-usuário: cada usuário adicional precisa de assinatura própria
     STRIPE_PRICE_ENTERPRISE_MONTHLY: Optional[str] = None
     STRIPE_PRICE_ENTERPRISE_YEARLY: Optional[str] = None
     
@@ -92,36 +95,45 @@ class Settings(BaseSettings):
 # =============================================================================
 LICENSE_LIMITS = {
     "trial": {
-        "max_contracts": 5,
+        "max_contracts": 1,  # Trial: apenas visualização, sem criar contratos
         "max_activations": 1,
-        "export_excel": False,
-        "export_csv": True,
+        "duration_hours": 24,  # Trial válido por 24 horas
+        "export_excel": False,  # SEM download
+        "export_csv": False,  # SEM download
+        "export_pdf": False,  # SEM download
+        "consolidation_reports": False,  # SEM emissão de relatórios na consolidação
         "support": False,
         "multi_user": False,
     },
     "basic": {
-        "max_contracts": 50,
-        "max_activations": 2,
+        "max_contracts": 5,  # Atualizado: 3 → 5 contratos
+        "max_activations": 1,  # Cada usuário = 1 assinatura (sem multi-user)
         "export_excel": True,
         "export_csv": True,
+        "export_pdf": True,
+        "consolidation_reports": True,
         "support": True,
-        "multi_user": False,
+        "multi_user": False,  # Cada usuário precisa de assinatura própria
     },
     "pro": {
-        "max_contracts": 500,
-        "max_activations": 3,
+        "max_contracts": 20,
+        "max_activations": 1,  # Cada usuário = 1 assinatura (sem multi-user)
         "export_excel": True,
         "export_csv": True,
+        "export_pdf": True,
+        "consolidation_reports": True,
         "support": True,
-        "multi_user": True,
+        "multi_user": False,  # Cada usuário precisa de assinatura própria
     },
     "enterprise": {
         "max_contracts": -1,  # Ilimitado
-        "max_activations": 10,
+        "max_activations": 1,  # Cada usuário = 1 assinatura (sem multi-user)
         "export_excel": True,
         "export_csv": True,
+        "export_pdf": True,
+        "consolidation_reports": True,
         "support": True,
-        "multi_user": True,
+        "multi_user": False,  # Cada usuário precisa de assinatura própria
     },
 }
 
@@ -133,4 +145,182 @@ def get_settings() -> Settings:
     Use esta função para acessar configurações em toda a aplicação.
     """
     return Settings()
+
+
+# =============================================================================
+# CONFIGURAÇÃO CENTRALIZADA DE PLANOS (Fonte única de verdade)
+# =============================================================================
+PLAN_CONFIG: Dict[str, Dict[str, Any]] = {
+    "basic_monthly": {
+        "price_id_env": "STRIPE_PRICE_BASIC_MONTHLY",
+        "license_type": "basic",
+        "duration_months": 1,
+        "max_contracts": 5,  # Atualizado: 3 → 5
+        "max_activations": 1,  # Cada usuário = 1 assinatura
+        "display_name": "Básico - Mensal",
+        "amount": Decimal("299.00"),
+        "currency": "brl",
+        "features": {
+            "export_excel": True,
+            "export_csv": True,
+            "export_pdf": True,
+            "consolidation_reports": True,
+            "support": "email",
+            "multi_user": False,  # Sem multi-user, cada usuário precisa assinar
+        }
+    },
+    "basic_yearly": {
+        "price_id_env": "STRIPE_PRICE_BASIC_YEARLY",
+        "license_type": "basic",
+        "duration_months": 12,
+        "max_contracts": 5,  # Atualizado: 3 → 5
+        "max_activations": 1,  # Cada usuário = 1 assinatura
+        "display_name": "Básico - Anual",
+        "amount": Decimal("3229.20"),
+        "currency": "brl",
+        "features": {
+            "export_excel": True,
+            "export_csv": True,
+            "export_pdf": True,
+            "consolidation_reports": True,
+            "support": "email",
+            "multi_user": False,  # Sem multi-user, cada usuário precisa assinar
+        }
+    },
+    "pro_monthly": {
+        "price_id_env": "STRIPE_PRICE_PRO_MONTHLY",
+        "license_type": "pro",
+        "duration_months": 1,
+        "max_contracts": 20,
+        "max_activations": 1,  # Cada usuário = 1 assinatura
+        "display_name": "Pro - Mensal",
+        "amount": Decimal("499.00"),
+        "currency": "brl",
+        "features": {
+            "export_excel": True,
+            "export_csv": True,
+            "export_pdf": True,
+            "consolidation_reports": True,
+            "support": "priority",
+            "multi_user": False,  # Sem multi-user, cada usuário precisa assinar
+            "api_access": True,
+        }
+    },
+    "pro_yearly": {
+        "price_id_env": "STRIPE_PRICE_PRO_YEARLY",
+        "license_type": "pro",
+        "duration_months": 12,
+        "max_contracts": 20,
+        "max_activations": 1,  # Cada usuário = 1 assinatura
+        "display_name": "Pro - Anual",
+        "amount": Decimal("5389.20"),
+        "currency": "brl",
+        "features": {
+            "export_excel": True,
+            "export_csv": True,
+            "export_pdf": True,
+            "consolidation_reports": True,
+            "support": "priority",
+            "multi_user": False,  # Sem multi-user, cada usuário precisa assinar
+            "api_access": True,
+        }
+    },
+    "enterprise_monthly": {
+        "price_id_env": "STRIPE_PRICE_ENTERPRISE_MONTHLY",
+        "license_type": "enterprise",
+        "duration_months": 1,
+        "max_contracts": -1,  # ilimitado
+        "max_activations": 1,  # Cada usuário = 1 assinatura
+        "display_name": "Enterprise - Mensal",
+        "amount": Decimal("999.00"),
+        "currency": "brl",
+        "features": {
+            "export_excel": True,
+            "export_csv": True,
+            "export_pdf": True,
+            "consolidation_reports": True,
+            "support": "dedicated",
+            "multi_user": False,  # Sem multi-user, cada usuário precisa assinar
+            "api_access": True,
+            "training": True,
+            "sla": True,
+        }
+    },
+    "enterprise_yearly": {
+        "price_id_env": "STRIPE_PRICE_ENTERPRISE_YEARLY",
+        "license_type": "enterprise",
+        "duration_months": 12,
+        "max_contracts": -1,  # ilimitado
+        "max_activations": 1,  # Cada usuário = 1 assinatura
+        "display_name": "Enterprise - Anual",
+        "amount": Decimal("10789.20"),
+        "currency": "brl",
+        "features": {
+            "export_excel": True,
+            "export_csv": True,
+            "export_pdf": True,
+            "consolidation_reports": True,
+            "support": "dedicated",
+            "multi_user": False,  # Sem multi-user, cada usuário precisa assinar
+            "api_access": True,
+            "training": True,
+            "sla": True,
+        }
+    },
+}
+
+
+def get_plan_config(plan_key: str) -> Dict[str, Any]:
+    """
+    Retorna configuração completa do plano com price_id resolvido do ambiente.
+
+    Args:
+        plan_key: Chave do plano (ex: "basic_monthly", "pro_yearly")
+
+    Returns:
+        Dict com configuração do plano incluindo price_id do .env
+
+    Raises:
+        ValueError: Se plano não existe ou price_id não está configurado
+    """
+    config = PLAN_CONFIG.get(plan_key)
+    if not config:
+        raise ValueError(f"Plano desconhecido: {plan_key}")
+
+    # Resolver price_id do ambiente
+    settings = get_settings()
+    price_id = getattr(settings, config["price_id_env"], None)
+    if not price_id:
+        raise ValueError(
+            f"Price ID não configurado no .env: {config['price_id_env']}"
+        )
+
+    # Retornar config com price_id resolvido
+    return {**config, "price_id": price_id}
+
+
+def get_plan_by_price_id(price_id: str) -> tuple[str, Dict[str, Any]]:
+    """
+    Retorna plano baseado no price_id do Stripe.
+
+    Args:
+        price_id: ID do preço do Stripe (ex: "price_1Sbs0oGEyVmwHCe6P9IylBWe")
+
+    Returns:
+        Tupla (plan_key, config) com a chave e configuração do plano
+
+    Note:
+        Se price_id não for encontrado, retorna fallback para "basic_monthly"
+    """
+    settings = get_settings()
+
+    # Procurar plano por price_id
+    for plan_key, config in PLAN_CONFIG.items():
+        env_var = config["price_id_env"]
+        if getattr(settings, env_var, None) == price_id:
+            return plan_key, get_plan_config(plan_key)
+
+    # Fallback para evitar crash
+    print(f"⚠️ Price ID desconhecido: {price_id}, usando fallback: basic_monthly")
+    return "basic_monthly", get_plan_config("basic_monthly")
 

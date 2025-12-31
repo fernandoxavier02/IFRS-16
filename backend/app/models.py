@@ -53,10 +53,19 @@ class SubscriptionStatus(str, enum.Enum):
 
 
 class PlanType(str, enum.Enum):
-    """Tipos de plano"""
-    MONTHLY = "monthly"
-    YEARLY = "yearly"
-    LIFETIME = "lifetime"
+    """Tipos de plano - Refatorado para refletir 6 planos reais"""
+    # Novos valores (fonte da verdade)
+    BASIC_MONTHLY = "basic_monthly"
+    BASIC_YEARLY = "basic_yearly"
+    PRO_MONTHLY = "pro_monthly"
+    PRO_YEARLY = "pro_yearly"
+    ENTERPRISE_MONTHLY = "enterprise_monthly"
+    ENTERPRISE_YEARLY = "enterprise_yearly"
+
+    # Deprecated (mantidos para retrocompatibilidade)
+    MONTHLY = "monthly"  # Alias para BASIC_MONTHLY
+    YEARLY = "yearly"    # Alias para PRO_YEARLY
+    LIFETIME = "lifetime"  # Alias para ENTERPRISE_YEARLY
 
 
 # =============================================================================
@@ -114,10 +123,12 @@ class User(Base):
     # Status
     is_active = Column(Boolean, default=True, nullable=False)
     email_verified = Column(Boolean, default=False, nullable=False)
-    
+    password_must_change = Column(Boolean, default=False, nullable=False)
+
     # Datas
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_login = Column(DateTime, nullable=True)
+    password_changed_at = Column(DateTime, nullable=True)
     
     # Relacionamentos
     subscriptions = relationship(
@@ -168,11 +179,12 @@ class Subscription(Base):
     
     # Stripe
     stripe_subscription_id = Column(String(100), unique=True, nullable=True)
+    stripe_session_id = Column(String(100), unique=True, nullable=True, index=True)  # Para idempotência de webhooks
     stripe_price_id = Column(String(100), nullable=True)
     
     # Tipo e status
     plan_type = Column(
-        SQLEnum(PlanType),
+        SQLEnum(PlanType, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False
     )
     status = Column(

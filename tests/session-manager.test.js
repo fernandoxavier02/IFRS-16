@@ -36,11 +36,41 @@ global.alert = jest.fn();
 // Importar SessionManager
 const fs = require('fs');
 const path = require('path');
-const sessionManagerCode = fs.readFileSync(
+
+// Ler código do SessionManager
+let sessionManagerCode = fs.readFileSync(
     path.join(__dirname, '..', 'assets', 'js', 'session-manager.js'),
     'utf8'
 );
-eval(sessionManagerCode);
+
+// Mock do document para evitar erros de auto-inicialização
+global.document = {
+    readyState: 'complete',
+    addEventListener: jest.fn()
+};
+
+// Executar código que define a classe SessionManager
+// Removemos as linhas que tentam auto-inicializar (linhas 199-220)
+// e as linhas da instância global (linha 200)
+const lines = sessionManagerCode.split('\n');
+const classDefinition = lines.slice(0, 197).join('\n');
+
+// Usar Function constructor para garantir que SessionManager seja global
+// IMPORTANTE: Não passamos setTimeout/setInterval aqui para que os mocks do Jest funcionem
+const defineSessionManager = new Function('window', 'localStorage', 'document', 'fetch', 'alert', 'console', `
+    ${classDefinition}
+    return SessionManager;
+`);
+
+// Executar e atribuir ao global
+global.SessionManager = defineSessionManager(
+    global.window,
+    global.localStorage,
+    global.document,
+    global.fetch,
+    global.alert,
+    console
+);
 
 
 describe('SessionManager', () => {

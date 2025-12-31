@@ -400,6 +400,72 @@ async def user_license(
 
 
 @router.post(
+    "/me/validate-license-token",
+    summary="Validar Licença pelo Token do Usuário",
+    description="Valida a licença usando o token de autenticação do usuário"
+)
+async def validate_license_by_user_token(
+    user_data: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Valida a licença do usuário autenticado usando seu token de autenticação.
+
+    Este endpoint permite que a calculadora valide a licença sem precisar
+    de um token JWT separado da licença. A licença é vinculada exclusivamente
+    ao usuário e só muda quando o plano é alterado.
+
+    Requer: Bearer Token de usuário
+
+    Retorna os dados da licença válida ou erro se não houver licença ativa.
+    """
+    user = user_data["user"]
+
+    # Buscar licença ativa do usuário
+    result = await db.execute(
+        select(License).where(
+            License.user_id == user.id,
+            License.status == LicenseStatus.ACTIVE,
+            License.revoked == False
+        ).order_by(License.created_at.desc())
+    )
+    license = result.scalar_one_or_none()
+
+    if not license:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Nenhuma licença ativa encontrada para este usuário"
+        )
+
+    # Verificar se expirou
+    if license.expires_at and datetime.utcnow() > license.expires_at:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Licença expirada. Renove sua assinatura para continuar."
+        )
+
+    # Gerar token JWT para a licença (para compatibilidade com código existente)
+    token_data = {
+        "key": license.key,
+        "customer_name": license.customer_name,
+        "license_type": license.license_type.value,
+    }
+    license_token = create_access_token(token_data)
+
+    return {
+        "valid": True,
+        "key": license.key,
+        "customer_name": license.customer_name,
+        "license_type": license.license_type.value,
+        "status": license.status.value,
+        "expires_at": license.expires_at.isoformat() if license.expires_at else None,
+        "features": license.features,
+        "token": license_token,
+        "message": "Licença válida e vinculada ao usuário"
+    }
+
+
+@router.post(
     "/logout",
     summary="Logout de Usuário",
     description="Invalida a sessão do usuário"

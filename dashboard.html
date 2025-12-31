@@ -670,7 +670,7 @@
         }
 
         // Verificar acesso à calculadora
-        function accessCalculator() {
+        async function accessCalculator() {
             // Verificar se tem assinatura ativa
             if (!dashboardData.subscription) {
                 showAccessDeniedModal('sem_assinatura');
@@ -695,8 +695,44 @@
                 return;
             }
 
-            // Tudo OK, permitir acesso
-            window.location.href = 'Calculadora_IFRS16_Deploy.html';
+            // IMPORTANTE: Validar a licença pelo token do usuário e salvar os dados
+            // Isso garante que a licença é exclusiva do usuário e vinculada a ele
+            const authToken = localStorage.getItem('ifrs16_auth_token');
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/me/validate-license-token`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    showAccessDeniedModal('erro_validacao');
+                    console.error('Erro ao validar licença:', error);
+                    return;
+                }
+
+                const licenseData = await response.json();
+
+                // Salvar dados da licença no localStorage
+                // A licença é exclusiva do usuário e só muda quando o plano muda
+                localStorage.setItem('ifrs16_license', licenseData.key);
+                localStorage.setItem('ifrs16_customer_name', licenseData.customer_name);
+                localStorage.setItem('ifrs16_token', licenseData.token); // Token JWT da licença
+                localStorage.setItem('ifrs16_user_token', authToken); // Token do usuário
+
+                console.log('✅ Licença validada e salva. Acesso liberado à calculadora.');
+
+                // Tudo OK, redirecionar para calculadora
+                window.location.href = 'Calculadora_IFRS16_Deploy.html';
+
+            } catch (error) {
+                console.error('Erro ao acessar calculadora:', error);
+                showAccessDeniedModal('erro_conexao');
+            }
         }
 
         // Mostrar modal de acesso negado
@@ -729,6 +765,18 @@
                 case 'assinatura_inativa':
                     titleText = 'Assinatura Inativa';
                     messageText = 'Sua assinatura não está ativa. Por favor, renove sua assinatura para ter acesso à calculadora IFRS 16.';
+                    break;
+                case 'erro_validacao':
+                    titleText = 'Erro na Validação da Licença';
+                    messageText = 'Não foi possível validar sua licença. Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.';
+                    buttonText = 'Entrar em Contato';
+                    buttonAction = () => window.location.href = 'mailto:contato@fxstudioai.com';
+                    break;
+                case 'erro_conexao':
+                    titleText = 'Erro de Conexão';
+                    messageText = 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet e tente novamente.';
+                    buttonText = 'Tentar Novamente';
+                    buttonAction = () => window.location.reload();
                     break;
             }
 

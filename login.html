@@ -251,11 +251,15 @@
         window.onload = function() {
             const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
             const userType = localStorage.getItem('ifrs16_user_type');
-            
-            if (token) {
-                // Tanto admin quanto usuário vão para a calculadora
-                // Admin pode acessar admin.html pelo botão no header
-                window.location.href = 'Calculadora_IFRS16_Deploy.html';
+
+            if (token && userType) {
+                // Redirecionar baseado no tipo de usuário
+                if (userType === 'admin') {
+                    window.location.href = 'Calculadora_IFRS16_Deploy.html';
+                } else {
+                    // Usuário regular vai para o dashboard (que verificará se tem licença)
+                    window.location.href = 'dashboard.html';
+                }
             }
         };
     </script>

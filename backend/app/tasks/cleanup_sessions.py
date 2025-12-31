@@ -25,7 +25,7 @@ async def cleanup_expired_sessions():
     """
     # Criar engine
     engine = create_async_engine(
-        settings.ASYNC_DATABASE_URL,
+        settings.DATABASE_URL,
         echo=False,
         pool_pre_ping=True
     )
@@ -74,7 +74,7 @@ async def mark_expired_sessions_inactive():
     Útil para auditoria.
     """
     engine = create_async_engine(
-        settings.ASYNC_DATABASE_URL,
+        settings.DATABASE_URL,
         echo=False,
         pool_pre_ping=True
     )

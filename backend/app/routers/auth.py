@@ -2,8 +2,9 @@
 Endpoints de autenticação para Admin e Usuários
 """
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional
+import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -12,7 +13,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 
 from ..database import get_db
-from ..models import AdminUser, User, AdminRole, License, LicenseStatus
+from ..models import AdminUser, User, AdminRole, License, LicenseStatus, UserSession
 from ..schemas import (
     LoginRequest,
     RegisterRequest,
@@ -254,12 +255,14 @@ async def register_user(
     description="Autentica um usuário e retorna token JWT"
 )
 async def user_login(
+    request: Request,
     body: LoginRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
     Login de usuário com email e senha.
-    
+    Registra automaticamente uma sessão para controle de acesso simultâneo.
+
     - **email**: Email do usuário
     - **password**: Senha do usuário
     """
@@ -303,11 +306,102 @@ async def user_login(
     # Gerar token
     token = create_user_token(user.id, user.email)
 
+    # ========== REGISTRO DE SESSÃO (Anti-compartilhamento) ==========
+    # Definir limites de sessão por plano
+    SESSION_LIMITS = {
+        "basic_monthly": 1,
+        "basic_yearly": 1,
+        "pro_monthly": 2,
+        "pro_yearly": 2,
+        "enterprise_monthly": 5,
+        "enterprise_yearly": 5,
+    }
+
+    # Buscar assinatura ativa do usuário para determinar o plano
+    from ..models import Subscription, SubscriptionStatus
+    result = await db.execute(
+        select(Subscription).where(
+            Subscription.user_id == user.id,
+            Subscription.status == SubscriptionStatus.ACTIVE
+        ).order_by(Subscription.created_at.desc())
+    )
+    subscription = result.scalar_one_or_none()
+
+    # Determinar limite de sessões
+    if not subscription:
+        max_sessions = 1  # Padrão para usuários sem assinatura
+    else:
+        plan_type = subscription.plan_type.value
+        max_sessions = SESSION_LIMITS.get(plan_type, 1)
+
+    # Buscar sessões ativas atuais (não expiradas)
+    now = datetime.utcnow()
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.user_id == user.id,
+            UserSession.is_active == True,
+            UserSession.expires_at > now
+        ).order_by(UserSession.last_activity.desc())
+    )
+    active_sessions = result.scalars().all()
+
+    # Verificar se atingiu o limite
+    if len(active_sessions) >= max_sessions:
+        # Invalidar a sessão mais antiga para permitir a nova
+        oldest_session = active_sessions[-1]
+        oldest_session.is_active = False
+        print(f"[INFO] Sessão antiga invalidada para {user.email} (device: {oldest_session.device_name})")
+
+    # Criar nova sessão
+    session_token = str(uuid.uuid4())
+
+    # Extrair informações do dispositivo
+    user_agent = request.headers.get("user-agent", "Unknown")
+    ip_address = request.client.host if request.client else "Unknown"
+
+    # Criar device fingerprint básico
+    device_fingerprint = f"{user_agent[:100]}-{ip_address}"
+
+    # Determinar nome do dispositivo
+    device_name = "Unknown Device"
+    if "Windows" in user_agent:
+        device_name = "Windows PC"
+    elif "Macintosh" in user_agent or "Mac OS" in user_agent:
+        device_name = "Mac"
+    elif "Linux" in user_agent:
+        device_name = "Linux PC"
+    elif "iPhone" in user_agent or "iPad" in user_agent:
+        device_name = "iOS Device"
+    elif "Android" in user_agent:
+        device_name = "Android Device"
+
+    # Expiração em 24 horas
+    expires_at = now + timedelta(hours=24)
+
+    new_session = UserSession(
+        user_id=user.id,
+        session_token=session_token,
+        device_fingerprint=device_fingerprint,
+        ip_address=ip_address,
+        user_agent=user_agent[:500],
+        device_name=device_name,
+        last_activity=now,
+        expires_at=expires_at,
+        is_active=True
+    )
+
+    db.add(new_session)
+    await db.commit()
+
+    print(f"[OK] Login bem-sucedido: {user.email} (device: {device_name}, IP: {ip_address})")
+    # ===============================================================
+
     return TokenResponse(
         access_token=token,
         token_type="bearer",
         expires_in=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        user_type="user"
+        user_type="user",
+        session_token=session_token
     )
 
 
@@ -621,6 +715,271 @@ async def reset_password(
     return {
         "success": True,
         "message": "Senha redefinida com sucesso. Você já pode fazer login com a nova senha."
+    }
+
+
+# =============================================================================
+# SESSION MANAGEMENT (CONTROLE DE SESSÕES SIMULTÂNEAS)
+# =============================================================================
+
+@router.post(
+    "/sessions/register",
+    summary="Registrar Nova Sessão",
+    description="Registra uma nova sessão de usuário e valida limite de sessões simultâneas"
+)
+async def register_session(
+    request: Request,
+    user_data: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Registra uma nova sessão de usuário.
+    Valida o limite de sessões simultâneas baseado no plano.
+
+    Limites por plano:
+    - basic_monthly/basic_yearly: 1 sessão simultânea
+    - pro_monthly/pro_yearly: 2 sessões simultâneas
+    - enterprise_monthly/enterprise_yearly: 5 sessões simultâneas
+    """
+    user = user_data["user"]
+
+    # Definir limites de sessão por plano
+    SESSION_LIMITS = {
+        "basic_monthly": 1,
+        "basic_yearly": 1,
+        "pro_monthly": 2,
+        "pro_yearly": 2,
+        "enterprise_monthly": 5,
+        "enterprise_yearly": 5,
+    }
+
+    # Buscar assinatura ativa do usuário para determinar o plano
+    from ..models import Subscription, SubscriptionStatus
+    result = await db.execute(
+        select(Subscription).where(
+            Subscription.user_id == user.id,
+            Subscription.status == SubscriptionStatus.ACTIVE
+        ).order_by(Subscription.created_at.desc())
+    )
+    subscription = result.scalar_one_or_none()
+
+    # Determinar limite de sessões
+    if not subscription:
+        max_sessions = 1  # Padrão para usuários sem assinatura
+    else:
+        plan_type = subscription.plan_type.value
+        max_sessions = SESSION_LIMITS.get(plan_type, 1)
+
+    # Buscar sessões ativas atuais (não expiradas)
+    now = datetime.utcnow()
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.user_id == user.id,
+            UserSession.is_active == True,
+            UserSession.expires_at > now
+        ).order_by(UserSession.last_activity.desc())
+    )
+    active_sessions = result.scalars().all()
+
+    # Verificar se atingiu o limite
+    if len(active_sessions) >= max_sessions:
+        # Invalidar a sessão mais antiga para permitir a nova
+        oldest_session = active_sessions[-1]
+        oldest_session.is_active = False
+        await db.commit()
+
+        print(f"[INFO] Sessão antiga invalidada para usuário {user.email} (device: {oldest_session.device_name})")
+
+    # Criar nova sessão
+    # Gerar token único para esta sessão
+    session_token = str(uuid.uuid4())
+
+    # Extrair informações do dispositivo
+    user_agent = request.headers.get("user-agent", "Unknown")
+    ip_address = request.client.host if request.client else "Unknown"
+
+    # Criar device fingerprint básico (pode ser melhorado com hash de user-agent + outros dados)
+    device_fingerprint = f"{user_agent[:100]}-{ip_address}"
+
+    # Determinar nome do dispositivo baseado no user-agent
+    device_name = "Unknown Device"
+    if "Windows" in user_agent:
+        device_name = "Windows PC"
+    elif "Macintosh" in user_agent or "Mac OS" in user_agent:
+        device_name = "Mac"
+    elif "Linux" in user_agent:
+        device_name = "Linux PC"
+    elif "iPhone" in user_agent or "iPad" in user_agent:
+        device_name = "iOS Device"
+    elif "Android" in user_agent:
+        device_name = "Android Device"
+
+    # Expiração em 24 horas
+    expires_at = now + timedelta(hours=24)
+
+    new_session = UserSession(
+        user_id=user.id,
+        session_token=session_token,
+        device_fingerprint=device_fingerprint,
+        ip_address=ip_address,
+        user_agent=user_agent[:500],  # Limitar tamanho
+        device_name=device_name,
+        last_activity=now,
+        expires_at=expires_at,
+        is_active=True
+    )
+
+    db.add(new_session)
+    await db.commit()
+    await db.refresh(new_session)
+
+    print(f"[OK] Nova sessão criada para {user.email} (device: {device_name}, IP: {ip_address})")
+
+    return {
+        "success": True,
+        "session_token": session_token,
+        "device_name": device_name,
+        "expires_at": expires_at.isoformat(),
+        "max_sessions": max_sessions,
+        "active_sessions": len(active_sessions) + 1 if len(active_sessions) < max_sessions else max_sessions,
+        "message": "Sessão registrada com sucesso"
+    }
+
+
+@router.post(
+    "/sessions/heartbeat",
+    summary="Atualizar Heartbeat da Sessão",
+    description="Atualiza o timestamp de última atividade da sessão"
+)
+async def session_heartbeat(
+    session_token: str,
+    user_data: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Atualiza o heartbeat da sessão para manter ela ativa.
+    Deve ser chamado periodicamente pelo frontend (ex: a cada 5 minutos).
+    """
+    user = user_data["user"]
+
+    # Buscar sessão
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.session_token == session_token,
+            UserSession.user_id == user.id,
+            UserSession.is_active == True
+        )
+    )
+    session = result.scalar_one_or_none()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sessão não encontrada ou inativa"
+        )
+
+    # Verificar se expirou
+    now = datetime.utcnow()
+    if session.expires_at < now:
+        session.is_active = False
+        await db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão expirada. Faça login novamente."
+        )
+
+    # Atualizar última atividade
+    session.last_activity = now
+    await db.commit()
+
+    return {
+        "success": True,
+        "last_activity": now.isoformat(),
+        "expires_at": session.expires_at.isoformat()
+    }
+
+
+@router.post(
+    "/sessions/terminate",
+    summary="Encerrar Sessão",
+    description="Encerra uma sessão ativa"
+)
+async def terminate_session(
+    session_token: str,
+    user_data: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Encerra uma sessão específica (logout).
+    """
+    user = user_data["user"]
+
+    # Buscar sessão
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.session_token == session_token,
+            UserSession.user_id == user.id
+        )
+    )
+    session = result.scalar_one_or_none()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Sessão não encontrada"
+        )
+
+    # Marcar como inativa
+    session.is_active = False
+    await db.commit()
+
+    print(f"[OK] Sessão encerrada para {user.email} (device: {session.device_name})")
+
+    return {
+        "success": True,
+        "message": "Sessão encerrada com sucesso"
+    }
+
+
+@router.get(
+    "/sessions/active",
+    summary="Listar Sessões Ativas",
+    description="Lista todas as sessões ativas do usuário"
+)
+async def list_active_sessions(
+    user_data: dict = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Lista todas as sessões ativas do usuário.
+    Útil para mostrar no dashboard quais dispositivos estão conectados.
+    """
+    user = user_data["user"]
+
+    # Buscar sessões ativas não expiradas
+    now = datetime.utcnow()
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.user_id == user.id,
+            UserSession.is_active == True,
+            UserSession.expires_at > now
+        ).order_by(UserSession.last_activity.desc())
+    )
+    sessions = result.scalars().all()
+
+    return {
+        "sessions": [
+            {
+                "session_token": s.session_token,
+                "device_name": s.device_name,
+                "ip_address": s.ip_address,
+                "last_activity": s.last_activity.isoformat(),
+                "created_at": s.created_at.isoformat(),
+                "expires_at": s.expires_at.isoformat()
+            }
+            for s in sessions
+        ],
+        "total": len(sessions)
     }
 
 

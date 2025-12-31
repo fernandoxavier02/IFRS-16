@@ -401,6 +401,11 @@
                     localStorage.setItem('ifrs16_user_token', data.access_token);
                     localStorage.setItem('ifrs16_user_type', data.user_type);
 
+                    // Salvar session_token para controle de sessões simultâneas
+                    if (data.session_token) {
+                        localStorage.setItem('ifrs16_session_token', data.session_token);
+                    }
+
                     // Redirecionar
                     if (data.user_type === 'admin') {
                         window.location.href = 'Calculadora_IFRS16_Deploy.html';

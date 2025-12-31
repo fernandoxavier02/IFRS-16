@@ -88,6 +88,7 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int = Field(description="Tempo de expiração em segundos")
     user_type: str = Field(description="Tipo: admin ou user")
+    session_token: Optional[str] = Field(None, description="Token da sessão para controle de acesso simultâneo")
 
 
 class ChangePasswordRequest(BaseModel):

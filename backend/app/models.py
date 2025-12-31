@@ -146,6 +146,11 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
+    sessions = relationship(
+        "UserSession",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
     
     def __repr__(self):
         return f"<User(email='{self.email}', name='{self.name}')>"
@@ -400,3 +405,62 @@ class Contract(Base):
 
     def __repr__(self):
         return f"<Contract(name='{self.name}', status='{self.status}')>"
+
+
+# =============================================================================
+# USER SESSIONS (CONTROLE DE ACESSO SIMULTÂNEO)
+# =============================================================================
+
+class UserSession(Base):
+    """
+    Sessões ativas de usuários para controle de acesso simultâneo.
+    Evita compartilhamento de licença entre múltiplos dispositivos.
+    """
+    __tablename__ = "user_sessions"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    # Identificação da sessão
+    session_token = Column(String(500), nullable=False, unique=True, index=True)
+    device_fingerprint = Column(String(255), nullable=True)
+
+    # Informações do dispositivo
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(String(500), nullable=True)
+    device_name = Column(String(255), nullable=True)
+
+    # Controle de atividade
+    last_activity = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow,
+        index=True
+    )
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        default=datetime.utcnow
+    )
+    expires_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        index=True
+    )
+    is_active = Column(Boolean, nullable=False, default=True, index=True)
+
+    # Relacionamento
+    user = relationship("User", back_populates="sessions")
+
+    __table_args__ = (
+        Index("idx_user_sessions_active", "user_id", "is_active"),
+        Index("idx_user_sessions_expires", "expires_at"),
+    )
+
+    def __repr__(self):
+        return f"<UserSession(user_id='{self.user_id}', device='{self.device_name}', active={self.is_active})>"

@@ -368,6 +368,10 @@ async function loadEconomicIndexes() {
                 economicIndexes[idx.index_type].push(idx);
             });
             console.log('Índices econômicos carregados:', economicIndexes);
+        } else if (response.status === 404) {
+            // API de índices ainda não implementada - usar modo manual
+            console.log('API de índices econômicos não disponível - usando modo manual');
+            economicIndexes = {};
         }
     } catch (error) {
         console.error('Erro ao carregar índices:', error);

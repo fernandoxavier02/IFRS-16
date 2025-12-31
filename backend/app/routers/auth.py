@@ -479,15 +479,81 @@ async def forgot_password(
     user = result.scalar_one_or_none()
     
     if user:
-        # TODO: Implementar envio de email com token de reset
-        # token = create_reset_token(user.id)
-        # send_reset_email(user.email, token)
-        pass
-    
-    # Sempre retorna sucesso por segurança
+        # Gerar token de reset
+        from ..auth import create_reset_token
+        reset_token = create_reset_token(user.id)
+
+        # Enviar email
+        from ..services.email_service import EmailService
+        try:
+            await EmailService.send_password_reset_email(
+                to_email=user.email,
+                user_name=user.name,
+                reset_token=reset_token
+            )
+            print(f"[OK] Email de reset enviado para: {user.email}")
+        except Exception as e:
+            print(f"[WARN] Erro ao enviar email de reset: {e}")
+            # Não falha a request se email falhar
+
+    # Sempre retorna sucesso por segurança (não revela se email existe)
     return {
         "success": True,
         "message": "Se o email existir em nossa base, você receberá instruções de recuperação."
+    }
+
+
+@router.post(
+    "/reset-password",
+    summary="Resetar Senha",
+    description="Reseta a senha usando o token recebido por email"
+)
+async def reset_password(
+    body: ResetPasswordRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Reseta a senha do usuário.
+
+    - **token**: Token recebido por email
+    - **new_password**: Nova senha (mínimo 8 caracteres)
+
+    Retorna erro se token for inválido ou expirado.
+    """
+    # Validar token
+    from ..auth import verify_reset_token
+    user_id = verify_reset_token(body.token)
+
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token inválido ou expirado. Solicite um novo link de recuperação."
+        )
+
+    # Buscar usuário
+    result = await db.execute(
+        select(User).where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não encontrado"
+        )
+
+    # Atualizar senha
+    user.password_hash = hash_password(body.new_password)
+    user.password_changed_at = datetime.utcnow()
+    user.password_must_change = False  # Usuário já trocou a senha
+
+    await db.commit()
+
+    print(f"[OK] Senha resetada para usuário: {user.email}")
+
+    return {
+        "success": True,
+        "message": "Senha redefinida com sucesso. Você já pode fazer login com a nova senha."
     }
 
 

@@ -549,3 +549,84 @@ def get_token_expiration(token: str) -> Optional[datetime]:
     if payload and "exp" in payload:
         return datetime.fromtimestamp(payload["exp"])
     return None
+
+
+# =============================================================================
+# FUNÇÕES DE RESET DE SENHA
+# =============================================================================
+
+def create_reset_token(user_id: UUID) -> str:
+    """
+    Cria um token JWT para reset de senha.
+
+    Args:
+        user_id: ID do usuário
+
+    Returns:
+        Token JWT que expira em 1 hora
+
+    Note:
+        O token contém:
+        - user_id: ID do usuário
+        - type: "password_reset" (para validação)
+        - exp: Expira em 1 hora
+    """
+    expires_delta = timedelta(hours=1)
+
+    return create_access_token(
+        data={"sub": str(user_id)},
+        expires_delta=expires_delta,
+        token_type="password_reset"
+    )
+
+
+def verify_reset_token(token: str) -> Optional[UUID]:
+    """
+    Valida token de reset e retorna user_id.
+
+    Args:
+        token: Token JWT de reset
+
+    Returns:
+        UUID do usuário se válido, None se inválido ou expirado
+
+    Note:
+        Verifica:
+        - Assinatura do token
+        - Expiração (1 hora)
+        - Tipo do token (deve ser "password_reset")
+    """
+    try:
+        payload = jwt.decode(
+            token,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM]
+        )
+
+        # Verificar tipo do token
+        if payload.get("type") != "password_reset":
+            print(f"⚠️ Token inválido: tipo incorreto ({payload.get('type')})")
+            return None
+
+        # Extrair user_id
+        user_id_str = payload.get("sub")
+        if not user_id_str:
+            print(f"⚠️ Token inválido: sem user_id")
+            return None
+
+        # Converter para UUID
+        try:
+            user_id = UUID(user_id_str)
+            print(f"✅ Token de reset válido para user_id: {user_id}")
+            return user_id
+        except (ValueError, TypeError):
+            print(f"⚠️ Token inválido: user_id malformado ({user_id_str})")
+            return None
+
+    except jwt.ExpiredSignatureError:
+        print(f"⚠️ Token de reset expirado")
+        return None  # Token expirado
+
+    except jwt.InvalidTokenError as e:
+        print(f"⚠️ Token de reset inválido: {e}")
+        return None  # Token inválido

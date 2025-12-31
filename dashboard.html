@@ -143,6 +143,50 @@
             color: var(--text-primary);
             font-weight: 500;
         }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .badge-success {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .badge-error {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        .features-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+        }
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(0, 212, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(0, 212, 255, 0.1);
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        .feature-item svg {
+            flex-shrink: 0;
+            color: var(--neon-cyan);
+        }
         .actions-row {
             display: flex;
             flex-wrap: wrap;
@@ -229,19 +273,63 @@
             <!-- Subscription Cards -->
             <div class="cards-grid">
                 <div class="value-card cyan">
-                    <p class="label">Status da Assinatura</p>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                        <p class="label">Status da Assinatura</p>
+                        <span id="statusBadge" class="badge badge-success" style="display: none;">Ativa</span>
+                    </div>
                     <p id="subStatus" class="value">-</p>
                     <p id="subPlan" class="sub">-</p>
                 </div>
                 <div class="value-card purple">
                     <p class="label">Próxima Renovação</p>
                     <p id="subRenewal" class="value">-</p>
-                    <p id="subCancelNote" class="sub" style="display: none;">Será cancelada ao fim do período</p>
+                    <p id="subCancelNote" class="sub" style="display: none; color: var(--warning);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" style="display: inline-block; margin-right: 4px; vertical-align: middle;">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                            <line x1="12" y1="9" x2="12" y2="13"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                        Será cancelada ao fim do período
+                    </p>
                 </div>
                 <div class="value-card amber">
-                    <p class="label">Total de Validações</p>
-                    <p id="totalValidations" class="value">0</p>
-                    <p class="sub">Usos da calculadora</p>
+                    <p class="label">Limites do Plano</p>
+                    <p id="contractsLimit" class="value">0/0</p>
+                    <p class="sub">Contratos utilizados</p>
+                    <div id="usageBar" style="margin-top: 12px; display: none;">
+                        <div style="background: rgba(255,255,255,0.1); border-radius: 4px; height: 6px; overflow: hidden;">
+                            <div id="usageProgress" style="background: linear-gradient(90deg, #f59e0b, #fbbf24); height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subscription Details Card (só aparece se tiver assinatura ativa) -->
+            <div id="subscriptionDetails" class="glass-card" style="padding: 24px; margin-bottom: 24px; display: none;">
+                <h2 class="section-title">Detalhes da Assinatura</h2>
+                <div class="info-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
+                    <div class="info-item">
+                        <p class="label">Plano Atual</p>
+                        <p id="planName" class="value">-</p>
+                    </div>
+                    <div class="info-item">
+                        <p class="label">Período Atual</p>
+                        <p id="currentPeriod" class="value">-</p>
+                    </div>
+                    <div class="info-item">
+                        <p class="label">ID da Assinatura</p>
+                        <p id="stripeSubId" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; color: var(--text-secondary);">-</p>
+                    </div>
+                    <div class="info-item">
+                        <p class="label">Criada em</p>
+                        <p id="createdAt" class="value">-</p>
+                    </div>
+                </div>
+
+                <!-- Features do Plano -->
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <h3 style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 12px;">Recursos Incluídos</h3>
+                    <div id="planFeatures" class="features-list"></div>
                 </div>
             </div>
 
@@ -302,6 +390,50 @@
         const API_URL = getApiUrl();
         let dashboardData = null;
 
+        // Formatar nome do plano
+        function formatPlanName(planType) {
+            const names = {
+                'basic_monthly': 'Básico Mensal',
+                'basic_yearly': 'Básico Anual',
+                'pro_monthly': 'Pro Mensal',
+                'pro_yearly': 'Pro Anual',
+                'enterprise_monthly': 'Enterprise Mensal',
+                'enterprise_yearly': 'Enterprise Anual'
+            };
+            return names[planType] || planType;
+        }
+
+        // Obter limites do plano
+        function getPlanLimits(planType) {
+            const limits = {
+                'basic_monthly': { max_contracts: 5, features: ['Excel Export', 'CSV Export', 'PDF Export', 'Relatórios', 'Suporte Email'] },
+                'basic_yearly': { max_contracts: 5, features: ['Excel Export', 'CSV Export', 'PDF Export', 'Relatórios', 'Suporte Email'] },
+                'pro_monthly': { max_contracts: 20, features: ['Excel Export', 'CSV Export', 'PDF Export', 'Relatórios', 'Suporte Prioritário', 'API Access'] },
+                'pro_yearly': { max_contracts: 20, features: ['Excel Export', 'CSV Export', 'PDF Export', 'Relatórios', 'Suporte Prioritário', 'API Access'] },
+                'enterprise_monthly': { max_contracts: -1, features: ['Contratos Ilimitados', 'Excel Export', 'CSV Export', 'PDF Export', 'Relatórios', 'Suporte Dedicado', 'API Access', 'Treinamento', 'SLA'] },
+                'enterprise_yearly': { max_contracts: -1, features: ['Contratos Ilimitados', 'Excel Export', 'CSV Export', 'PDF Export', 'Relatórios', 'Suporte Dedicado', 'API Access', 'Treinamento', 'SLA'] }
+            };
+            return limits[planType] || { max_contracts: 0, features: [] };
+        }
+
+        // Renderizar features do plano
+        function renderPlanFeatures(planLimits) {
+            const container = document.getElementById('planFeatures');
+            container.innerHTML = '';
+
+            planLimits.features.forEach(feature => {
+                const featureEl = document.createElement('div');
+                featureEl.className = 'feature-item';
+                featureEl.innerHTML = `
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>${feature}</span>
+                `;
+                container.appendChild(featureEl);
+            });
+        }
+
         async function loadDashboard() {
             const token = localStorage.getItem('ifrs16_auth_token');
             
@@ -331,11 +463,28 @@
 
                 const subscription = subscriptionResponse.ok ? await subscriptionResponse.json() : null;
 
+                // Carregar contratos do usuário para calcular uso
+                let contractsCount = 0;
+                try {
+                    const contractsResponse = await fetch(`${API_URL}/api/contracts`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (contractsResponse.ok) {
+                        const contracts = await contractsResponse.json();
+                        contractsCount = Array.isArray(contracts) ? contracts.length : 0;
+                    }
+                } catch (e) {
+                    console.warn('Erro ao carregar contratos:', e);
+                }
+
                 dashboardData = {
                     user: profile,
                     subscription: subscription,
                     license: subscription?.license || null,
-                    stats: { total_validations: 0 }
+                    stats: {
+                        total_validations: 0,
+                        contracts_count: contractsCount
+                    }
                 };
 
                 renderDashboard();
@@ -373,23 +522,82 @@
             // Subscription
             if (dashboardData.subscription && dashboardData.subscription.status === 'active') {
                 const sub = dashboardData.subscription;
+
+                // Status Badge
+                const badge = document.getElementById('statusBadge');
+                badge.style.display = 'inline-block';
+                badge.className = 'badge badge-success';
+                badge.textContent = 'Ativa';
+
                 document.getElementById('subStatus').textContent = 'Ativa';
-                document.getElementById('subPlan').textContent = `Plano ${sub.plan_type}`;
-                
+                document.getElementById('subPlan').textContent = formatPlanName(sub.plan_type);
+
+                // Renovação
                 if (sub.current_period_end) {
                     const endDate = new Date(sub.current_period_end);
                     document.getElementById('subRenewal').textContent = endDate.toLocaleDateString('pt-BR');
+
+                    // Aviso se cancelar ao fim do período
+                    if (sub.cancel_at_period_end) {
+                        document.getElementById('subCancelNote').style.display = 'block';
+                    }
                 } else {
                     document.getElementById('subRenewal').textContent = 'Vitalício';
                 }
 
+                // Limites do plano
+                const planLimits = getPlanLimits(sub.plan_type);
+                const contractsUsed = dashboardData.stats.contracts_count || 0;
+                document.getElementById('contractsLimit').textContent = `${contractsUsed}/${planLimits.max_contracts === -1 ? '∞' : planLimits.max_contracts}`;
+
+                // Barra de progresso
+                if (planLimits.max_contracts > 0) {
+                    const usagePercent = (contractsUsed / planLimits.max_contracts) * 100;
+                    document.getElementById('usageBar').style.display = 'block';
+                    document.getElementById('usageProgress').style.width = `${Math.min(usagePercent, 100)}%`;
+
+                    // Mudar cor se próximo do limite
+                    if (usagePercent >= 90) {
+                        document.getElementById('usageProgress').style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+                    } else if (usagePercent >= 70) {
+                        document.getElementById('usageProgress').style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                    }
+                }
+
+                // Detalhes da assinatura
+                document.getElementById('subscriptionDetails').style.display = 'block';
+                document.getElementById('planName').textContent = formatPlanName(sub.plan_type);
+
+                if (sub.current_period_start && sub.current_period_end) {
+                    const start = new Date(sub.current_period_start).toLocaleDateString('pt-BR');
+                    const end = new Date(sub.current_period_end).toLocaleDateString('pt-BR');
+                    document.getElementById('currentPeriod').textContent = `${start} - ${end}`;
+                }
+
+                document.getElementById('stripeSubId').textContent = sub.stripe_subscription_id || '-';
+
+                if (sub.created_at) {
+                    document.getElementById('createdAt').textContent = new Date(sub.created_at).toLocaleDateString('pt-BR');
+                }
+
+                // Features do plano
+                renderPlanFeatures(planLimits);
+
                 document.getElementById('portalBtn').style.display = 'inline-flex';
             } else {
+                // Sem assinatura ativa
+                const badge = document.getElementById('statusBadge');
+                badge.style.display = 'inline-block';
+                badge.className = 'badge badge-error';
+                badge.textContent = 'Inativa';
+
                 document.getElementById('subStatus').textContent = 'Inativa';
                 document.getElementById('subPlan').textContent = 'Sem assinatura';
                 document.getElementById('subRenewal').textContent = '-';
+                document.getElementById('contractsLimit').textContent = '0/0';
                 document.getElementById('upgradeBtn').style.display = 'inline-flex';
                 document.getElementById('portalBtn').style.display = 'none';
+                document.getElementById('subscriptionDetails').style.display = 'none';
             }
 
             // License

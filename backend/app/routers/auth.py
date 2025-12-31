@@ -187,29 +187,24 @@ async def admin_change_password(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED,
     summary="Registro de Usuário",
-    description="Cria uma nova conta de usuário com senha temporária"
+    description="Cria uma nova conta de usuário"
 )
 async def register_user(
     body: RegisterRequest,
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Registra um novo usuário com senha temporária.
+    Registra um novo usuário.
 
     - **name**: Nome completo
     - **email**: Email (único)
-    - **password**: Senha temporária será gerada automaticamente
+    - **password**: Senha escolhida pelo usuário
     - **company_name**: Nome da empresa (opcional)
 
-    O usuário receberá um email com:
-    - Email de login (username)
-    - Senha temporária
-    - Instruções para primeiro acesso
-
-    Ao fazer login, será obrigado a trocar a senha.
+    O usuário receberá um email de confirmação de cadastro.
+    O cadastro é criado sem assinatura - o usuário precisará assinar um plano
+    para ter acesso à calculadora.
     """
-    import secrets
-
     # Verificar se email já existe
     result = await db.execute(
         select(User).where(User.email == body.email.lower())
@@ -220,37 +215,32 @@ async def register_user(
             detail="Este email já está cadastrado"
         )
 
-    # Gerar senha temporária segura (12 caracteres: letras + números)
-    temp_password = secrets.token_urlsafe(9)[:12]  # 12 chars alfanuméricos
-
-    # Criar usuário com senha temporária e flag para forçar troca
+    # Criar usuário com a senha fornecida
     user = User(
         email=body.email.lower(),
         name=body.name,
-        password_hash=hash_password(temp_password),
+        password_hash=hash_password(body.password),
         company_name=body.company_name,
         is_active=True,
         email_verified=False,
-        password_must_change=True,  # Força troca de senha no primeiro login
-        password_changed_at=None
+        password_must_change=False,  # Usuário escolheu a senha
+        password_changed_at=datetime.utcnow()
     )
 
     db.add(user)
     await db.commit()
     await db.refresh(user)
 
-    # Enviar email com credenciais temporárias
+    # Enviar email de confirmação de cadastro
     from ..services.email_service import EmailService
     try:
-        await EmailService.send_welcome_email(
+        await EmailService.send_registration_confirmation_email(
             to_email=user.email,
-            user_name=user.name,
-            temp_password=temp_password,
-            company_name=user.company_name or "Sua empresa"
+            user_name=user.name
         )
-        print(f"[OK] Email de boas-vindas enviado para: {user.email}")
+        print(f"[OK] Email de confirmação de cadastro enviado para: {user.email}")
     except Exception as e:
-        print(f"[WARN] Erro ao enviar email de boas-vindas: {e}")
+        print(f"[WARN] Erro ao enviar email de confirmação: {e}")
         # Não falha o registro se email falhar
 
     return UserResponse.model_validate(user)

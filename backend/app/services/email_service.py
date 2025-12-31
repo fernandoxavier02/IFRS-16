@@ -121,6 +121,306 @@ class EmailService:
         )
     
     @classmethod
+    async def send_registration_confirmation_email(
+        cls,
+        to_email: str,
+        user_name: str
+    ) -> bool:
+        """
+        Envia email de confirmação de cadastro (sem senha temporária).
+        """
+        subject = "Bem-vindo ao IFRS 16 - Cadastro Confirmado"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 40px 40px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                                IFRS 16
+                            </h1>
+                            <p style="color: #a8c5e2; margin: 10px 0 0 0; font-size: 14px;">
+                                Sistema de Gestão de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 22px;">
+                                Olá, {user_name}!
+                            </h2>
+
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Seu cadastro foi realizado com sucesso no sistema IFRS 16!
+                            </p>
+
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                                Você já pode fazer login no sistema utilizando o email <strong>{to_email}</strong> e a senha que você cadastrou.
+                            </p>
+
+                            <!-- Info Box -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="color: #1e40af; font-size: 15px; margin: 0 0 12px 0; font-weight: 600;">
+                                            Próximo passo: Escolha seu plano
+                                        </p>
+                                        <p style="color: #1e40af; font-size: 14px; margin: 0; line-height: 1.6;">
+                                            Para começar a utilizar a calculadora IFRS 16 e todos os recursos do sistema,
+                                            você precisa assinar um dos nossos planos. Acesse a área de preços e escolha
+                                            o plano ideal para suas necessidades.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Features List -->
+                            <p style="color: #4a5568; font-size: 15px; font-weight: 600; margin: 0 0 12px 0;">
+                                O que você pode fazer com o IFRS 16:
+                            </p>
+                            <ul style="color: #4a5568; font-size: 14px; line-height: 1.8; margin: 0 0 30px 0;">
+                                <li>Calcular automaticamente arrendamentos conforme IFRS 16</li>
+                                <li>Gerar relatórios completos em Excel, CSV e PDF</li>
+                                <li>Gerenciar múltiplos contratos de arrendamento</li>
+                                <li>Acompanhar vencimentos e renovações</li>
+                            </ul>
+
+                            <!-- CTA Buttons -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                                <tr>
+                                    <td align="center" style="padding: 10px;">
+                                        <a href="{settings.FRONTEND_URL}/login.html"
+                                           style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(30, 58, 95, 0.3);">
+                                            Fazer Login
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{settings.FRONTEND_URL}/landing.html#pricing"
+                                           style="display: inline-block; background: transparent; color: #2d5a87; text-decoration: none; padding: 12px 32px; border-radius: 8px; font-size: 15px; font-weight: 600; border: 2px solid #2d5a87;">
+                                            Ver Planos e Preços
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 30px 40px; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="color: #718096; font-size: 14px; margin: 0 0 10px 0;">
+                                Precisa de ajuda? Entre em contato conosco.
+                            </p>
+                            <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                                © 2025 IFRS 16 - Sistema de Gestão de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        """
+
+        text_content = f"""
+Olá, {user_name}!
+
+Seu cadastro foi realizado com sucesso no sistema IFRS 16!
+
+Você já pode fazer login no sistema utilizando o email {to_email} e a senha que você cadastrou.
+
+PRÓXIMO PASSO: Escolha seu plano
+
+Para começar a utilizar a calculadora IFRS 16 e todos os recursos do sistema, você precisa assinar um dos nossos planos.
+
+O que você pode fazer com o IFRS 16:
+- Calcular automaticamente arrendamentos conforme IFRS 16
+- Gerar relatórios completos em Excel, CSV e PDF
+- Gerenciar múltiplos contratos de arrendamento
+- Acompanhar vencimentos e renovações
+
+Fazer login: {settings.FRONTEND_URL}/login.html
+Ver planos: {settings.FRONTEND_URL}/landing.html#pricing
+
+Atenciosamente,
+Equipe IFRS 16
+        """
+
+        return await cls.send_email(to_email, subject, html_content, text_content)
+
+    @classmethod
+    async def send_registration_email(
+        cls,
+        to_email: str,
+        user_name: str,
+        temp_password: str
+    ) -> bool:
+        """
+        Envia email de boas-vindas para registro manual (sem assinatura).
+        """
+        subject = "Bem-vindo ao IFRS 16 - Suas Credenciais de Acesso"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 40px 40px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                                IFRS 16
+                            </h1>
+                            <p style="color: #a8c5e2; margin: 10px 0 0 0; font-size: 14px;">
+                                Sistema de Gestão de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="color: #1e3a5f; margin: 0 0 20px 0; font-size: 22px;">
+                                Olá, {user_name}!
+                            </h2>
+
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Seu cadastro foi realizado com sucesso no sistema IFRS 16!
+                            </p>
+
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                                Abaixo estão suas credenciais de acesso:
+                            </p>
+
+                            <!-- Credentials Box -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f8fafc; border-radius: 8px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 25px;">
+                                        <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                            <tr>
+                                                <td style="padding: 10px 0; border-bottom: 1px solid #e2e8f0;">
+                                                    <span style="color: #718096; font-size: 14px;">Email:</span>
+                                                    <br>
+                                                    <strong style="color: #1e3a5f; font-size: 16px;">{to_email}</strong>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 10px 0;">
+                                                    <span style="color: #718096; font-size: 14px;">Senha Temporária:</span>
+                                                    <br>
+                                                    <code style="background-color: #edf2f7; padding: 8px 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 18px; color: #e53e3e; display: inline-block; margin-top: 5px;">{temp_password}</code>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Warning -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #fef3c7; border-left: 4px solid #f59e0b; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 15px 20px;">
+                                        <p style="color: #92400e; font-size: 14px; margin: 0;">
+                                            <strong>Importante:</strong> Por segurança, você será obrigado a alterar sua senha no primeiro acesso.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Info Box -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #dbeafe; border-left: 4px solid #3b82f6; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 15px 20px;">
+                                        <p style="color: #1e40af; font-size: 14px; margin: 0;">
+                                            <strong>Próximo passo:</strong> Para utilizar o sistema, você precisa assinar um dos nossos planos.
+                                            Acesse a área de preços após o login para escolher o plano ideal para você.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center">
+                                        <a href="{settings.FRONTEND_URL}/login.html"
+                                           style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(30, 58, 95, 0.3);">
+                                            Acessar o Sistema
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 30px 40px; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="color: #718096; font-size: 14px; margin: 0 0 10px 0;">
+                                Precisa de ajuda? Entre em contato conosco.
+                            </p>
+                            <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                                © 2025 IFRS 16 - Sistema de Gestão de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        """
+
+        text_content = f"""
+Olá, {user_name}!
+
+Seu cadastro foi realizado com sucesso no sistema IFRS 16!
+
+Suas credenciais de acesso:
+- Email: {to_email}
+- Senha Temporária: {temp_password}
+
+IMPORTANTE: Por segurança, você será obrigado a alterar sua senha no primeiro acesso.
+
+PRÓXIMO PASSO: Para utilizar o sistema, você precisa assinar um dos nossos planos.
+Acesse a área de preços após o login para escolher o plano ideal para você.
+
+Acesse o sistema em: {settings.FRONTEND_URL}/login.html
+
+Atenciosamente,
+Equipe IFRS 16
+        """
+
+        return await cls.send_email(to_email, subject, html_content, text_content)
+
+    @classmethod
     async def send_welcome_email(
         cls,
         to_email: str,
@@ -130,9 +430,9 @@ class EmailService:
         plan_name: str
     ) -> bool:
         """
-        Envia email de boas-vindas com credenciais de acesso.
+        Envia email de boas-vindas com credenciais de acesso (para assinaturas via Stripe).
         """
-        subject = "🎉 Bem-vindo ao IFRS 16 - Suas Credenciais de Acesso"
+        subject = "Bem-vindo ao IFRS 16 - Suas Credenciais de Acesso"
         
         html_content = f"""
 <!DOCTYPE html>

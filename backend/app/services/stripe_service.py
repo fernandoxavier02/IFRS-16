@@ -388,7 +388,7 @@ class StripeService:
                         license_key=license.key,
                         plan_name=plan_name
                     )
-                    print(f"📧 Email de boas-vindas enviado para: {user.email}")
+                    print(f"[EMAIL] Email de boas-vindas enviado para: {user.email}")
                 else:
                     await EmailService.send_license_activated_email(
                         to_email=user.email,
@@ -396,9 +396,9 @@ class StripeService:
                         license_key=license.key,
                         plan_name=plan_name
                     )
-                    print(f"📧 Email de licença ativada enviado para: {user.email}")
+                    print(f"[EMAIL] Email de licenca ativada enviado para: {user.email}")
 
-                # Enviar notificação ao administrador
+                # Enviar notificacao ao administrador
                 try:
                     await EmailService.send_admin_new_subscription_notification(
                         customer_name=user.name,
@@ -407,7 +407,7 @@ class StripeService:
                         license_key=license.key,
                         amount=f"R$ {session.get('amount_total', 0) / 100:.2f}"
                     )
-                    print(f"📧 Notificacao de admin enviada para: contato@fxstudioai.com")
+                    print(f"[EMAIL] Notificacao de admin enviada para: contato@fxstudioai.com")
                 except Exception as e:
                     print(f"[WARN] Erro ao enviar notificacao de admin: {e}")
             except Exception as e:
@@ -457,7 +457,7 @@ class StripeService:
                     license_key=license.key,
                     plan_name=plan_name
                 )
-                print(f"📧 Email de boas-vindas enviado para: {user.email}")
+                print(f"[EMAIL] Email de boas-vindas enviado para: {user.email}")
             else:
                 await EmailService.send_license_activated_email(
                     to_email=user.email,
@@ -465,9 +465,9 @@ class StripeService:
                     license_key=license.key,
                     plan_name=plan_name
                 )
-                print(f"📧 Email de licença ativada enviado para: {user.email}")
+                print(f"[EMAIL] Email de licenca ativada enviado para: {user.email}")
 
-            # Enviar notificação ao administrador
+            # Enviar notificacao ao administrador
             try:
                 await EmailService.send_admin_new_subscription_notification(
                     customer_name=user.name,
@@ -476,11 +476,11 @@ class StripeService:
                     license_key=license.key,
                     amount=f"R$ {session.get('amount_total', 0) / 100:.2f}"
                 )
-                print(f"📧 Notificacao de admin enviada para: contato@fxstudioai.com")
+                print(f"[EMAIL] Notificacao de admin enviada para: contato@fxstudioai.com")
             except Exception as e:
                 print(f"[WARN] Erro ao enviar notificacao de admin: {e}")
         except Exception as e:
-            print(f"⚠️ Erro ao enviar email pós-checkout: {e}")
+            print(f"[WARN] Erro ao enviar email pos-checkout: {e}")
 
         return subscription
     

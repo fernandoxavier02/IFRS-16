@@ -461,7 +461,13 @@
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
-                const subscription = subscriptionResponse.ok ? await subscriptionResponse.json() : null;
+                let subscription = null;
+                if (subscriptionResponse.ok) {
+                    subscription = await subscriptionResponse.json();
+                    console.log('📊 Dados da assinatura recebidos:', subscription);
+                } else {
+                    console.warn('⚠️ Erro ao buscar assinatura:', subscriptionResponse.status);
+                }
 
                 // A API agora retorna contracts_count dentro de subscription
                 const contractsCount = subscription?.contracts_count || 0;
@@ -476,6 +482,7 @@
                     }
                 };
 
+                console.log('📋 Dashboard data final:', dashboardData);
                 renderDashboard();
             } catch (error) {
                 console.error('Erro:', error);
@@ -509,8 +516,15 @@
             document.getElementById('totalValidations').textContent = dashboardData.stats.total_validations;
 
             // Subscription
+            console.log('🔍 Verificando assinatura:', {
+                hasSubscription: !!dashboardData.subscription,
+                status: dashboardData.subscription?.status,
+                plan_type: dashboardData.subscription?.plan_type
+            });
+
             if (dashboardData.subscription && dashboardData.subscription.status === 'active') {
                 const sub = dashboardData.subscription;
+                console.log('✅ Assinatura ativa detectada, renderizando dados...');
 
                 // Status Badge
                 const badge = document.getElementById('statusBadge');

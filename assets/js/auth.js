@@ -162,7 +162,50 @@ async function verificarSessaoSalva() {
         }
     }
 
-    // 1.5. Usuário logado (token existe), mas ainda não ativou licença
+    // 2. PRIMEIRO: Verificar se tem licença já ativada (chave + token de licença)
+    const savedLicense = localStorage.getItem('ifrs16_license');
+    const savedToken = localStorage.getItem('ifrs16_token');
+
+    // Se tem licença salva, verificar se ainda é válida
+    if (savedLicense && savedToken) {
+        try {
+            const response = await fetch(`${CONFIG.API_URL}/api/check-license`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedToken}` }
+            });
+            const result = await response.json();
+
+            if (response.ok && result.valid) {
+                licenseToken = savedToken;
+                // Também salvar userToken se existir
+                const userTokenStored = localStorage.getItem('ifrs16_user_token') || localStorage.getItem('ifrs16_auth_token');
+                if (userTokenStored) {
+                    userToken = userTokenStored;
+                }
+                ativarSistema(savedLicense, {
+                    nome: localStorage.getItem('ifrs16_customer_name') || 'Usuário Licenciado',
+                    expira: result.expires_at
+                });
+                iniciarMonitoramento();
+                console.log('✅ Licença já ativada - sistema liberado');
+                return true;
+            } else {
+                // Licença inválida - limpar e pedir login novamente
+                console.warn('⚠️ Licença inválida ou expirada');
+                limparDadosSessao();
+            }
+        } catch (error) {
+            // Modo offline - ativar mesmo assim se tem licença salva
+            console.warn('⚠️ Modo offline - usando licença salva');
+            ativarSistema(savedLicense, {
+                nome: localStorage.getItem('ifrs16_customer_name') || 'Usuário Licenciado (Offline)',
+                expira: null
+            });
+            return true;
+        }
+    }
+
+    // 3. DEPOIS: Usuário logado (token existe), mas ainda não ativou licença
     // Não deve voltar para a tela de login novamente após o redirect do login.html.
     const userTokenStored = localStorage.getItem('ifrs16_user_token') || localStorage.getItem('ifrs16_auth_token');
     if (userTokenStored && userType !== 'admin') {
@@ -201,41 +244,6 @@ async function verificarSessaoSalva() {
         } catch (error) {
             // Sem conexão momentânea: ainda assim não pedir login de novo.
             mostrarTelaLicenca();
-            return true;
-        }
-    }
-
-    // 2. Verificar se tem licença já ativada (chave + token de licença)
-    const savedLicense = localStorage.getItem('ifrs16_license');
-    const savedToken = localStorage.getItem('ifrs16_token');
-
-    // Se tem licença salva, verificar se ainda é válida
-    if (savedLicense && savedToken) {
-        try {
-            const response = await fetch(`${CONFIG.API_URL}/api/check-license`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${savedToken}` }
-            });
-            const result = await response.json();
-
-            if (response.ok && result.valid) {
-                licenseToken = savedToken;
-                ativarSistema(savedLicense, {
-                    nome: localStorage.getItem('ifrs16_customer_name') || 'Usuário Licenciado',
-                    expira: result.expires_at
-                });
-                iniciarMonitoramento();
-                return true;
-            } else {
-                // Licença inválida - limpar e pedir login novamente
-                limparDadosSessao();
-            }
-        } catch (error) {
-            // Modo offline - ativar mesmo assim se tem licença salva
-            ativarSistema(savedLicense, {
-                nome: localStorage.getItem('ifrs16_customer_name') || 'Usuário Licenciado (Offline)',
-                expira: null
-            });
             return true;
         }
     }

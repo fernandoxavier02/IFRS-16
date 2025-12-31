@@ -239,11 +239,11 @@
                 </div>
             </div>
             <div class="header-actions">
-                <a href="Calculadora_IFRS16_Deploy.html" class="btn-neon btn-neon-sm">
+                <button type="button" id="btnCalculator" onclick="accessCalculator()" class="btn-neon btn-neon-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>
                     Calculadora
-                </a>
-                <button onclick="logout()" class="btn-neon-outline btn-neon-sm">Sair</button>
+                </button>
+                <button type="button" onclick="logout()" class="btn-neon-outline btn-neon-sm">Sair</button>
             </div>
         </header>
 
@@ -463,19 +463,8 @@
 
                 const subscription = subscriptionResponse.ok ? await subscriptionResponse.json() : null;
 
-                // Carregar contratos do usuário para calcular uso
-                let contractsCount = 0;
-                try {
-                    const contractsResponse = await fetch(`${API_URL}/api/contracts`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    if (contractsResponse.ok) {
-                        const contracts = await contractsResponse.json();
-                        contractsCount = Array.isArray(contracts) ? contracts.length : 0;
-                    }
-                } catch (e) {
-                    console.warn('Erro ao carregar contratos:', e);
-                }
+                // A API agora retorna contracts_count dentro de subscription
+                const contractsCount = subscription?.contracts_count || 0;
 
                 dashboardData = {
                     user: profile,
@@ -665,9 +654,121 @@
             window.location.href = 'login.html';
         }
 
+        // Verificar acesso à calculadora
+        function accessCalculator() {
+            // Verificar se tem assinatura ativa
+            if (!dashboardData.subscription) {
+                showAccessDeniedModal('sem_assinatura');
+                return;
+            }
+
+            // Verificar se tem licença
+            if (!dashboardData.license) {
+                showAccessDeniedModal('sem_licenca');
+                return;
+            }
+
+            // Verificar se a licença está ativa
+            if (dashboardData.license.status !== 'active') {
+                showAccessDeniedModal('licenca_inativa');
+                return;
+            }
+
+            // Verificar se a assinatura está ativa
+            if (dashboardData.subscription.status !== 'active') {
+                showAccessDeniedModal('assinatura_inativa');
+                return;
+            }
+
+            // Tudo OK, permitir acesso
+            window.location.href = 'Calculadora_IFRS16_Deploy.html';
+        }
+
+        // Mostrar modal de acesso negado
+        function showAccessDeniedModal(reason) {
+            const modal = document.getElementById('accessDeniedModal');
+            const title = document.getElementById('modalTitle');
+            const message = document.getElementById('modalMessage');
+            const actionBtn = document.getElementById('modalActionBtn');
+
+            let titleText = '';
+            let messageText = '';
+            let buttonText = 'Ver Planos e Assinar';
+            let buttonAction = () => window.location.href = 'landing.html#pricing';
+
+            switch(reason) {
+                case 'sem_assinatura':
+                    titleText = 'Assinatura Necessária';
+                    messageText = 'Para acessar a calculadora IFRS 16, você precisa ter uma assinatura ativa. Escolha o plano ideal para suas necessidades e comece a usar agora!';
+                    break;
+                case 'sem_licenca':
+                    titleText = 'Licença Não Encontrada';
+                    messageText = 'Sua assinatura está ativa, mas a licença ainda não foi gerada. Por favor, entre em contato com o suporte ou tente novamente em alguns minutos.';
+                    buttonText = 'Entrar em Contato';
+                    buttonAction = () => window.location.href = 'mailto:contato@fxstudioai.com';
+                    break;
+                case 'licenca_inativa':
+                    titleText = 'Licença Inativa';
+                    messageText = 'Sua licença não está ativa. Isso pode acontecer se sua assinatura expirou ou foi cancelada. Renove sua assinatura para continuar usando a calculadora.';
+                    break;
+                case 'assinatura_inativa':
+                    titleText = 'Assinatura Inativa';
+                    messageText = 'Sua assinatura não está ativa. Por favor, renove sua assinatura para ter acesso à calculadora IFRS 16.';
+                    break;
+            }
+
+            title.textContent = titleText;
+            message.textContent = messageText;
+            actionBtn.textContent = buttonText;
+            actionBtn.onclick = buttonAction;
+
+            modal.style.display = 'flex';
+        }
+
+        // Fechar modal
+        function closeAccessDeniedModal() {
+            document.getElementById('accessDeniedModal').style.display = 'none';
+        }
+
+        // Fechar modal ao clicar fora
+        window.onclick = function(event) {
+            const modal = document.getElementById('accessDeniedModal');
+            if (event.target === modal) {
+                closeAccessDeniedModal();
+            }
+        }
+
         // Inicializar
         window.onload = loadDashboard;
     </script>
+
+    <!-- Modal de Acesso Negado -->
+    <div id="accessDeniedModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); z-index: 9999; justify-content: center; align-items: center;">
+        <div class="glass-card" style="max-width: 500px; margin: 20px; padding: 32px; position: relative;">
+            <button type="button" onclick="closeAccessDeniedModal()" style="position: absolute; top: 16px; right: 16px; background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 24px; line-height: 1;">
+                &times;
+            </button>
+
+            <div style="text-align: center; margin-bottom: 24px;">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="margin: 0 auto 16px;">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                <h2 id="modalTitle" style="font-family: 'Orbitron', sans-serif; font-size: 1.5rem; color: var(--text-primary); margin-bottom: 12px;">Acesso Negado</h2>
+                <p id="modalMessage" style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 24px;">Você precisa de uma assinatura ativa para acessar a calculadora.</p>
+            </div>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button type="button" id="modalActionBtn" class="btn-neon" style="flex: 1; min-width: 200px;">
+                    Ver Planos e Assinar
+                </button>
+                <button type="button" onclick="closeAccessDeniedModal()" class="btn-neon-outline" style="flex: 0 0 auto;">
+                    Fechar
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 

@@ -234,11 +234,11 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    successMsg.textContent = 'Conta criada com sucesso! Redirecionando para login...';
+                    successMsg.textContent = 'Conta criada com sucesso! Redirecionando...';
                     successMsg.style.display = 'block';
-                    
+
                     setTimeout(() => {
-                        window.location.href = 'login.html';
+                        window.location.href = 'landing.html';
                     }, 2000);
                 } else {
                     errorMsg.textContent = data.detail || 'Erro ao criar conta';

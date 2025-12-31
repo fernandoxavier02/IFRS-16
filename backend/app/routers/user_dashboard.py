@@ -87,19 +87,18 @@ async def update_profile(
 
 @router.get(
     "/subscription",
-    response_model=Optional[SubscriptionWithLicenseResponse],
     summary="Assinatura Atual",
-    description="Retorna a assinatura ativa do usuário"
+    description="Retorna a assinatura ativa do usuário com dados completos"
 )
 async def get_subscription(
     user_data: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Retorna a assinatura ativa do usuário com dados da licença.
+    Retorna a assinatura ativa do usuário com dados da licença e contagem de contratos.
     """
     user = user_data["user"]
-    
+
     # Buscar assinatura ativa (pega a mais recente se houver múltiplas)
     result = await db.execute(
         select(Subscription)
@@ -115,25 +114,41 @@ async def get_subscription(
         .order_by(Subscription.created_at.desc())
     )
     subscription = result.scalars().first()
-    
+
     if not subscription:
         return None
-    
-    license_key = None
-    license_type = None
-    license_expires = None
-    
-    if subscription.license:
-        license_key = subscription.license.key
-        license_type = LicenseTypeEnum(subscription.license.license_type.value)
-        license_expires = subscription.license.expires_at
-    
-    return SubscriptionWithLicenseResponse(
-        subscription=SubscriptionResponse.model_validate(subscription),
-        license_key=license_key,
-        license_type=license_type,
-        license_expires_at=license_expires
+
+    # Buscar contratos do usuário
+    from ..models import Contract
+    from sqlalchemy import func
+
+    contracts_result = await db.execute(
+        select(func.count())
+        .select_from(Contract)
+        .where(Contract.user_id == user.id)
     )
+    contracts_count = contracts_result.scalar() or 0
+
+    license_data = None
+    if subscription.license:
+        license_data = {
+            "key": subscription.license.key,
+            "type": subscription.license.license_type.value,
+            "status": subscription.license.status.value,
+            "expires_at": subscription.license.expires_at.isoformat() if subscription.license.expires_at else None,
+            "features": subscription.license.features
+        }
+
+    return {
+        "status": subscription.status.value,
+        "plan_type": subscription.plan_type.value,
+        "current_period_start": subscription.current_period_start.isoformat() if subscription.current_period_start else None,
+        "current_period_end": subscription.current_period_end.isoformat() if subscription.current_period_end else None,
+        "cancel_at_period_end": subscription.cancel_at_period_end,
+        "stripe_subscription_id": subscription.stripe_subscription_id,
+        "license": license_data,
+        "contracts_count": contracts_count
+    }
 
 
 @router.get(

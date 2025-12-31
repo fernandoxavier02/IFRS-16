@@ -43,6 +43,12 @@ async function fazerLogin() {
         localStorage.setItem('ifrs16_auth_token', userToken); // Também salvar com chave padrão
         localStorage.setItem('ifrs16_user_type', loginResult.user_type || 'user'); // Salvar tipo de usuário
 
+        // IMPORTANTE: Salvar session_token para controle de sessões simultâneas
+        if (loginResult.session_token) {
+            localStorage.setItem('ifrs16_session_token', loginResult.session_token);
+            console.log('[Auth] Session token salvo:', loginResult.session_token.substring(0, 10) + '...');
+        }
+
         // 3. Buscar dados do usuário
         const userResponse = await fetch(`${CONFIG.API_URL}/api/auth/me`, {
             headers: { 'Authorization': `Bearer ${userToken}` }

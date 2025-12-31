@@ -19,6 +19,7 @@ from ..schemas import (
     TokenResponse,
     ChangePasswordRequest,
     ForgotPasswordRequest,
+    ResetPasswordRequest,
     AdminUserResponse,
     UserResponse,
     UserLicenseResponse,

@@ -61,6 +61,133 @@
             font-size: 0.9rem;
             margin-top: 12px;
         }
+
+        /* Modal de Recuperação de Senha */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--dark-bg);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 480px;
+            width: 90%;
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.3);
+            animation: slideUp 0.3s ease;
+            position: relative;
+        }
+        .modal-header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        .modal-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 16px;
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 30px rgba(0, 212, 255, 0.5);
+        }
+        .modal-title {
+            color: var(--neon-cyan);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .modal-description {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+        .modal-body {
+            margin: 24px 0;
+        }
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: 1px solid;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .modal-btn-cancel {
+            background: transparent;
+            border-color: var(--dark-border);
+            color: var(--text-muted);
+        }
+        .modal-btn-cancel:hover {
+            border-color: var(--neon-purple);
+            color: var(--neon-purple);
+            box-shadow: 0 0 15px rgba(167, 139, 250, 0.3);
+        }
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, var(--neon-cyan), var(--neon-purple));
+            border-color: transparent;
+            color: white;
+        }
+        .modal-btn-confirm:hover {
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            transform: translateY(-2px);
+        }
+        .modal-btn-confirm:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .modal-success {
+            text-align: center;
+        }
+        .modal-success-icon {
+            color: #00ff88;
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
@@ -129,6 +256,61 @@
         <div class="footer-neon">
             <p>© 2025 FX Studio AI - Todos os direitos reservados</p>
             <p style="margin-top: 8px; font-size: 0.75rem;">Engine IFRS 16 v1.1.1</p>
+        </div>
+    </div>
+
+    <!-- Modal de Recuperação de Senha -->
+    <div id="forgotPasswordModal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="modalConfirmation" style="display: block;">
+                <div class="modal-header">
+                    <div class="modal-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                            <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h2 class="modal-title">Recuperar Senha</h2>
+                    <p class="modal-description">
+                        Enviaremos um email com instruções para redefinir sua senha para:
+                    </p>
+                </div>
+                <div class="modal-body">
+                    <div class="input-group">
+                        <label class="label-neon">Email</label>
+                        <input type="email" id="modalEmail" readonly class="input-neon" style="background: var(--dark-card); cursor: not-allowed;">
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; margin-top: 16px;">
+                        <strong>⚠️ Importante:</strong> O link de recuperação expira em 1 hora. Verifique também sua caixa de spam.
+                    </p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="modal-btn modal-btn-cancel" onclick="closeForgotPasswordModal()">
+                        Cancelar
+                    </button>
+                    <button type="button" class="modal-btn modal-btn-confirm" id="btnConfirmReset" onclick="confirmForgotPassword()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+                        </svg>
+                        Enviar Email
+                    </button>
+                </div>
+            </div>
+
+            <div id="modalSuccess" class="modal-success" style="display: none;">
+                <div class="modal-success-icon">✓</div>
+                <h2 class="modal-title">Email Enviado!</h2>
+                <p class="modal-description" style="margin-top: 16px;">
+                    Se o email <strong id="successEmail"></strong> existir em nossa base, você receberá as instruções de recuperação em alguns instantes.
+                </p>
+                <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 20px;">
+                    Não se esqueça de verificar sua caixa de spam.
+                </p>
+                <div class="modal-footer" style="margin-top: 32px; justify-content: center;">
+                    <button type="button" class="modal-btn modal-btn-confirm" onclick="closeForgotPasswordModal()">
+                        Entendi
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -241,19 +423,72 @@
 
         function forgotPassword() {
             const email = document.getElementById('email').value;
+            const errorMsg = document.getElementById('errorMsg');
+
+            errorMsg.style.display = 'none';
+
             if (!email) {
-                alert('Digite seu email primeiro');
+                errorMsg.textContent = 'Digite seu email antes de solicitar recuperação de senha';
+                errorMsg.style.display = 'block';
+                document.getElementById('email').focus();
                 return;
             }
-            
-            fetch(`${API_URL}/api/auth/forgot-password`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })
-            }).then(() => {
-                alert('Se o email existir, você receberá instruções de recuperação.');
-            });
+
+            // Validação básica de email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                errorMsg.textContent = 'Digite um email válido';
+                errorMsg.style.display = 'block';
+                document.getElementById('email').focus();
+                return;
+            }
+
+            // Abrir modal com o email
+            document.getElementById('modalEmail').value = email;
+            document.getElementById('forgotPasswordModal').classList.add('show');
         }
+
+        function closeForgotPasswordModal() {
+            document.getElementById('forgotPasswordModal').classList.remove('show');
+            // Reset do modal para próxima abertura
+            setTimeout(() => {
+                document.getElementById('modalConfirmation').style.display = 'block';
+                document.getElementById('modalSuccess').style.display = 'none';
+                document.getElementById('btnConfirmReset').disabled = false;
+            }, 300);
+        }
+
+        async function confirmForgotPassword() {
+            const email = document.getElementById('modalEmail').value;
+            const btnConfirm = document.getElementById('btnConfirmReset');
+
+            btnConfirm.disabled = true;
+            btnConfirm.innerHTML = '<svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation: spin 1s linear infinite;"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Enviando...';
+
+            try {
+                await fetch(`${API_URL}/api/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                // Sempre mostra sucesso (não revela se email existe ou não - segurança)
+                document.getElementById('modalConfirmation').style.display = 'none';
+                document.getElementById('modalSuccess').style.display = 'block';
+                document.getElementById('successEmail').textContent = email;
+            } catch (error) {
+                btnConfirm.disabled = false;
+                btnConfirm.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg> Enviar Email';
+                alert('Erro de conexão. Verifique sua internet e tente novamente.');
+            }
+        }
+
+        // Fechar modal ao clicar fora
+        document.getElementById('forgotPasswordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeForgotPasswordModal();
+            }
+        });
 
         // Verificar se já está logado
         window.onload = function() {

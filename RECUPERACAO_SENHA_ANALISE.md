@@ -240,15 +240,15 @@ async def reset_password(
   - `create_reset_token(user_id)`
   - `verify_reset_token(token)`
 
+- [x] **Tarefa 2:** Completar endpoint forgot-password
 - [ ] **Tarefa 2:** Completar endpoint forgot-password
   - Descomentar e implementar linhas 482-484
   - Adicionar chamada para `EmailService.send_password_reset_email()`
-
+- [x] **Tarefa 3:** Criar endpoint reset-password
 - [ ] **Tarefa 3:** Criar endpoint reset-password
   - Adicionar em `backend/app/routers/auth.py`
   - Usar schema `ResetPasswordRequest`
   - Validar token antes de resetar
-
 - [ ] **Tarefa 4:** Criar página reset-password.html
   - Copiar estrutura de login.html
   - Campos: nova senha + confirmar

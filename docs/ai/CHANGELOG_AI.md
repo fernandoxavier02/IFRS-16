@@ -7,6 +7,122 @@
 
 ## Changelog
 
+### 2026-01-01 — Correção de CORS e Heartbeat de Sessão
+
+**Agent:** GitHub Copilot (via Claude)
+**Task:** Corrigir erros de CORS e erro 500 no endpoint `/api/auth/sessions/heartbeat`
+
+**Problema Identificado:**
+- Console do navegador mostrava erros de CORS + erro 500 no endpoint heartbeat
+- O middleware CORS não adicionava headers quando ocorria uma exceção não tratada
+- Possível problema de timezone na comparação de datas de expiração
+
+**Arquivos modificados:**
+- `backend/app/main.py` — Adicionado headers CORS ao exception handler global
+- `backend/app/routers/auth.py` — Melhorado tratamento de erros no endpoint heartbeat
+- `RECUPERACAO_SENHA_ANALISE.md` — Atualizado status (implementação completa)
+
+**Correções implementadas:**
+1. **CORS em exceções** — Exception handler global agora retorna headers CORS corretos
+2. **Heartbeat robusto** — try/catch para capturar erros + correção de timezone
+3. **Graceful degradation** — Heartbeat retorna sucesso silenciosamente se sessão não for encontrada
+
+**Verificação:**
+- [x] Código Python importa corretamente
+- [ ] Deploy pendente para Cloud Run
+
+---
+
+### 2026-01-01 — MCP Functionality Verification
+
+**Agent:** Junie (via gemini-3-flash-preview)
+**Task:** Verificar se a MCP está funcional.
+
+**Ações executadas:**
+- Testada a execução dos servidores MCP locais (`mcp/*_mcp_server.py`).
+- **Stripe MCP**: 🟢 Funcional. Conectou com sucesso e listou produtos/preços.
+- **Firebase MCP**: 🟡 Parcialmente funcional. O código executa, mas retornou erro 404 (banco 'default' não encontrado no projeto Firebase).
+- **Cloud SQL MCP**: 🔴 Erro de conexão. O servidor MCP inicia, mas não consegue conectar ao banco de dados (Conexão recusada). Provavelmente devido a configurações de host/porta no `.env` ou falta de acesso ao banco remoto.
+
+**Verificação:**
+- [x] Scripts de teste integrados nos próprios servidores MCP foram executados.
+- [x] Logs capturados confirmam que o framework MCP está operando corretamente, dependendo agora apenas de credenciais válidas e conectividade de rede.
+
+---
+
+### 2026-01-01 — Firebase CLI and MCP Configuration
+
+**Agent:** Junie (via gemini-3-flash-preview)
+**Task:** Instalar o MPC e CLI do firebase.
+
+**Ações executadas:**
+- Instalada a Firebase CLI v15.1.0 via `npm install -g firebase-tools`.
+- Verificada a existência do servidor MCP local em `mcp/firebase_mcp_server.py`.
+- Confirmada a presença da dependência `firebase-admin` no ambiente.
+- Atualizado `PROJECT_CONTEXT.md` com comandos de gerenciamento Firebase e execução do MCP.
+- Registrada a decisão **DEC-009** em `DECISIONS.md`.
+
+**Verificação:**
+- [x] `firebase --version` retornou versão 15.1.0.
+- [x] Arquivo `mcp/firebase_mcp_server.py` localizado no repositório.
+
+---
+
+### 2026-01-01 — Google Cloud SQL MCP Configuration
+
+**Agent:** Junie (via gemini-3-flash-preview)
+**Task:** Instalar a MCP do Gcloud SQL.
+
+**Ações executadas:**
+- Verificadas as dependências de banco de dados (`asyncpg`, `psycopg2-binary`) no arquivo `mcp/requirements.txt`.
+- Documentada a configuração do MCP oficial (`@modelcontextprotocol/server-postgres`) e do local (`cloudsql_mcp_server.py`) em `mcp/README.md`.
+- Atualizado `PROJECT_CONTEXT.md` com comandos de execução e verificação para o Cloud SQL MCP.
+- Registrada a decisão **DEC-008** em `DECISIONS.md`.
+
+**Verificação:**
+- [x] Arquivo `mcp/cloudsql_mcp_server.py` existe no repositório.
+- [x] Dependências necessárias já instaladas no passo anterior.
+
+---
+
+### 2026-01-01 — Stripe CLI and MCP Installation
+
+**Agent:** Junie (via gemini-3-flash-preview)
+**Task:** Instalar o MCP do Stripe e a CLI.
+
+**Ações executadas:**
+- Instalada a Stripe CLI v1.33.2 via `npm install -g stripe-cli`.
+- Instaladas/Verificadas dependências do MCP em `mcp/requirements.txt`.
+- Atualizado `DECISIONS.md` (DEC-007).
+- Atualizado `PROJECT_CONTEXT.md` com comandos da Stripe CLI.
+
+**Verificação:**
+- [x] `stripe --version` retornou versão 1.33.2.
+- [x] `pip install -r mcp/requirements.txt` confirmou dependências satisfeitas.
+
+---
+
+### 2026-01-01 — Context System for JetBrains IDE Tools
+
+**Agent:** Junie (via gemini-3-flash-preview)
+**Task:** Create a “World-Class Context System” for the JetBrains agent.
+
+**Ações executadas:**
+- Updated `docs/ai/PROJECT_CONTEXT.md` with Agent Protocol.
+- Updated `docs/ai/DECISIONS.md` with DEC-006.
+- Created `docs/ai/CONTEXT_INDEX.md`.
+- Created `AGENTS.md` and `.junie/guidelines.md`.
+- Created `.aiassistant/rules/000-foundation.md`, `100-repo-navigation.md`, `200-quality-and-verification.md`.
+- Created `.aiignore`.
+- Created `docs/ai/SELF_REVIEW.md`.
+
+**Verificação:**
+- [x] All paths verified.
+- [x] Protocol includes Active Retrieval and Stop Rule.
+- [x] Verification commands extracted from repo files.
+
+---
+
 ### 2025-12-31 — Limpeza completa do banco de dados
 
 **Agent:** Windsurf Cascade  

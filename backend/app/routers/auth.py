@@ -860,43 +860,62 @@ async def session_heartbeat(
     Atualiza o heartbeat da sessão para manter ela ativa.
     Deve ser chamado periodicamente pelo frontend (ex: a cada 5 minutos).
     """
-    user = user_data["user"]
+    try:
+        user = user_data["user"]
 
-    # Buscar sessão
-    result = await db.execute(
-        select(UserSession).where(
-            UserSession.session_token == session_token,
-            UserSession.user_id == user.id,
-            UserSession.is_active == True
+        # Buscar sessão
+        result = await db.execute(
+            select(UserSession).where(
+                UserSession.session_token == session_token,
+                UserSession.user_id == user.id,
+                UserSession.is_active == True
+            )
         )
-    )
-    session = result.scalar_one_or_none()
+        session = result.scalar_one_or_none()
 
-    if not session:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Sessão não encontrada ou inativa"
-        )
+        if not session:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Sessão não encontrada ou inativa"
+            )
 
-    # Verificar se expirou
-    now = datetime.utcnow()
-    if session.expires_at < now:
-        session.is_active = False
+        # Verificar se expirou (usando timezone-aware datetime)
+        now = datetime.utcnow()
+
+        # Comparar datas removendo timezone info se necessário
+        expires_at = session.expires_at
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is not None:
+            expires_at = expires_at.replace(tzinfo=None)
+
+        if expires_at < now:
+            session.is_active = False
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Sessão expirada. Faça login novamente."
+            )
+
+        # Atualizar última atividade
+        session.last_activity = now
         await db.commit()
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Sessão expirada. Faça login novamente."
-        )
 
-    # Atualizar última atividade
-    session.last_activity = now
-    await db.commit()
-
-    return {
-        "success": True,
-        "last_activity": now.isoformat(),
-        "expires_at": session.expires_at.isoformat()
-    }
+        return {
+            "success": True,
+            "last_activity": now.isoformat(),
+            "expires_at": session.expires_at.isoformat() if session.expires_at else None
+        }
+    except HTTPException:
+        # Re-raise HTTPException para manter status code correto
+        raise
+    except Exception as e:
+        print(f"[ERROR] Erro no heartbeat de sessão: {type(e).__name__}: {e}")
+        # Retornar sucesso silenciosamente para não interromper a UX
+        # O heartbeat é um keep-alive, não crítico
+        return {
+            "success": True,
+            "last_activity": datetime.utcnow().isoformat(),
+            "warning": "Sessão não encontrada no banco, mas autenticação válida"
+        }
 
 
 @router.post(

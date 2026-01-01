@@ -146,7 +146,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
             print(f"[WARN] Erro ao inicializar banco: {e}")
     else:
         print("[INFO] Producao: init_db desabilitado (use Alembic migrations)")
-    
+
+    # IMPORTANTE: Garantir que tabela user_sessions existe (migration temporária)
+    try:
+        from .database import ensure_user_sessions_table
+        await ensure_user_sessions_table()
+    except Exception as e:
+        print(f"[WARN] Erro ao criar tabela user_sessions: {e}")
+
     yield
     
     # Shutdown
@@ -241,7 +248,19 @@ async def global_exception_handler(request: Request, exc: Exception):
             "error": str(exc),
             "type": type(exc).__name__
         })
-    return JSONResponse(status_code=500, content=content)
+
+    # Adicionar headers CORS para evitar erro de CORS em exceções
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in ALLOWED_ORIGINS:
+        headers = {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Allow-Methods": "*",
+            "Access-Control-Allow-Headers": "*",
+        }
+
+    return JSONResponse(status_code=500, content=content, headers=headers)
 
 
 # Incluir routers

@@ -2,7 +2,7 @@
 Autenticação JWT, hash de senha e validação de tokens
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
 from uuid import UUID
 
@@ -155,17 +155,23 @@ def create_admin_token(admin_id: UUID, username: str, role: str) -> str:
     )
 
 
-def create_user_token(user_id: UUID, email: str) -> str:
+def create_user_token(user_id: UUID, email: str, session_token: str = None) -> str:
     """
     Cria token JWT específico para usuário cliente.
+
+    Args:
+        user_id: ID do usuário
+        email: Email do usuário
+        session_token: Token da sessão para validação de sessão única
     """
-    return create_access_token(
-        data={
-            "sub": str(user_id),
-            "email": email,
-            "user_type": "user"
-        }
-    )
+    data = {
+        "sub": str(user_id),
+        "email": email,
+        "user_type": "user"
+    }
+    if session_token:
+        data["session_token"] = session_token
+    return create_access_token(data=data)
 
 
 def verify_token(token: str) -> Optional[Dict[str, Any]]:
@@ -302,6 +308,82 @@ async def get_current_user(
         "name": user.name,
         "user": user
     }
+
+
+async def get_current_user_with_session(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: AsyncSession = Depends(get_db)
+) -> Dict[str, Any]:
+    """
+    Dependency que valida JWT E verifica se a sessão ainda está ativa.
+    Use esta dependency para endpoints que precisam de controle de sessão única.
+
+    Isso garante que quando um usuário faz login em outro dispositivo e sua
+    sessão anterior é invalidada, ele perde acesso imediatamente.
+    """
+    from .models import UserSession
+
+    # 1. Validar JWT (reutiliza lógica existente)
+    user_data = await get_current_user(credentials, db)
+
+    # 2. Extrair session_token do JWT
+    token = credentials.credentials
+    payload = verify_token(token)
+    session_token = payload.get("session_token") if payload else None
+
+    if not session_token:
+        # JWT antigo sem session_token - forçar re-login
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão inválida. Faça login novamente.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    # 3. Verificar se sessão existe e está ativa
+    result = await db.execute(
+        select(UserSession).where(
+            UserSession.session_token == session_token,
+            UserSession.user_id == UUID(user_data["id"]),
+            UserSession.is_active == True
+        )
+    )
+    session = result.scalar_one_or_none()
+
+    if not session:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sessão encerrada. Sua conta foi acessada em outro dispositivo.",
+            headers={"WWW-Authenticate": "Bearer"}
+        )
+
+    # 4. Verificar se sessão expirou
+    now = datetime.utcnow()
+    expires_at = session.expires_at
+    if expires_at is not None:
+        # Normalizar timezone se necessário
+        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is not None:
+            try:
+                expires_at = expires_at.replace(tzinfo=None)
+            except Exception:
+                expires_at = datetime.utcfromtimestamp(expires_at.timestamp())
+
+        if expires_at < now:
+            session.is_active = False
+            await db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Sessão expirada. Faça login novamente.",
+                headers={"WWW-Authenticate": "Bearer"}
+            )
+
+    # 5. Atualizar last_activity (heartbeat automático)
+    session.last_activity = now
+    await db.commit()
+
+    # 6. Retornar dados do usuário + sessão
+    user_data["session"] = session
+    user_data["session_token"] = session_token
+    return user_data
 
 
 async def get_current_admin(

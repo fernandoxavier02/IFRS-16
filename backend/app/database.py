@@ -78,6 +78,50 @@ async def init_db():
         await conn.run_sync(Base.metadata.create_all)
 
 
+async def ensure_user_sessions_table():
+    """
+    Garante que a tabela user_sessions existe no banco de dados.
+    Cria a tabela e índices se não existirem.
+    """
+    import sqlalchemy as sa
+    async with engine.begin() as conn:
+        # Criar tabela user_sessions se não existir
+        await conn.execute(sa.text("""
+            CREATE TABLE IF NOT EXISTS user_sessions (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                session_token VARCHAR(500) NOT NULL UNIQUE,
+                device_fingerprint VARCHAR(255),
+                ip_address VARCHAR(45),
+                user_agent VARCHAR(500),
+                device_name VARCHAR(255),
+                last_activity TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+                expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+                is_active BOOLEAN NOT NULL DEFAULT true
+            )
+        """))
+
+        # Criar índices se não existirem
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_user_sessions_user_id ON user_sessions(user_id)
+        """))
+
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_user_sessions_token ON user_sessions(session_token)
+        """))
+
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_user_sessions_active ON user_sessions(user_id, is_active)
+        """))
+
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_user_sessions_expires ON user_sessions(expires_at)
+        """))
+
+    print("[OK] Tabela user_sessions verificada/criada com sucesso!")
+
+
 async def close_db():
     """
     Fecha todas as conexões do pool.

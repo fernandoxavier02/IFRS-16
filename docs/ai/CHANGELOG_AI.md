@@ -7,6 +7,50 @@
 
 ## Changelog
 
+### 2026-01-01 — World-Class Context System Initialized
+
+**Agent:** Auto (Cursor IDE)  
+**Task:** Build exceptional, repo-native context system for both OpenAI Codex and Claude Code agents
+
+**Files Created:**
+- `.cursor/rules/000-foundation.mdc` — Foundation rules for Cursor IDE
+
+**Files Updated:**
+- `docs/ai/PROJECT_CONTEXT.md` — Enhanced with comprehensive overview, conventions, known pitfalls, and clearer agent protocol
+- `docs/ai/DECISIONS.md` — Added DEC-011: World-Class Context System Initialized
+- `AGENTS.md` — Enhanced with clearer protocol, definition of done, and directory notes
+- `CLAUDE.md` — Updated to reference PROJECT_CONTEXT.md (instead of 00-INDEX.md), added stop rule details
+- `.claude/rules/00-core.md` — Enhanced with active retrieval protocol and stop rule details
+
+**Changes Made:**
+1. **PROJECT_CONTEXT.md enhancements:**
+   - Added "Known Pitfalls" section with database, secrets, and testing pitfalls
+   - Enhanced "Agent Operating Protocol" with clearer active retrieval and stop rule
+   - Expanded "Conventions Observed" with backend/frontend/API specifics
+   - Updated repository structure to include repositories/ and tasks/ directories
+
+2. **AGENTS.md enhancements:**
+   - Added directory notes for monorepo structure
+   - Enhanced Definition of Done with checklist format
+   - Clarified verification commands per component
+
+3. **CLAUDE.md updates:**
+   - Changed reference from `00-INDEX.md` to `PROJECT_CONTEXT.md`
+   - Added section on updating DECISIONS.md when new constraints appear
+   - Enhanced stop rules with detailed protocol
+
+4. **Cursor rules:**
+   - Created `.cursor/rules/000-foundation.mdc` with core operating protocol
+
+**Verification:**
+- [x] All referenced file paths exist
+- [x] All commands verified against actual repo files
+- [x] No secrets exposed
+- [x] Structure matches actual repository
+- [x] Protocol includes Active Retrieval and Stop Rule
+
+---
+
 ### 2026-01-01 — Correção de CORS e Heartbeat de Sessão
 
 **Agent:** GitHub Copilot (via Claude)

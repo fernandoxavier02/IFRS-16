@@ -11,7 +11,7 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 
 from ..database import get_db
-from ..auth import get_current_user
+from ..auth import get_current_user, get_current_user_with_session
 from ..models import (
     User, License, Subscription,
     LicenseStatus, SubscriptionStatus
@@ -36,7 +36,7 @@ router = APIRouter(prefix="/api/user", tags=["Painel do Usuário"])
     description="Retorna os dados do perfil do usuário"
 )
 async def get_profile(
-    user_data: dict = Depends(get_current_user)
+    user_data: dict = Depends(get_current_user_with_session)
 ):
     """
     Retorna os dados do perfil do usuário autenticado.
@@ -53,7 +53,7 @@ async def get_profile(
 )
 async def update_profile(
     body: UserUpdateRequest,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -91,7 +91,7 @@ async def update_profile(
     description="Retorna a assinatura ativa do usuário com dados completos"
 )
 async def get_subscription(
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -158,7 +158,7 @@ async def get_subscription(
     description="Lista todas as licenças do usuário"
 )
 async def get_licenses(
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -182,7 +182,7 @@ async def get_licenses(
     description="Cancela a assinatura no final do período atual"
 )
 async def cancel_subscription(
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -243,7 +243,7 @@ async def cancel_subscription(
     description="Cancela o pedido de cancelamento da assinatura"
 )
 async def reactivate_subscription(
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -300,7 +300,7 @@ async def reactivate_subscription(
     description="Retorna resumo para o dashboard do usuário"
 )
 async def get_dashboard_summary(
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """

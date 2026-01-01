@@ -1,7 +1,7 @@
 """add user sessions table
 
-Revision ID: add_user_sessions
-Revises:
+Revision ID: 20251231_add_user_sessions
+Revises: 57b1a03cb0df
 Create Date: 2025-12-31
 
 """
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = 'add_user_sessions'
-down_revision = None  # Será preenchido automaticamente
+revision = '20251231_add_user_sessions'
+down_revision = '57b1a03cb0df'  # Última migration anterior
 branch_labels = None
 depends_on = None
 

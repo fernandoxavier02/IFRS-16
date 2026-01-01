@@ -4,7 +4,7 @@ Modelos SQLAlchemy para o banco de dados
 
 import uuid
 import enum
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
@@ -309,7 +309,7 @@ class License(Base):
             return False
         if self.status != LicenseStatus.ACTIVE:
             return False
-        if self.expires_at and datetime.utcnow() > self.expires_at:
+        if self.expires_at and datetime.now(timezone.utc) > self.expires_at:
             return False
         return True
     
@@ -401,7 +401,7 @@ class Contract(Base):
 
     def mark_deleted(self):
         self.is_deleted = True
-        self.deleted_at = datetime.utcnow()
+        self.deleted_at = datetime.now(timezone.utc)
 
     def __repr__(self):
         return f"<Contract(name='{self.name}', status='{self.status}')>"

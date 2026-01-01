@@ -29,13 +29,7 @@ except ImportError:
 
 class CloudSQLMCPServer:
     """
-    Servidor MCP para integração direta com Google Cloud SQL (PostgreSQL).
-    Fornece ferramentas para:
-    - Executar queries SQL
-    - Gerenciar tabelas
-    - CRUD em tabelas
-    - Backup e restore
-    - Monitoramento
+    Servidor MCP para integração direta com Banco de Dados (PostgreSQL ou SQLite).
     """
     
     def __init__(
@@ -48,16 +42,16 @@ class CloudSQLMCPServer:
         connection_string: str = None
     ):
         """
-        Inicializa conexão com Cloud SQL.
-        
-        Pode usar variáveis de ambiente:
-        - POSTGRES_HOST
-        - POSTGRES_PORT
-        - POSTGRES_USER
-        - POSTGRES_PASSWORD
-        - POSTGRES_DATABASE
-        - DATABASE_URL (connection string completa)
+        Inicializa conexão com Banco de Dados.
         """
+        # Carregar .env se existir na pasta mcp
+        from dotenv import load_dotenv
+        mcp_env = os.path.join(os.path.dirname(__file__), ".env")
+        if os.path.exists(mcp_env):
+            load_dotenv(mcp_env)
+        
+        self.is_sqlite = False
+        
         if connection_string:
             self.connection_string = connection_string
         elif os.getenv("DATABASE_URL"):
@@ -74,9 +68,53 @@ class CloudSQLMCPServer:
                 f"{self.host}:{self.port}/{self.database}"
             )
         
+        # Verificar se é SQLite (suporta formatos sqlalchemy e puros)
+        clean_conn = self.connection_string.lower()
+        if "sqlite" in clean_conn:
+            self.is_sqlite = True
+            # Extrair o caminho do arquivo
+            if "///" in self.connection_string:
+                self.sqlite_path = self.connection_string.split("///")[-1]
+            else:
+                self.sqlite_path = self.connection_string.split("sqlite:")[-1].lstrip("/")
+            
+            if not os.path.isabs(self.sqlite_path):
+                # Tentar localizar o arquivo em pastas comuns
+                possible_paths = [
+                    os.path.join(os.getcwd(), self.sqlite_path),
+                    os.path.join(os.getcwd(), "backend", self.sqlite_path),
+                    os.path.join(os.path.dirname(__file__), "..", "backend", self.sqlite_path)
+                ]
+                for p in possible_paths:
+                    if os.path.exists(p):
+                        self.sqlite_path = os.path.abspath(p)
+                        break
+        
         self._pool = None
         self._engine = None
-    
+        self._sqlite_conn = None
+
+    async def _get_conn(self):
+        """Retorna conexão ativa (PostgreSQL ou SQLite)"""
+        if self.is_sqlite:
+            if self._sqlite_conn is None:
+                import aiosqlite
+                self._sqlite_conn = await aiosqlite.connect(self.sqlite_path)
+                self._sqlite_conn.row_factory = aiosqlite.Row
+            return self._sqlite_conn
+        else:
+            pool = await self._get_pool()
+            return await pool.acquire()
+
+    async def _release_conn(self, conn):
+        """Libera conexão"""
+        if self.is_sqlite:
+            # SQLite mantém a conexão aberta no _sqlite_conn
+            pass
+        else:
+            pool = await self._get_pool()
+            await pool.release(conn)
+
     async def _get_pool(self):
         """Retorna pool de conexões asyncpg"""
         if not ASYNCPG_AVAILABLE:
@@ -118,28 +156,41 @@ class CloudSQLMCPServer:
     ) -> Dict:
         """
         Executa uma query SQL.
-        
-        Args:
-            query: Query SQL
-            params: Parâmetros para a query (opcional)
-            fetch: Se True, retorna resultados. Se False, apenas executa.
-        
-        Returns:
-            Dict com resultados ou status
         """
-        pool = await self._get_pool()
+        conn = await self._get_conn()
         
-        async with pool.acquire() as conn:
-            try:
+        try:
+            if self.is_sqlite:
+                # Converter placeholders $1 para ? do SQLite
+                import re
+                sqlite_query = re.sub(r'\$(\d+)', r'?', query)
+                
+                if fetch:
+                    async with conn.execute(sqlite_query, params or []) as cursor:
+                        rows = await cursor.fetchall()
+                        results = [dict(row) for row in rows]
+                        return {
+                            "success": True,
+                            "rows": results,
+                            "row_count": len(results)
+                        }
+                else:
+                    await conn.execute(sqlite_query, params or [])
+                    await conn.commit()
+                    return {
+                        "success": True,
+                        "status": "Success",
+                        "message": "Query executada com sucesso"
+                    }
+            else:
+                # PostgreSQL (asyncpg)
                 if fetch:
                     if params:
                         rows = await conn.fetch(query, *params)
                     else:
                         rows = await conn.fetch(query)
                     
-                    # Converter para lista de dicts
                     results = [dict(row) for row in rows]
-                    
                     return {
                         "success": True,
                         "rows": results,
@@ -156,12 +207,14 @@ class CloudSQLMCPServer:
                         "status": result,
                         "message": "Query executada com sucesso"
                     }
-            except Exception as e:
-                return {
-                    "success": False,
-                    "error": str(e),
-                    "error_type": type(e).__name__
-                }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "error_type": type(e).__name__
+            }
+        finally:
+            await self._release_conn(conn)
     
     async def execute_many(
         self,

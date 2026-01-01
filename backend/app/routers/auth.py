@@ -303,9 +303,6 @@ async def user_login(
     user.last_login = datetime.utcnow()
     await db.commit()
 
-    # Gerar token
-    token = create_user_token(user.id, user.email)
-
     # ========== REGISTRO DE SESSÃO (Anti-compartilhamento) ==========
     # Definir limites de sessão por plano
     SESSION_LIMITS = {
@@ -392,6 +389,9 @@ async def user_login(
 
     db.add(new_session)
     await db.commit()
+
+    # Gerar token JWT COM o session_token incluído
+    token = create_user_token(user.id, user.email, session_token=session_token)
 
     print(f"[OK] Login bem-sucedido: {user.email} (device: {device_name}, IP: {ip_address})")
     # ===============================================================
@@ -879,15 +879,22 @@ async def session_heartbeat(
                 detail="Sessão não encontrada ou inativa"
             )
 
-        # Verificar se expirou (usando timezone-aware datetime)
+        # Verificar se expirou (normalizando timezone para comparação segura)
         now = datetime.utcnow()
 
-        # Comparar datas removendo timezone info se necessário
+        # Normalizar expires_at para naive datetime (sem timezone)
         expires_at = session.expires_at
-        if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is not None:
-            expires_at = expires_at.replace(tzinfo=None)
+        if expires_at is not None:
+            # Se tiver timezone, converter para naive
+            if hasattr(expires_at, 'tzinfo') and expires_at.tzinfo is not None:
+                # Converter para UTC e remover timezone
+                try:
+                    expires_at = expires_at.replace(tzinfo=None)
+                except Exception:
+                    # Fallback: usar timestamp
+                    expires_at = datetime.utcfromtimestamp(expires_at.timestamp())
 
-        if expires_at < now:
+        if expires_at is None or expires_at < now:
             session.is_active = False
             await db.commit()
             raise HTTPException(

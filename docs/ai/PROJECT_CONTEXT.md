@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
-> **Last updated:** 2025-12-30  
-> **Version:** 1.1.0  
+> **Last updated:** 2026-01-01  
+> **Version:** 1.2.0  
 > **Maintainer:** AI Context Pack
 
 ---
@@ -8,6 +8,8 @@
 ## 1. Project Overview
 
 **IFRS 16 License Management System** — A SaaS application for IFRS 16 lease accounting calculations with a license/subscription management backend.
+
+The system provides lease contract management, automated IFRS 16 calculations, license/subscription management via Stripe, and user authentication. Frontend is static HTML/JS hosted on Firebase, backend is FastAPI on Google Cloud Run, database is PostgreSQL.
 
 | Layer | Technology | Hosting |
 |-------|------------|---------|
@@ -38,9 +40,15 @@ IFRS 16/
 │   │   │   ├── contracts.py
 │   │   │   ├── licenses.py
 │   │   │   ├── payments.py
-│   │   │   ├── stripe.py
 │   │   │   └── user_dashboard.py
-│   │   └── services/           # Business logic services
+│   │   ├── services/           # Business logic services
+│   │   │   ├── contracts_service.py
+│   │   │   ├── email_service.py
+│   │   │   └── stripe_service.py
+│   │   ├── repositories/       # Data access layer
+│   │   │   └── contracts.py
+│   │   └── tasks/              # Background tasks
+│   │       └── cleanup_sessions.py
 │   ├── tests/                  # Pytest test suite
 │   │   ├── conftest.py         # Fixtures (SQLite in-memory)
 │   │   └── test_*.py           # Test modules
@@ -101,6 +109,33 @@ IFRS 16/
 |--------|---------|
 | **Build image** | `docker build -t ifrs16-backend backend/` |
 | **Run container** | `docker run -p 8080:8080 ifrs16-backend` |
+
+### Stripe CLI & MCP
+
+| Action | Command |
+|--------|---------|
+| **Login Stripe** | `stripe login` |
+| **Listen Webhooks** | `stripe listen --forward-to localhost:8000/api/payments/webhook` |
+| **Trigger Event** | `stripe trigger payment_intent.succeeded` |
+
+### Firebase CLI & MCP
+
+| Action | Command |
+|--------|---------|
+| **Login Firebase** | `firebase login` |
+| **Deploy Hosting** | `firebase deploy --only hosting` |
+| **Run MCP Local** | `python mcp/firebase_mcp_server.py` |
+| **Project Info** | `firebase projects:list` |
+
+### Google Cloud SQL (PostgreSQL) MCP
+
+| Action | Command |
+|--------|---------|
+| **Run Official MCP** | `npx -y @modelcontextprotocol/server-postgres "postgresql://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require"` |
+| **Run Local MCP** | `python mcp/cloudsql_mcp_server.py` |
+| **Check Connectivity** | `psql "postgresql://USER:PASSWORD@HOST:5432/DATABASE"` |
+| **MCP Server (Npx)** | `npx -y @stripe/mcp --tools=all` |
+| **MCP Server (Local)**| `python mcp/stripe_mcp_server.py` |
 
 ---
 
@@ -194,7 +229,68 @@ IFRS 16/
 
 ---
 
-## 9. Invariants & Constraints
+## 8. Agent Operating Protocol (Mandatory)
+
+**Active Context Retrieval:**
+- Before proposing any change, search the repo and open the 3–10 most relevant files
+- Always end responses with: **"Files read:"** followed by exact file paths
+- Never guess — every factual claim must be grounded in files read; cite paths
+
+**Stop Rule:**
+- After 2 failed attempts at fixing something (tests/lint/build still failing or the bug persists), **STOP**
+- Produce a root-cause analysis + a new plan before any third attempt
+- If verification fails twice, analyze deeper rather than making another immediate fix
+
+**Privacy & Security:**
+- Never print secrets. Treat `.env*`, keys, tokens, credentials as sensitive
+- Add sensitive patterns to `.aiignore` or `.gitignore`
+
+**Verification:**
+- All changes must be verified using exact commands found in section 4
+- Backend: `cd backend && pytest -v`
+- Frontend/E2E: `.\testar_sistema_completo.ps1` (from project root)
+
+## 9. Conventions Observed
+
+**Backend:**
+- Service-Repository pattern: business logic in `services/`, data access in `repositories/`
+- Pydantic for request/response schemas (`schemas.py`)
+- SQLAlchemy async ORM for database models (`models.py`)
+- FastAPI routers in `routers/` directory
+- Naming: snake_case for Python code
+
+**Frontend:**
+- Vanilla JavaScript (no frameworks)
+- State managed globally in `assets/js/config.js` and `localStorage`
+- Naming: camelCase for JavaScript variables/functions
+- Console logs conditional (only in development, see `config.js`)
+
+**API:**
+- CORS: Explicitly configured in `main.py`; does not allow wildcards with credentials
+- Stripe: Price IDs must match those in `backend/app/config.py`
+- Error handling: Global exception handler in `main.py`
+- Rate limiting: Using slowapi for critical endpoints
+
+## 10. Known Pitfalls
+
+**Database:**
+- Use Alembic migrations in production; `init_db()` only for development
+- PostgreSQL connections require SSL (`ssl='require'`)
+- SQLite in-memory used for tests (see `backend/tests/conftest.py`)
+
+**Secrets:**
+- Critical settings validated at startup in production (see `main.py:validate_critical_settings()`)
+- Stripe price IDs validated at startup (see `main.py:validate_stripe_config()`)
+- Never log or expose secrets in responses
+
+**Testing:**
+- Tests use SQLite in-memory database (NullPool)
+- Fixtures defined in `backend/tests/conftest.py`
+- Async tests require `@pytest.mark.asyncio` marker
+
+---
+
+## 11. Invariants & Constraints
 
 1. **License validation** — Always check `is_valid` property (status + expiry + revoked)
 2. **CORS** — Explicit origins only; no wildcards with credentials
@@ -204,7 +300,7 @@ IFRS 16/
 
 ---
 
-## 10. Production URLs
+## 12. Production URLs
 
 | Service | URL |
 |---------|-----|
@@ -214,7 +310,7 @@ IFRS 16/
 
 ---
 
-## 11. Session Start Checklist
+## 13. Session Start Checklist
 
 Before making any changes, AI agents MUST:
 
@@ -230,7 +326,7 @@ Before making any changes, AI agents MUST:
 
 ---
 
-## 12. File Modification Protocol
+## 14. File Modification Protocol
 
 1. **Read first** — Always read the file before editing
 2. **Minimal edits** — Prefer small, focused changes

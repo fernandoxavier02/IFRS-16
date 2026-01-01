@@ -15,7 +15,7 @@ from sqlalchemy import select, func, text
 from pydantic import BaseModel
 
 from ..database import get_db
-from ..auth import get_current_user
+from ..auth import get_current_user, get_current_user_with_session
 from ..models import User, License, LicenseStatus, Contract, ContractStatus
 
 
@@ -179,7 +179,7 @@ async def list_contracts(
     start_date: Optional[str] = Query(None, description="Data início"),
     end_date: Optional[str] = Query(None, description="Data fim"),
     include_deleted: bool = Query(False, description="Incluir contratos deletados"),
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Lista contratos do usuário autenticado"""
@@ -226,7 +226,7 @@ async def list_contracts(
 )
 async def create_contract(
     data: ContractCreate,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Cria um novo contrato para o usuário"""
@@ -289,7 +289,7 @@ async def create_contract(
 )
 async def get_contract(
     contract_id: str,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Obtém um contrato específico"""
@@ -327,7 +327,7 @@ async def get_contract(
 async def update_contract(
     contract_id: str,
     data: ContractUpdate,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Atualiza um contrato"""
@@ -381,7 +381,7 @@ async def update_contract(
 )
 async def delete_contract(
     contract_id: str,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Exclui um contrato (soft delete)"""
@@ -424,7 +424,7 @@ async def delete_contract(
 )
 async def list_versions(
     contract_id: str,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Lista versões de um contrato"""
@@ -493,7 +493,7 @@ async def list_versions(
 async def create_version(
     contract_id: str,
     data: ContractVersionCreate,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Cria uma nova versão imutável do contrato"""
@@ -605,7 +605,7 @@ async def create_version(
 async def delete_version(
     contract_id: str,
     version_id: str,
-    user_data: dict = Depends(get_current_user),
+    user_data: dict = Depends(get_current_user_with_session),
     db: AsyncSession = Depends(get_db)
 ):
     """Exclui uma versão do contrato"""

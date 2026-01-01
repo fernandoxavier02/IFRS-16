@@ -4,7 +4,7 @@ Operações CRUD para o banco de dados
 
 import secrets
 import string
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 from uuid import UUID
 
@@ -155,7 +155,7 @@ async def create_license(
     # Calcular data de expiração
     expires_at = None
     if license_data.duration_months:
-        expires_at = datetime.utcnow() + timedelta(days=30 * license_data.duration_months)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=30 * license_data.duration_months)
     
     # Criar licença
     license = License(
@@ -225,7 +225,7 @@ async def revoke_license(
         return None
     
     license.revoked = True
-    license.revoked_at = datetime.utcnow()
+    license.revoked_at = datetime.now(timezone.utc)
     license.revoke_reason = reason or "Revogada pelo administrador"
     license.status = LicenseStatus.CANCELLED
     
@@ -288,7 +288,7 @@ async def update_license_validation(
     if not license:
         return None
     
-    license.last_validation = datetime.utcnow()
+    license.last_validation = datetime.now(timezone.utc)
     license.last_validation_ip = ip_address
     
     # Controle de ativações por dispositivo
@@ -398,7 +398,7 @@ async def get_recent_validations(
     Returns:
         Lista de logs
     """
-    since = datetime.utcnow() - timedelta(hours=hours)
+    since = datetime.now(timezone.utc) - timedelta(hours=hours)
     
     result = await db.execute(
         select(ValidationLog)

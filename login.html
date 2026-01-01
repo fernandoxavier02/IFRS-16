@@ -404,6 +404,9 @@
                     // Salvar session_token para controle de sessões simultâneas
                     if (data.session_token) {
                         localStorage.setItem('ifrs16_session_token', data.session_token);
+                        console.log('[Auth] Session token salvo:', data.session_token.substring(0, 10) + '...');
+                    } else {
+                        console.warn('[Auth] AVISO: session_token nao retornado pelo backend!');
                     }
 
                     // Redirecionar

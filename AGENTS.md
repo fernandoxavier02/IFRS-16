@@ -1,52 +1,46 @@
 # AGENTS.md
 
-> **For:** OpenAI Codex | **Project:** IFRS 16
+> **Purpose:** Entry point for all AI Agents (Codex, AI Assistant, etc.)  
+> **For:** OpenAI Codex / IDE extensions
 
-## Quick Start
+## Critical Protocol
 
-```bash
-# 1. Leia o contexto
-cat docs/ai/00-INDEX.md
-
-# 2. Antes de editar: liste arquivos
-
-# 3. Após editar: teste
-cd backend && pytest -v
-```
+1. **Read Context First:** Read `docs/ai/PROJECT_CONTEXT.md` before any action.
+2. **Active Retrieval:** Search the repo and open the 3–10 most relevant files before proposing changes.
+3. **Stop Rule:** After 2 failed attempts (tests/lint/build failing), STOP and produce a root-cause analysis.
+4. **Cite Sources:** Always end responses with **"Files read:"** followed by exact file paths.
+5. **No Guessing:** Factual claims must be grounded in files; cite paths.
+6. **Privacy:** NEVER print secrets (tokens, .env). Add sensitive patterns to `.gitignore` or `.aiignore`.
+7. **Verify:** Use exact verification commands from `docs/ai/PROJECT_CONTEXT.md` section 4.
 
 ## Context Pack → `docs/ai/`
 
-| Arquivo | Conteúdo |
-|---------|----------|
-| `00-INDEX.md` | Índice e quick start |
-| `10-STACK.md` | Stack, comandos, URLs |
-| `20-ARCHITECTURE.md` | Diagramas e fluxos |
-| `30-DATA_BACKEND.md` | Models, API, schemas |
-| `40-FRONTEND_APP.md` | Páginas, deploy |
-| `90-OPEN_QUESTIONS.md` | TODOs e questões |
-| `CHANGELOG_AI.md` | Log de mudanças AI |
+- **[PROJECT_CONTEXT.md](./docs/ai/PROJECT_CONTEXT.md)** — Main project map, commands, architecture, conventions
+- **[DECISIONS.md](./docs/ai/DECISIONS.md)** — Architectural decisions log
+- **[CHANGELOG_AI.md](./docs/ai/CHANGELOG_AI.md)** — AI changes audit log
 
-## Guardrails
+## Definition of Done
 
-1. **Nunca commitar segredos**
-2. **Regra das 2 tentativas** — Se falhar 2x, pare e analise
-3. **Sempre testar** — `pytest -v` antes de concluir
-4. **Atualizar CHANGELOG_AI.md** após mudanças
+A task is complete only when:
 
-## Comandos Essenciais
+1. ✅ Verification commands executed and passed:
+   - Backend: `cd backend && pytest -v`
+   - Frontend/E2E: `.\testar_sistema_completo.ps1` (from project root)
+2. ✅ `CHANGELOG_AI.md` updated with the change and verification evidence
+3. ✅ Minimal diff preference (small, focused changes)
+4. ✅ All file paths cited in "Files read:" section
 
-| Ação | Comando |
-|------|---------|
-| Testes backend | `cd backend && pytest -v` |
-| Deploy frontend | `firebase deploy --only hosting --project ifrs16-app` |
-| E2E tests | `.\testar_sistema_completo.ps1` |
+## Directory Notes
 
-## Stop Rules
+**Monorepo structure:**
+- `backend/` — FastAPI Python backend (run commands from here)
+- Root — Frontend HTML/JS files, deploy scripts
 
-- Após 2 falhas → análise de causa raiz
-- Testes falhando → leia o arquivo de teste primeiro
-- Dúvida de arquitetura → leia `docs/ai/20-ARCHITECTURE.md`
+**Verification per component:**
+- Backend changes: `cd backend && pytest -v`
+- Frontend changes: Manual browser test or `.\testar_sistema_completo.ps1`
+- Full stack: `.\testar_sistema_completo.ps1`
 
 ---
 
-*Detalhes completos em `docs/ai/`*
+*Full details in `docs/ai/PROJECT_CONTEXT.md`*

@@ -44,23 +44,42 @@ class FirebaseMCPServer:
         
         # Inicializar Firebase se ainda não foi inicializado
         if not firebase_admin._apps:
-            if credentials_path:
-                cred = credentials.Certificate(credentials_path)
-            elif os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
-                cred = credentials.Certificate(
-                    os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
-                )
-            else:
-                # Usar credenciais padrão (Application Default Credentials)
-                cred = credentials.ApplicationDefault()
-            
-            firebase_admin.initialize_app(cred, {
-                "projectId": self.project_id,
-                "storageBucket": f"{self.project_id}.appspot.com"
-            })
+            try:
+                if credentials_path:
+                    cred = credentials.Certificate(credentials_path)
+                elif os.getenv("GOOGLE_APPLICATION_CREDENTIALS"):
+                    cred = credentials.Certificate(
+                        os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+                    )
+                else:
+                    # Tentar carregar arquivo padrão se existir
+                    default_path = os.path.join(os.getcwd(), "firebase-service-account.json")
+                    if os.path.exists(default_path):
+                        cred = credentials.Certificate(default_path)
+                    else:
+                        # Usar credenciais padrão (Application Default Credentials)
+                        cred = credentials.ApplicationDefault()
+                
+                firebase_admin.initialize_app(cred, {
+                    "projectId": self.project_id,
+                    "storageBucket": f"{self.project_id}.appspot.com"
+                })
+            except Exception as e:
+                print(f"⚠️ Erro ao inicializar Firebase Admin: {e}")
+                # Fallback: tentar inicializar apenas com project_id para ferramentas que não exigem auth total
+                firebase_admin.initialize_app(options={"projectId": self.project_id})
         
-        self.db = firestore.client()
-        self.bucket = storage.bucket()
+        try:
+            self.db = firestore.client()
+        except Exception as e:
+            print(f"⚠️ Erro ao inicializar Firestore: {e}")
+            self.db = None
+
+        try:
+            self.bucket = storage.bucket()
+        except Exception as e:
+            print(f"⚠️ Erro ao inicializar Storage: {e}")
+            self.bucket = None
     
     # =========================================================================
     # FIRESTORE - CRUD

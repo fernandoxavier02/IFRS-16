@@ -2,50 +2,54 @@
 
 > **For:** Claude Code | **Project:** IFRS 16
 
-## Protocolo de Sessão
+## Session Protocol
 
-1. **Ler:** `docs/ai/00-INDEX.md` → contexto completo
-2. **Listar arquivos** antes de editar
-3. **Testar:** `cd backend && pytest -v`
-4. **Logar:** atualizar `docs/ai/CHANGELOG_AI.md`
+1. **Read first:** `docs/ai/PROJECT_CONTEXT.md` + latest `docs/ai/CHANGELOG_AI.md`
+2. **List files** you will modify before editing
+3. **Active Retrieval:** Search repo and open 3–10 most relevant files
+4. **Verify:** Run verification commands after changes
+5. **Log changes:** Update `docs/ai/CHANGELOG_AI.md`
 
 ## Context Pack → `docs/ai/`
 
-| Arquivo | Conteúdo |
-|---------|----------|
-| `00-INDEX.md` | Índice e quick start |
-| `10-STACK.md` | Stack, comandos, URLs |
-| `20-ARCHITECTURE.md` | Diagramas e fluxos |
-| `30-DATA_BACKEND.md` | Models, API, schemas |
-| `40-FRONTEND_APP.md` | Páginas, deploy |
-| `90-OPEN_QUESTIONS.md` | TODOs e questões |
+| File | Content |
+|------|---------|
+| `PROJECT_CONTEXT.md` | Main project map, commands, architecture, conventions |
+| `DECISIONS.md` | Architectural decisions log |
+| `CHANGELOG_AI.md` | AI changes audit log |
 
 ## Guardrails
 
-1. **Nunca commitar segredos**
-2. **Regra das 2 tentativas** — Se falhar 2x, pare e analise
-3. **Sempre testar** antes de concluir
-4. **Atualizar CHANGELOG_AI.md**
+1. **Never commit secrets** — Treat `.env*`, keys, tokens, credentials as sensitive
+2. **Stop rule (2 attempts)** — After 2 failed fix attempts, STOP and do root-cause analysis
+3. **Always verify** — Use exact commands from `PROJECT_CONTEXT.md` section 4
+4. **Update CHANGELOG_AI.md** — Log all changes with verification evidence
 
-## Comandos
+## Verification Commands
 
 ```bash
 # Backend
 cd backend && pytest -v
 
-# Deploy
-firebase deploy --only hosting --project ifrs16-app
-
-# E2E
+# Frontend/E2E (from project root)
 .\testar_sistema_completo.ps1
+
+# Deploy (from project root)
+firebase deploy --only hosting --project ifrs16-app
 ```
 
 ## Stop Rules
 
-- 2 falhas → análise de causa raiz
-- Testes falhando → leia o teste primeiro
-- Dúvida → leia `docs/ai/`
+- **2 failed attempts** → Root-cause analysis required before third attempt
+- **Tests failing** → Read test file first, understand failure
+- **Uncertainty** → Read `docs/ai/PROJECT_CONTEXT.md` for context
+
+## When New Constraints/Decisions Appear
+
+If a new architectural constraint or decision is made:
+- Update `docs/ai/DECISIONS.md` with date, decision, rationale, trade-offs, risks
+- Reference the decision in code comments if relevant
 
 ---
 
-*Ver também: `AGENTS.md`, `docs/ai/00-INDEX.md`*
+*See also: `AGENTS.md`, `.claude/rules/`, `docs/ai/PROJECT_CONTEXT.md`*

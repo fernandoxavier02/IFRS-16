@@ -1,0 +1,28 @@
+# Secrets and sensitive files
+.env*
+*.key
+*.pem
+credentials*
+secrets.json
+firebase-key.json
+
+# Heavy/Generated folders
+node_modules/
+dist/
+build/
+coverage/
+.next/
+.turbo/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Database files
+*.db
+*.sqlite
+
+# IDE and system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db

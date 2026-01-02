@@ -86,7 +86,7 @@ class AdminUser(Base):
     
     # Role e status
     role = Column(
-        SQLEnum(AdminRole),
+        SQLEnum(AdminRole, values_callable=lambda obj: [e.value for e in obj]),
         default=AdminRole.ADMIN,
         nullable=False
     )
@@ -198,7 +198,7 @@ class Subscription(Base):
         nullable=False
     )
     status = Column(
-        SQLEnum(SubscriptionStatus),
+        SQLEnum(SubscriptionStatus, values_callable=lambda obj: [e.value for e in obj]),
         default=SubscriptionStatus.INCOMPLETE,
         nullable=False
     )
@@ -253,13 +253,13 @@ class License(Base):
     
     # Status e tipo
     status = Column(
-        SQLEnum(LicenseStatus), 
-        default=LicenseStatus.ACTIVE, 
+        SQLEnum(LicenseStatus, values_callable=lambda obj: [e.value for e in obj]),
+        default=LicenseStatus.ACTIVE,
         nullable=False
     )
     license_type = Column(
-        SQLEnum(LicenseType), 
-        default=LicenseType.TRIAL, 
+        SQLEnum(LicenseType, values_callable=lambda obj: [e.value for e in obj]),
+        default=LicenseType.TRIAL,
         nullable=False
     )
     
@@ -388,7 +388,7 @@ class Contract(Base):
     contract_code = Column(String(100), nullable=True)
     categoria = Column(String(2), nullable=False, default="OT")
 
-    status = Column(SQLEnum(ContractStatus), nullable=False, default=ContractStatus.DRAFT)
+    status = Column(SQLEnum(ContractStatus, values_callable=lambda obj: [e.value for e in obj]), nullable=False, default=ContractStatus.DRAFT)
 
     numero_sequencial = Column(Integer, nullable=True)
 
@@ -544,7 +544,7 @@ class Notification(Base):
 
     # Tipo e conteúdo
     notification_type = Column(
-        SQLEnum(NotificationType),
+        SQLEnum(NotificationType, values_callable=lambda obj: [e.value for e in obj]),
         nullable=False
     )
     title = Column(String(255), nullable=False)

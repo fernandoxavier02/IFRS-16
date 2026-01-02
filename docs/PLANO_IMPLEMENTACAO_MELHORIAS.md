@@ -213,7 +213,7 @@ As funcionalidades foram priorizadas considerando:
 ## 🎯 Funcionalidades Prioritizadas
 
 ### Fase 1 - Alta Prioridade (MVP de Melhorias)
-1. ⚠️ **API de Índices Econômicos** (verificar - endpoint retorna 404)
+1. ✅ **API de Índices Econômicos** (Concluído 2026-01-02 - Job mensal configurado)
 2. ⬜ **Sistema de Alertas e Notificações**
 3. ⬜ **Upload e Gestão de Documentos**
 4. ⬜ **Dashboard Analítico Melhorado**
@@ -564,7 +564,14 @@ Criar API completa para buscar e armazenar índices econômicos do Banco Central
 
 ### 📊 Resumo Funcionalidade 1
 
-**Status:** ⚠️ Verificar implementação (endpoint 404 em produção)
+**Status:** ✅ **CONCLUÍDO** (2026-01-02)
+
+**Implementação:**
+- API completa com endpoints GET/POST
+- Integração com BCB API (SELIC, IGPM, IPCA, CDI, INPC, TR)
+- 2.493 registros sincronizados
+- Cloud Run Job para sync mensal (dia 5 às 08:00)
+- Cloud Scheduler configurado
 
 **Arquivos Criados:**
 - `backend/app/models.py` (adicionar EconomicIndex)
@@ -1873,7 +1880,7 @@ async def test_create_economic_index(client: AsyncClient, db_session: AsyncSessi
 
 | Funcionalidade | Status | Progresso | Testes |
 |----------------|--------|-----------|--------|
-| 1. API de Índices Econômicos | ⬜ | 0% | 0/15 |
+| 1. API de Índices Econômicos | ✅ | 100% | Concluído |
 | 2. Sistema de Alertas | ⬜ | 0% | 0/12 |
 | 3. Upload de Documentos | ⬜ | 0% | 0/10 |
 | 4. Dashboard Analítico | ⬜ | 0% | 0/8 |

@@ -7,6 +7,69 @@
 
 ## Changelog
 
+### 2026-01-02 — API de Índices Econômicos + Job de Sync Mensal
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Implementar Funcionalidade 1 do PLANO_IMPLEMENTACAO_MELHORIAS.md - API de Índices Econômicos do BCB
+
+**Arquivos Criados:**
+- `backend/app/routers/economic_indexes.py` — Router com endpoints para índices econômicos
+- `backend/app/services/bcb_service.py` — Service de integração com API do Banco Central
+- `backend/jobs/sync_economic_indexes.py` — Script do Cloud Run Job para sync mensal
+- `backend/jobs/Dockerfile` — Container para o job
+- `backend/jobs/requirements.txt` — Dependências do job
+- `backend/alembic/versions/20260101_add_economic_indexes_table.py` — Migration Alembic
+
+**Arquivos Modificados:**
+- `backend/app/models.py` — Adicionado modelo `EconomicIndex`
+- `backend/app/schemas.py` — Adicionados schemas: `EconomicIndexTypeEnum`, `EconomicIndexResponse`, `EconomicIndexListResponse`, `EconomicIndexLatestResponse`, `EconomicIndexSyncResponse`
+- `backend/app/routers/__init__.py` — Exportado `economic_indexes_router`
+- `backend/app/services/__init__.py` — Exportado `BCBService`
+- `backend/app/main.py` — Registrado router e chamada para `ensure_economic_indexes_table()`
+- `backend/app/database.py` — Adicionada função `ensure_economic_indexes_table()`
+
+**Funcionalidades Implementadas:**
+
+1. **API de Índices Econômicos:**
+   - `GET /api/economic-indexes` — Listar índices (com filtros)
+   - `GET /api/economic-indexes/types` — Listar tipos suportados
+   - `GET /api/economic-indexes/{type}/latest` — Último valor de um índice
+   - `POST /api/economic-indexes/sync/{type}` — Sincronizar do BCB (admin)
+   - `POST /api/economic-indexes/sync-all` — Sincronizar todos (admin)
+
+2. **Índices Suportados (BCB API):**
+   | Índice | Código BCB |
+   |--------|------------|
+   | SELIC | 4189 |
+   | IGPM | 189 |
+   | IPCA | 433 |
+   | CDI | 4391 |
+   | INPC | 188 |
+   | TR | 226 |
+
+3. **Cloud Run Job + Cloud Scheduler:**
+   - Job: `sync-economic-indexes`
+   - Scheduler: `sync-economic-indexes-monthly`
+   - Agenda: Dia 5 de cada mês às 08:00 (Brasília)
+   - Próxima execução: 05/01/2026 às 08:00
+
+**Correções Aplicadas:**
+- Corrigido problema de tipo ENUM vs VARCHAR na coluna `index_type`
+- Tabela `economic_indexes` criada com `DROP TABLE IF EXISTS` para resolver conflito
+
+**Deploy:**
+- Backend Cloud Run: `ifrs16-backend-00119-9fc` (serving 100%)
+- Job testado e funcionando
+- 2.493 registros de índices sincronizados do BCB
+
+**Verificação:**
+- [x] API `/api/economic-indexes/types` retorna lista de tipos
+- [x] API `/api/economic-indexes` retorna 2.493 registros
+- [x] Cloud Run Job executa com sucesso
+- [x] Cloud Scheduler configurado
+
+---
+
 ### 2026-01-01 — World-Class Context System Initialized
 
 **Agent:** Auto (Cursor IDE)  

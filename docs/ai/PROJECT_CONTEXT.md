@@ -1,6 +1,6 @@
 # PROJECT_CONTEXT.md
-> **Last updated:** 2026-01-01  
-> **Version:** 1.2.0  
+> **Last updated:** 2026-01-02  
+> **Version:** 1.3.0  
 > **Maintainer:** AI Context Pack
 
 ---
@@ -38,10 +38,12 @@ IFRS 16/
 │   │   │   ├── admin.py
 │   │   │   ├── auth.py
 │   │   │   ├── contracts.py
+│   │   │   ├── economic_indexes.py  # API de índices econômicos (BCB)
 │   │   │   ├── licenses.py
 │   │   │   ├── payments.py
 │   │   │   └── user_dashboard.py
 │   │   ├── services/           # Business logic services
+│   │   │   ├── bcb_service.py  # Integração com API do Banco Central
 │   │   │   ├── contracts_service.py
 │   │   │   ├── email_service.py
 │   │   │   └── stripe_service.py
@@ -58,6 +60,12 @@ IFRS 16/
 │   ├── pytest.ini              # Pytest configuration
 │   └── .env                    # Local env vars (gitignored)
 ├── assets/                     # Static assets (CSS, JS, images)
+├── docs/                       # Documentation
+│   ├── ai/                     # AI context pack
+│   │   ├── PROJECT_CONTEXT.md  # Main project context
+│   │   ├── DECISIONS.md        # Architectural decisions
+│   │   └── CHANGELOG_AI.md     # AI changes log
+│   └── PLANO_IMPLEMENTACAO_MELHORIAS.md  # Implementation roadmap
 ├── mcp/                        # MCP server integrations
 ├── *.html                      # Frontend pages (landing, login, admin, etc.)
 ├── firebase.json               # Firebase Hosting config
@@ -171,6 +179,7 @@ IFRS 16/
 | `License` | License keys with type (Trial/Basic/Pro/Enterprise) |
 | `Subscription` | Stripe subscription tracking |
 | `Contract` | IFRS 16 lease contracts |
+| `EconomicIndex` | Economic indexes from Banco Central (SELIC, IGPM, IPCA, CDI, INPC, TR) |
 | `ValidationLog` | License validation audit trail |
 
 ### License Types & Features

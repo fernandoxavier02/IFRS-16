@@ -122,6 +122,40 @@ async def ensure_user_sessions_table():
     print("[OK] Tabela user_sessions verificada/criada com sucesso!")
 
 
+async def ensure_economic_indexes_table():
+    """
+    Garante que a tabela economic_indexes existe no banco de dados.
+    Cria a tabela e índices se não existirem.
+    """
+    import sqlalchemy as sa
+    async with engine.begin() as conn:
+        # Criar tabela economic_indexes se não existir
+        await conn.execute(sa.text("""
+            CREATE TABLE IF NOT EXISTS economic_indexes (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                index_type VARCHAR(20) NOT NULL,
+                reference_date TIMESTAMP NOT NULL,
+                value VARCHAR(50) NOT NULL,
+                source VARCHAR(50) NOT NULL DEFAULT 'BCB',
+                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+        """))
+
+        # Criar índice único para evitar duplicatas
+        await conn.execute(sa.text("""
+            CREATE UNIQUE INDEX IF NOT EXISTS uq_economic_index_type_date
+            ON economic_indexes (index_type, reference_date)
+        """))
+
+        # Criar índice para consultas
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_economic_index_type_date
+            ON economic_indexes (index_type, reference_date)
+        """))
+
+    print("[OK] Tabela economic_indexes verificada/criada com sucesso!")
+
+
 async def close_db():
     """
     Fecha todas as conexões do pool.

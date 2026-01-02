@@ -136,6 +136,40 @@ Plus tool-specific wiring:
 
 ---
 
+### DEC-010: API de Índices Econômicos do Banco Central (2026-01-01)
+
+**Context:** Necessidade de fornecer índices econômicos (SELIC, IGPM, IPCA, CDI, INPC, TR) atualizados automaticamente para cálculos de reajuste de contratos IFRS 16.
+
+**Decision:**
+- Criar modelo `EconomicIndex` para armazenar índices no banco de dados
+- Implementar `BCBService` para buscar dados da API do Banco Central do Brasil (BCB)
+- Criar router `/api/economic-indexes` com endpoints para listagem, busca do último valor e sincronização
+- Endpoints de sincronização requerem autenticação admin
+- Endpoints de consulta são públicos (para facilitar integração)
+
+**Rationale:**
+- Integração com API oficial do BCB garante dados atualizados e confiáveis
+- Armazenamento local reduz dependência de APIs externas e melhora performance
+- Sincronização manual via admin permite controle sobre atualizações
+- Endpoints públicos facilitam uso pelo frontend sem autenticação obrigatória
+
+**Trade-offs:**
+- Dados não atualizados automaticamente (requer ação admin para sincronizar)
+- Dependência da disponibilidade da API do BCB para sincronização
+- Armazenamento adicional no banco de dados (trade-off aceitável pela performance)
+
+**Files Created:**
+- `backend/app/models.py` — Modelo `EconomicIndex`
+- `backend/app/services/bcb_service.py` — Service para integração com BCB
+- `backend/app/routers/economic_indexes.py` — Router com endpoints
+- `backend/alembic/versions/20260101_add_economic_indexes_table.py` — Migration
+
+**Files Modified:**
+- `backend/app/main.py` — Registro do router
+- `backend/app/schemas.py` — Schemas Pydantic para índices
+
+---
+
 ### DEC-009: Firebase CLI and MCP Integration (2026-01-01)
 
 **Context:** Need to manage Firebase Hosting and provide the AI agent with tools to interact with Firebase services (Auth, Firestore, Storage).

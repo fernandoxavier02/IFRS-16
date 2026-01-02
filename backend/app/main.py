@@ -148,12 +148,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     else:
         print("[INFO] Producao: init_db desabilitado (use Alembic migrations)")
 
-    # IMPORTANTE: Garantir que tabela user_sessions existe (migration temporária)
+    # IMPORTANTE: Garantir que tabelas necessárias existem (migration temporária)
     try:
-        from .database import ensure_user_sessions_table
+        from .database import ensure_user_sessions_table, ensure_economic_indexes_table
         await ensure_user_sessions_table()
+        await ensure_economic_indexes_table()
     except Exception as e:
-        print(f"[WARN] Erro ao criar tabela user_sessions: {e}")
+        print(f"[WARN] Erro ao criar tabelas: {e}")
 
     yield
     

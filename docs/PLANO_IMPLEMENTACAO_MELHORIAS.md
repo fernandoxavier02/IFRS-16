@@ -18,10 +18,202 @@ Este documento detalha o plano de implementação das melhorias identificadas ap
 
 ---
 
+## 🔍 Análise Comparativa de Mercado e Benchmarks
+
+### Contexto do Mercado IFRS 16/CPC 06
+
+O mercado de soluções para cálculo e gestão de arrendamentos conforme IFRS 16/CPC 06 no Brasil é composto principalmente por:
+- **Soluções ERP integradas** (TOTVS, SAP, Oracle)
+- **Soluções especializadas** (softwares contábeis dedicados)
+- **Consultorias com ferramentas próprias**
+- **Planilhas Excel customizadas**
+
+### Principais Concorrentes Identificados
+
+#### 1. Soluções ERP (TOTVS, SAP, Oracle)
+
+**Características:**
+- ✅ Integração nativa com módulos contábeis
+- ✅ Processamento em lote (múltiplos contratos)
+- ✅ Remensuração automática
+- ✅ Relatórios padrão IFRS
+- ✅ Auditoria e rastreabilidade completa
+- ❌ Alto custo de licenciamento (R$ 50k - R$ 500k+)
+- ❌ Complexidade de implementação (3-6 meses)
+- ❌ Requer treinamento extensivo
+- ❌ Overhead para empresas pequenas/médias
+
+**Target:** Grandes empresas (500+ funcionários)
+
+#### 2. Softwares Contábeis Especializados
+
+**Características:**
+- ✅ Foco em compliance IFRS 16
+- ✅ Interface mais simples que ERPs
+- ✅ Preços mais acessíveis (R$ 500 - R$ 5.000/mês)
+- ✅ Suporte especializado
+- ✅ Dashboard analítico
+- ✅ Notas explicativas automatizadas
+- ⚠️ Variável: Qualidade da integração
+- ⚠️ Variável: Atualização de índices econômicos
+- ❌ Alguns não têm simulação de cenários
+- ❌ Limitado multi-usuário em planos básicos
+
+**Target:** Médias empresas (50-500 funcionários)
+
+#### 3. Planilhas Excel Customizadas
+
+**Características:**
+- ✅ Baixo custo inicial
+- ✅ Familiaridade dos usuários
+- ✅ Flexibilidade de customização
+- ❌ Propenso a erros (validação limitada)
+- ❌ Sem versionamento adequado
+- ❌ Difícil auditoria
+- ❌ Atualização manual de índices
+- ❌ Colaboração limitada
+- ❌ Escalabilidade baixa
+
+**Target:** Pequenas empresas (< 50 funcionários)
+
+### Benchmarks Funcionais
+
+| Funcionalidade | Nossa Solução | ERPs (TOTVS/SAP) | Softwares Especializados | Excel |
+|----------------|---------------|------------------|--------------------------|-------|
+| **Cálculo IFRS 16** | ✅ Completo | ✅ Completo | ✅ Completo | ⚠️ Manual |
+| **Dashboard Analítico** | ⬜ Em desenvolvimento | ✅ Avançado | ✅ Básico a Médio | ❌ Não |
+| **Versionamento** | ✅ Manual | ✅ Automático | ⚠️ Variável | ❌ Limitado |
+| **Índices Econômicos** | ⬜ Em desenvolvimento | ✅ Integrado | ⚠️ Variável | ❌ Manual |
+| **Remensuração Automática** | ⬜ Planejado | ✅ Sim | ⚠️ Variável | ❌ Não |
+| **Upload de Documentos** | ⬜ Planejado | ✅ Sim | ⚠️ Variável | ❌ Não |
+| **Notas Explicativas** | ⬜ Planejado | ✅ Automatizado | ✅ Automatizado | ❌ Manual |
+| **Simulação de Cenários** | ⬜ Planejado | ✅ Avançado | ⚠️ Básico | ⚠️ Manual |
+| **Workflow de Aprovação** | ❌ Não | ✅ Sim | ⚠️ Variável | ❌ Não |
+| **Integração ERP** | ❌ Não | ✅ Nativa | ⚠️ Variável | ❌ Não |
+| **API** | ⬜ REST (existente) | ✅ REST/SOAP | ❌ Raro | ❌ Não |
+| **Multi-usuário** | ✅ Sim | ✅ Sim | ⚠️ Limitado | ⚠️ Compartilhado |
+| **Preço** | ✅ R$ 299-499/mês | ❌ R$ 50k-500k+ | ⚠️ R$ 500-5k/mês | ✅ Baixo |
+| **Facilidade de Uso** | ✅ Alta | ❌ Baixa | ⚠️ Média | ✅ Alta |
+| **Tempo de Implementação** | ✅ Imediato | ❌ 3-6 meses | ⚠️ 1-2 semanas | ✅ Imediato |
+
+### Diferenciais Competitivos Identificados
+
+#### Pontos Fortes da Nossa Solução
+1. **Preço Acessível:** Posicionamento entre Excel e ERPs, acessível para PMEs
+2. **Facilidade de Uso:** Interface intuitiva, sem necessidade de treinamento extensivo
+3. **Implementação Rápida:** Uso imediato após registro
+4. **Foco em IFRS 16:** Especialização vs. soluções genéricas
+5. **Versionamento:** Histórico de versões (diferencial vs. Excel)
+
+#### Gaps Identificados (Oportunidades)
+1. **Dashboard Analítico:** Ausente - padrão do mercado
+2. **Índices Econômicos Automáticos:** Manual vs. automático nos concorrentes
+3. **Remensuração Automática:** Diferencial importante de ERPs
+4. **Upload de Documentos:** Necessário para auditoria/compliance
+5. **Notas Explicativas:** Padrão em softwares especializados
+6. **Simulação de Cenários:** Funcionalidade valorizada por gestores
+7. **Workflow de Aprovação:** Necessário para empresas maiores
+8. **Integração ERP:** Diferencial para escalabilidade
+
+### Análise de Benchmark por Categoria
+
+#### Performance e Disponibilidade
+- **Nossa Meta:** Uptime > 99.5%, Latência < 500ms
+- **Benchmark ERPs:** Uptime > 99.9%, Latência < 1s (aceitável para ERPs)
+- **Benchmark SaaS:** Uptime > 99.9%, Latência < 300ms
+
+#### Cobertura de Funcionalidades
+- **Nossa Solução Atual:** 60% das funcionalidades de mercado
+- **Meta (após Fase 1):** 80% das funcionalidades essenciais
+- **Meta (após Fase 2):** 90% das funcionalidades do mercado
+
+#### Preço vs. Valor
+- **Posicionamento:** Premium vs. Excel, Acessível vs. ERPs
+- **TCO (Total Cost of Ownership):** Menor que ERPs (sem implementação, sem manutenção)
+- **ROI:** Rápido retorno vs. soluções enterprise
+
+### Priorização Baseada em Benchmark
+
+As funcionalidades foram priorizadas considerando:
+
+1. **Frequência de Uso:** Funcionalidades usadas diariamente têm prioridade
+2. **Diferencial Competitivo:** Funcionalidades que nos diferenciam dos concorrentes
+3. **Gap Crítico:** Funcionalidades que são padrão no mercado e estão ausentes
+4. **Complexidade vs. Valor:** ROI esperado de cada funcionalidade
+5. **Dependências:** Funcionalidades que habilitam outras
+
+### Roadmap Competitivo
+
+**Fase 1 (Alta Prioridade):** Cobrir gaps críticos vs. softwares especializados
+- Índices econômicos automáticos
+- Dashboard analítico
+- Upload de documentos
+- Sistema de alertas
+
+**Fase 2 (Média Prioridade):** Adicionar funcionalidades valorizadas
+- Remensuração automática (diferencial vs. ERPs)
+- Notas explicativas (padrão do mercado)
+- Simulação de cenários (valorizado por gestores)
+- Auditoria completa
+
+**Fase 3 (Baixa Prioridade):** Funcionalidades avançadas/enterprise
+- Workflow de aprovação
+- Integração ERP
+- Multi-idioma (expansão internacional)
+- API GraphQL (desenvolvedores)
+
+---
+
+## ⏱️ Estimativas de Esforço
+
+| # | Funcionalidade | Complexidade | Esforço Estimado |
+|---|----------------|--------------|------------------|
+| 1 | API de Índices Econômicos | Média | 2-3 dias |
+| 2 | Sistema de Alertas | Média | 3-4 dias |
+| 3 | Upload de Documentos | Alta | 4-5 dias |
+| 4 | Dashboard Analítico | Média | 2-3 dias |
+| 5 | Notas Explicativas | Baixa | 1-2 dias |
+| 6 | Simulação de Cenários | Média | 3-4 dias |
+| 7 | Remensuração Automática | Alta | 4-5 dias |
+| 8 | Auditoria | Média | 3-4 dias |
+| 9 | Workflow de Aprovação | Alta | 5-7 dias |
+| 10 | Integração ERP | Alta | 5-7 dias |
+| 11 | Multi-idioma | Baixa | 2-3 dias |
+| 12 | API GraphQL | Média | 3-4 dias |
+| 13 | Multi-moeda | Média | 3-4 dias |
+
+**Total estimado Fase 1:** 12-15 dias
+**Total estimado Fase 2:** 12-16 dias
+**Total estimado Fase 3:** 18-25 dias
+
+---
+
+## 🏗️ Pré-requisitos de Infraestrutura
+
+### Para Funcionalidades 2 (Alertas) e 7 (Remensuração):
+- [ ] Configurar Cloud Scheduler no GCP
+- [ ] Criar service account com permissões adequadas
+- [ ] Definir frequência de execução dos jobs (diário/mensal)
+- [ ] Configurar alertas de falha no Cloud Monitoring
+
+### Para Funcionalidade 3 (Documentos):
+- [ ] Criar bucket no Cloud Storage ou Firebase Storage
+- [ ] Configurar CORS para o bucket
+- [ ] Definir políticas de ciclo de vida (expiração de arquivos temporários)
+- [ ] Estimar custos mensais de storage (~$0.02/GB/mês)
+- [ ] Configurar regras de segurança (acesso por usuário)
+
+### Para Funcionalidade 10 (Integração ERP):
+- [ ] Obter documentação de APIs dos ERPs alvo (TOTVS, SAP)
+- [ ] Definir formatos de exportação aceitos
+- [ ] Obter ambientes de teste dos clientes
+
+---
+
 ## 🎯 Funcionalidades Prioritizadas
 
 ### Fase 1 - Alta Prioridade (MVP de Melhorias)
-1. ✅ **API de Índices Econômicos** (base para remensuração)
+1. ⚠️ **API de Índices Econômicos** (verificar - endpoint retorna 404)
 2. ⬜ **Sistema de Alertas e Notificações**
 3. ⬜ **Upload e Gestão de Documentos**
 4. ⬜ **Dashboard Analítico Melhorado**
@@ -57,10 +249,18 @@ Este documento detalha o plano de implementação das melhorias identificadas ap
 
 ## 🎯 Funcionalidade 1: API de Índices Econômicos
 
-**Prioridade:** 🔴 Crítica  
-**Complexidade:** Média  
-**Dependências:** Nenhuma  
+**Prioridade:** 🔴 Crítica
+**Complexidade:** Média
+**Dependências:** Nenhuma
 **Base para:** Remensuração Automática
+
+### ⚠️ Riscos Identificados
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|--------------|---------|-----------|
+| API BCB indisponível | Média | Alto | Implementar cache local, retry com backoff |
+| Rate limiting do BCB | Baixa | Médio | Respeitar limites, usar cache agressivo |
+| Dados desatualizados | Baixa | Médio | Job diário de sincronização |
+| Formato de resposta muda | Baixa | Alto | Testes de contrato, monitoramento |
 
 ### Objetivo
 Criar API completa para buscar e armazenar índices econômicos do Banco Central do Brasil (SELIC, IGPM, IPCA, CDI, INPC, TR).
@@ -364,7 +564,7 @@ Criar API completa para buscar e armazenar índices econômicos do Banco Central
 
 ### 📊 Resumo Funcionalidade 1
 
-**Status:** ⬜ Não iniciado
+**Status:** ⚠️ Verificar implementação (endpoint 404 em produção)
 
 **Arquivos Criados:**
 - `backend/app/models.py` (adicionar EconomicIndex)
@@ -388,10 +588,18 @@ Criar API completa para buscar e armazenar índices econômicos do Banco Central
 
 ## 🎯 Funcionalidade 2: Sistema de Alertas e Notificações
 
-**Prioridade:** 🔴 Alta  
-**Complexidade:** Média  
-**Dependências:** Nenhuma  
+**Prioridade:** 🔴 Alta
+**Complexidade:** Média
+**Dependências:** Nenhuma
 **Base para:** Melhorar experiência do usuário
+
+### ⚠️ Riscos Identificados
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|--------------|---------|-----------|
+| Spam de notificações | Média | Alto | Rate limiting por usuário, configurações |
+| Email não entregue | Média | Médio | Usar SendGrid/SES, verificar bounce |
+| Custo de envio de email | Baixa | Baixo | Usar tier gratuito, batch emails |
+| Job agendado falha | Baixa | Alto | Alertas no Cloud Monitoring, retry |
 
 ### Objetivo
 Criar sistema de notificações (email e in-app) para eventos importantes do sistema.
@@ -558,10 +766,18 @@ Criar sistema de notificações (email e in-app) para eventos importantes do sis
 
 ## 🎯 Funcionalidade 3: Upload e Gestão de Documentos
 
-**Prioridade:** 🔴 Alta  
-**Complexidade:** Alta  
-**Dependências:** Firebase Storage ou Google Cloud Storage  
+**Prioridade:** 🔴 Alta
+**Complexidade:** Alta
+**Dependências:** Firebase Storage ou Google Cloud Storage
 **Base para:** Auditoria e compliance
+
+### ⚠️ Riscos Identificados
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|--------------|---------|-----------|
+| Custo de storage elevado | Média | Médio | Limitar tamanho, políticas de expiração |
+| Upload de arquivo malicioso | Baixa | Alto | Validar MIME type, scan antivírus |
+| Perda de arquivos | Baixa | Crítico | Backup automático, versionamento |
+| Performance lenta | Média | Médio | CDN, compressão, signed URLs |
 
 ### Objetivo
 Permitir upload de PDFs de contratos e documentos relacionados, com armazenamento seguro e versionamento.
@@ -715,10 +931,18 @@ Permitir upload de PDFs de contratos e documentos relacionados, com armazenament
 
 ## 🎯 Funcionalidade 4: Dashboard Analítico Melhorado
 
-**Prioridade:** 🔴 Alta  
-**Complexidade:** Média  
-**Dependências:** Nenhuma  
+**Prioridade:** 🔴 Alta
+**Complexidade:** Média
+**Dependências:** Nenhuma
 **Base para:** Valor para gestores
+
+### ⚠️ Riscos Identificados
+| Risco | Probabilidade | Impacto | Mitigação |
+|-------|--------------|---------|-----------|
+| Query lenta com muitos contratos | Média | Alto | Índices, cache, paginação |
+| Dados inconsistentes | Baixa | Alto | Validação, reconciliação |
+| Gráficos não renderizam | Baixa | Médio | Fallback, testes cross-browser |
+| Mobile não responsivo | Média | Médio | Design mobile-first |
 
 ### Objetivo
 Melhorar dashboard com métricas visuais, gráficos e análises dos contratos.
@@ -1742,5 +1966,85 @@ Antes de marcar uma funcionalidade como concluída, verificar:
 
 ---
 
-**Última Atualização:** 2026-01-01  
+# 🔄 Rollback e Recuperação
+
+## Antes de Cada Deploy
+- [ ] Backup do banco de dados (Cloud SQL snapshot)
+- [ ] Anotar versão atual do serviço no Cloud Run
+- [ ] Verificar migrations pendentes
+
+## Comandos de Rollback
+
+### Banco de Dados (Alembic)
+```bash
+# Ver histórico de migrations
+alembic history
+
+# Voltar uma migration
+alembic downgrade -1
+
+# Voltar para versão específica
+alembic downgrade <revision_id>
+
+# Ver migration atual
+alembic current
+```
+
+### Cloud Run
+```bash
+# Listar revisões
+gcloud run revisions list --service=ifrs16-backend
+
+# Redirecionar tráfego para revisão anterior
+gcloud run services update-traffic ifrs16-backend \
+  --to-revisions=ifrs16-backend-00097-xxx=100
+
+# Ou via Console: Cloud Run > Serviço > Gerenciar tráfego
+```
+
+### Restaurar Backup do Banco
+```bash
+# Via Console do Cloud SQL:
+# SQL > Instância > Backups > Restaurar
+```
+
+---
+
+# 📊 Monitoramento Pós-Deploy
+
+## Primeiros 30 Minutos
+- [ ] Verificar logs no Cloud Run (erros 5xx)
+- [ ] Testar endpoint de health: `GET /health`
+- [ ] Testar login de usuário
+- [ ] Verificar métricas de latência
+
+## Métricas a Observar
+| Métrica | Limite Aceitável | Ação se Exceder |
+|---------|------------------|-----------------|
+| Latência p95 | < 500ms | Investigar queries |
+| Taxa de erros 5xx | < 1% | Rollback imediato |
+| CPU utilization | < 80% | Escalar instâncias |
+| Memory usage | < 512MB | Otimizar código |
+
+## Alertas Configurados (Cloud Monitoring)
+- [ ] Alerta: Taxa de erros > 5% por 5 min
+- [ ] Alerta: Latência p95 > 2s por 10 min
+- [ ] Alerta: Instâncias não saudáveis > 0
+- [ ] Alerta: Falha em job agendado
+
+## Comandos Úteis
+```bash
+# Ver logs recentes
+gcloud logging read "resource.type=cloud_run_revision" --limit=50
+
+# Ver logs de erro
+gcloud logging read "resource.type=cloud_run_revision AND severity>=ERROR" --limit=20
+
+# Verificar status do serviço
+gcloud run services describe ifrs16-backend --region=us-central1
+```
+
+---
+
+**Última Atualização:** 2026-01-01
 **Próxima Revisão:** Após conclusão da Fase 1

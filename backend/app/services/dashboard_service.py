@@ -33,10 +33,10 @@ class DashboardService:
                 COALESCE(SUM(cv.total_vp), 0) as total_ativos,
                 COALESCE(SUM(
                     CASE 
-                        WHEN cv.resultados_json->'contabilizacao' IS NOT NULL 
+                        WHEN cv.resultados_json IS NOT NULL AND cv.resultados_json != ''
                         THEN (
                             SELECT SUM((item->>'despTotal')::numeric)
-                            FROM jsonb_array_elements(cv.resultados_json->'contabilizacao') item
+                            FROM jsonb_array_elements(cv.resultados_json::jsonb->'contabilizacao') item
                             WHERE (item->>'mes')::int = 1
                         )
                         ELSE 0
@@ -177,7 +177,7 @@ class DashboardService:
                 c.name as contract_name,
                 COALESCE((
                     SELECT SUM((item->>'despTotal')::numeric)
-                    FROM jsonb_array_elements(cv.resultados_json->'contabilizacao') item
+                    FROM jsonb_array_elements(cv.resultados_json::jsonb->'contabilizacao') item
                     WHERE (item->>'mes')::int = 1
                 ), 0) as despesa_mensal
             FROM contracts c
@@ -241,7 +241,7 @@ class DashboardService:
         
         result = await self.db.execute(query, {
             "user_id": user_id,
-            "days": f"{days} days"
+            "days": timedelta(days=days)
         })
         rows = result.fetchall()
         

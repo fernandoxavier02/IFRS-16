@@ -7,6 +7,167 @@
 
 ## Changelog
 
+### 2026-01-02 19:40 — Correção: Operador JSONB no Dashboard (RESOLVIDO)
+
+**Agent:** Claude Code (Opus 4.5)  
+**Task:** Corrigir erro de operador JSONB em queries do dashboard
+
+**Erro:**
+```
+asyncpg.exceptions.UndefinedFunctionError: 
+operator does not exist: text -> unknown
+```
+
+**Causa:**
+- Campo `resultados_json` definido como `TEXT` na migration
+- Código tentando usar operadores JSONB (`->` e `->>`)
+- PostgreSQL não permite operadores JSONB em campos TEXT
+
+**Correção:**
+- `dashboard_service.py` linhas 36, 39, 180
+- Adicionado cast explícito: `cv.resultados_json::jsonb`
+- Queries agora funcionam corretamente
+
+**Arquivos Modificados:**
+- `backend/app/services/dashboard_service.py` — 3 correções de cast JSONB
+
+**Verificação:**
+- [x] Build: ✅ Sucesso
+- [x] Deploy: ✅ Revision `ifrs16-backend-00158-8sq`
+- [x] Endpoints dashboard: ✅ Funcionando
+
+---
+
+### 2026-01-02 19:21 — Correção Crítica: Erro 500 no Login (RESOLVIDO)
+
+**Agent:** Claude Code (Opus 4.5)  
+**Task:** Identificar e corrigir erro 500 Internal Server Error no endpoint de login
+
+**Causa Raiz Identificada:**
+```
+asyncpg.exceptions.InvalidTextRepresentationError: 
+invalid input value for enum subscriptionstatus: "ACTIVE"
+```
+
+**Problema:**
+- `SQLEnum` sem `values_callable` enviava **nome do enum** (`"ACTIVE"`) em vez do **valor** (`"active"`)
+- PostgreSQL rejeitava: enum `subscriptionstatus` não tem valor `"ACTIVE"`, apenas `"active"`
+
+**Arquivos Modificados:**
+1. `backend/app/models.py` — Corrigido 6 enums com `values_callable`:
+   - `Subscription.status` (linha 200)
+   - `AdminUser.role` (linha 88)
+   - `License.status` (linha 255)
+   - `License.license_type` (linha 260)
+   - `Contract.status` (linha 391)
+   - `Notification.notification_type` (linha 546)
+
+2. URLs da API atualizadas (de `1051753255664` para `ox4zylcs5a`):
+   - `login.html` (linha 328)
+   - `dashboard.html` (linha 543)
+   - `assets/js/config.js` (linha 15)
+   - `assets/js/document-manager.js` (linha 31)
+
+**Verificação:**
+- [x] Build: ✅ Sucesso
+- [x] Deploy: ✅ Revision `ifrs16-backend-00156-4rg`
+- [x] Health: ✅ 200 OK
+- [x] Login: ✅ Retorna 401 (comportamento correto, não mais 500)
+- [x] Logs: ✅ Sem erros 500
+
+**Impacto:**
+- ✅ Login funciona sem erro 500
+- ✅ Todas as queries com enums agora funcionam (auth, dashboard, contracts, licenses, notifications)
+
+**Documentação:**
+- `docs/DIAGNOSTICO_LOGIN_FRONTEND.md` — Análise inicial
+- `docs/ERRO_500_LOGIN.md` — Diagnóstico do erro 500
+- `docs/CAUSA_RAIZ_ERRO_500_FINAL.md` — Causa raiz identificada
+- `docs/SOLUCAO_APLICADA_ERRO_500.md` — Solução completa aplicada
+
+---
+
+### 2026-01-02 — Migracao Completa: Cloud SQL para Supabase (FINALIZADA)
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Executar migracao do banco de dados de Cloud SQL/Render para Supabase
+
+**Projeto Supabase:**
+- Nome: IFRS 16
+- Reference ID: `jafdinvixrfxtvoagrsf`
+- Regiao: South America (Sao Paulo) - `sa-east-1`
+- Status: ACTIVE_HEALTHY
+
+**Arquivos Criados:**
+- `backend/supabase/migrations/20260102181620_remote_commit.sql` — Migration SQL completa com todas as tabelas
+- `backend/supabase/migrations/20260102190000_add_contract_versions.sql` — Tabela contract_versions (SCD Type 2)
+
+**Arquivos Modificados:**
+- `backend/.env` — Atualizado DATABASE_URL para Supabase Pooler
+- `backend/app/database.py` — Adicionado `statement_cache_size=0` para compatibilidade com PgBouncer
+
+**Tabelas Migradas (12):**
+1. `admin_users` — Usuarios administradores
+2. `users` — Usuarios clientes
+3. `licenses` — Licencas de software
+4. `subscriptions` — Assinaturas Stripe
+5. `validation_logs` — Logs de validacao
+6. `contracts` — Contratos IFRS 16
+7. `contract_versions` — Versoes imutaveis SCD Type 2
+8. `user_sessions` — Sessoes de usuarios
+9. `economic_indexes` — Indices economicos BCB
+10. `notifications` — Sistema de alertas
+11. `documents` — Anexos de contratos
+12. `alembic_version` — Controle de migrations
+
+**ENUMs Criados (7):**
+- licensestatus, licensetype, adminrole, subscriptionstatus
+- plantype, contractstatus, notificationtype
+
+**Fix Importante - PgBouncer:**
+O Supabase usa PgBouncer em Transaction Mode, que nao suporta prepared statements.
+Corrigido adicionando `statement_cache_size=0` em `backend/app/database.py`:
+```python
+connect_args={
+    "ssl": "require",
+    "command_timeout": 60,
+    "statement_cache_size": 0,  # Desabilita cache para PgBouncer (Supabase)
+},
+```
+
+**Indices Economicos Sincronizados:**
+| Indice | Registros | Status |
+|--------|-----------|--------|
+| SELIC  | 473       | OK     |
+| IGPM   | 438       | OK     |
+| IPCA   | 550       | OK     |
+| CDI    | 473       | OK     |
+| INPC   | 559       | OK     |
+| TR     | -         | Erro API BCB (406) |
+
+**Cloud Run Atualizado:**
+- DATABASE_URL: Supabase Pooler (Transaction Mode)
+- Todas as variaveis de ambiente restauradas
+- Build com fix PgBouncer aplicado
+
+**Verificacao Final:**
+- [x] Conexao com Supabase funcionando
+- [x] 12 tabelas criadas no Supabase
+- [x] Backend Cloud Run atualizado
+- [x] Health check: `{"status":"healthy","environment":"production"}`
+- [x] API `/api/economic-indexes` retornando dados
+- [x] Indices economicos sincronizados (5/6 - TR com erro API BCB)
+- [x] Frontend fxstudioai.com respondendo
+
+**Connection String:**
+```
+postgresql+asyncpg://postgres.jafdinvixrfxtvoagrsf:[PASSWORD]@aws-1-sa-east-1.pooler.supabase.com:6543/postgres
+```
+
+**Status:** MIGRACAO CONCLUIDA COM SUCESSO
+
+---
+
 ### 2026-01-02 — Avaliacao de Viabilidade: Migracao para Supabase
 
 **Agent:** Claude Code (Opus 4.5)

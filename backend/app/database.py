@@ -23,8 +23,9 @@ if "sqlite" in database_url:
         connect_args=connect_args,
     )
 else:
-    # PostgreSQL com SSL para Render
+    # PostgreSQL com SSL para Supabase/Render
     # asyncpg aceita ssl='require' para SSL obrigatório
+    # statement_cache_size=0 é necessário para PgBouncer do Supabase (transaction mode)
     engine = create_async_engine(
         database_url,
         echo=settings.DEBUG,
@@ -35,8 +36,9 @@ else:
         pool_recycle=300,  # Recicla a cada 5 min (evita conexões antigas)
         pool_timeout=30,  # Timeout para obter conexão do pool
         connect_args={
-            "ssl": "require",  # SSL obrigatório para Cloud SQL
+            "ssl": "require",  # SSL obrigatório para Cloud SQL/Supabase
             "command_timeout": 60,  # Timeout para comandos SQL
+            "statement_cache_size": 0,  # Desabilita cache para PgBouncer (Supabase)
         },
     )
 

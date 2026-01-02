@@ -129,7 +129,18 @@ async def ensure_economic_indexes_table():
     """
     import sqlalchemy as sa
     async with engine.begin() as conn:
-        # Criar tabela economic_indexes se não existir
+        # Dropar tabela existente se tiver tipo errado (ENUM em vez de VARCHAR)
+        # Isso corrige o problema de migration anterior
+        await conn.execute(sa.text("""
+            DROP TABLE IF EXISTS economic_indexes CASCADE
+        """))
+
+        # Dropar tipo ENUM se existir
+        await conn.execute(sa.text("""
+            DROP TYPE IF EXISTS economicindextype CASCADE
+        """))
+
+        # Criar tabela economic_indexes com VARCHAR
         await conn.execute(sa.text("""
             CREATE TABLE IF NOT EXISTS economic_indexes (
                 id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -14,7 +14,14 @@ from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from .config import Settings, get_settings
-from .database import init_db, close_db
+from .database import (
+    init_db,
+    close_db,
+    ensure_user_sessions_table,
+    ensure_economic_indexes_table,
+    ensure_reajuste_periodicidade_column,
+    ensure_notifications_table,
+)
 from .routers import (
     licenses_router,
     admin_router,
@@ -22,18 +29,21 @@ from .routers import (
     payments_router,
     user_dashboard_router,
     economic_indexes_router,
+    notifications_router,
+    jobs_router,
 )
 from .routers.contracts import router as contracts_router
 
 settings = get_settings()
 
 
-def validate_critical_settings(current_settings: Settings) -> list[str]:
+def validate_critical_settings(current_settings: Settings) -> tuple[list[str], list[str]]:
     """
-    Retorna lista de erros de configuração crítica.
-    Usado para fail-fast em produção e para testes automatizados.
+    Retorna tupla (erros_criticos, warnings) de configuração.
+    Erros críticos bloqueiam o startup, warnings são apenas logados.
     """
     errors = []
+    warnings = []
 
     stripe_key = (getattr(current_settings, "STRIPE_SECRET_KEY", "") or "").strip()
     webhook_secret = (getattr(current_settings, "STRIPE_WEBHOOK_SECRET", "") or "").strip()
@@ -46,27 +56,30 @@ def validate_critical_settings(current_settings: Settings) -> list[str]:
     jwt_secret = (getattr(current_settings, "JWT_SECRET_KEY", "") or "").strip()
     admin_token = (getattr(current_settings, "ADMIN_TOKEN", "") or "").strip()
 
+    # Erros críticos - bloqueiam startup
     if not stripe_key or stripe_key.endswith("...") or stripe_key.startswith("sk_test_"):
         errors.append("STRIPE_SECRET_KEY inválida/placeholder")
-    if not webhook_secret or webhook_secret.endswith("...") or not webhook_secret.startswith("whsec_"):
-        errors.append("STRIPE_WEBHOOK_SECRET inválida/placeholder")
-
-    if not smtp_host:
-        errors.append("SMTP_HOST ausente")
-    if not smtp_port:
-        errors.append("SMTP_PORT ausente")
-    if not smtp_user:
-        errors.append("SMTP_USER ausente")
-    if not smtp_pass:
-        errors.append("SMTP_PASSWORD ausente")
 
     if not jwt_secret or "sua-chave-secreta" in jwt_secret:
         errors.append("JWT_SECRET_KEY fraca/placeholder")
 
-    if not admin_token or "admin-token-super-secreto" in admin_token:
-        errors.append("ADMIN_TOKEN fraco/placeholder")
+    # Warnings - não bloqueiam mas são logados
+    if not webhook_secret or webhook_secret.endswith("...") or not webhook_secret.startswith("whsec_"):
+        warnings.append("STRIPE_WEBHOOK_SECRET não configurada (webhooks não funcionarão)")
 
-    return errors
+    if not smtp_host:
+        warnings.append("SMTP_HOST ausente (emails não serão enviados)")
+    if not smtp_port:
+        warnings.append("SMTP_PORT ausente (emails não serão enviados)")
+    if not smtp_user:
+        warnings.append("SMTP_USER ausente (emails não serão enviados)")
+    if not smtp_pass:
+        warnings.append("SMTP_PASSWORD ausente (emails não serão enviados)")
+
+    if not admin_token or "admin-token-super-secreto" in admin_token:
+        warnings.append("ADMIN_TOKEN fraco/placeholder (use um token seguro)")
+
+    return errors, warnings
 
 
 def validate_stripe_config() -> None:
@@ -128,9 +141,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         print(f"[ERROR] {e}")
         raise
 
-    # Fail-fast em produção: evita deploy com placeholders (sk_live_...) e SMTP incompleto
+    # Fail-fast em produção: evita deploy com placeholders críticos
     if settings.ENVIRONMENT == "production":
-        errors = validate_critical_settings(settings)
+        errors, warnings = validate_critical_settings(settings)
+        # Logar warnings (não bloqueiam)
+        for warn in warnings:
+            print(f"[WARN] {warn}")
+        # Erros críticos bloqueiam startup
         if errors:
             msg = " | ".join(errors)
             print(f"[ERROR CRITICO] Configuracao incompleta em producao: {msg}")
@@ -148,13 +165,14 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     else:
         print("[INFO] Producao: init_db desabilitado (use Alembic migrations)")
 
-    # IMPORTANTE: Garantir que tabelas necessárias existem (migration temporária)
+    # IMPORTANTE: Garantir que tabelas e colunas necessárias existem
     try:
-        from .database import ensure_user_sessions_table, ensure_economic_indexes_table
         await ensure_user_sessions_table()
         await ensure_economic_indexes_table()
+        await ensure_notifications_table()
+        await ensure_reajuste_periodicidade_column()
     except Exception as e:
-        print(f"[WARN] Erro ao criar tabelas: {e}")
+        print(f"[WARN] Erro ao criar tabelas/colunas: {e}")
 
     yield
     
@@ -273,6 +291,8 @@ app.include_router(payments_router)
 app.include_router(user_dashboard_router)
 app.include_router(contracts_router)
 app.include_router(economic_indexes_router)
+app.include_router(notifications_router)
+app.include_router(jobs_router)
 # stripe_router removido - funcionalidade consolidada em payments_router
 
 

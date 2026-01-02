@@ -102,6 +102,7 @@ class ContractVersionCreate(BaseModel):
     parcela_inicial: float
     taxa_desconto_anual: float
     reajuste_tipo: str = "manual"
+    reajuste_periodicidade: str = "anual"  # "anual" ou "mensal"
     reajuste_valor: Optional[float] = None
     mes_reajuste: int = 1
     resultados_json: dict
@@ -446,7 +447,7 @@ async def list_versions(
         text("""
             SELECT id, contract_id, version_number, version_id, data_inicio, prazo_meses,
                    carencia_meses, parcela_inicial, taxa_desconto_anual,
-                   reajuste_tipo, reajuste_valor, mes_reajuste,
+                   reajuste_tipo, reajuste_periodicidade, reajuste_valor, mes_reajuste,
                    resultados_json, total_vp, total_nominal, avp,
                    notas, archived_at, created_at
             FROM contract_versions
@@ -470,15 +471,16 @@ async def list_versions(
             "parcela_inicial": float(row[7]) if row[7] else 0,
             "taxa_desconto_anual": float(row[8]) if row[8] else 0,
             "reajuste_tipo": row[9],
-            "reajuste_valor": float(row[10]) if row[10] else None,
-            "mes_reajuste": row[11],
-            "resultados_json": row[12],
-            "total_vp": float(row[13]) if row[13] else 0,
-            "total_nominal": float(row[14]) if row[14] else 0,
-            "avp": float(row[15]) if row[15] else 0,
-            "notas": row[16],
-            "archived_at": row[17].isoformat() if row[17] else None,
-            "created_at": row[18].isoformat() if row[18] else None
+            "reajuste_periodicidade": row[10] or "anual",
+            "reajuste_valor": float(row[11]) if row[11] else None,
+            "mes_reajuste": row[12],
+            "resultados_json": row[13],
+            "total_vp": float(row[14]) if row[14] else 0,
+            "total_nominal": float(row[15]) if row[15] else 0,
+            "avp": float(row[16]) if row[16] else 0,
+            "notas": row[17],
+            "archived_at": row[18].isoformat() if row[18] else None,
+            "created_at": row[19].isoformat() if row[19] else None
         })
     
     return {"versions": versions}
@@ -534,12 +536,12 @@ async def create_version(
     insert_query = """
         INSERT INTO contract_versions (
             contract_id, version_number, version_id, data_inicio, prazo_meses, carencia_meses,
-            parcela_inicial, taxa_desconto_anual, reajuste_tipo, reajuste_valor,
+            parcela_inicial, taxa_desconto_anual, reajuste_tipo, reajuste_periodicidade, reajuste_valor,
             mes_reajuste, resultados_json, total_vp, total_nominal, avp, notas
         )
         VALUES (
             :contract_id, :version_number, :version_id, :data_inicio, :prazo_meses, :carencia_meses,
-            :parcela_inicial, :taxa_desconto_anual, :reajuste_tipo, :reajuste_valor,
+            :parcela_inicial, :taxa_desconto_anual, :reajuste_tipo, :reajuste_periodicidade, :reajuste_valor,
             :mes_reajuste, :resultados_json, :total_vp, :total_nominal, :avp, :notas
         )
         RETURNING id, contract_id, version_number, version_id, data_inicio, prazo_meses,
@@ -570,6 +572,7 @@ async def create_version(
             "parcela_inicial": data.parcela_inicial,
             "taxa_desconto_anual": data.taxa_desconto_anual,
             "reajuste_tipo": data.reajuste_tipo,
+            "reajuste_periodicidade": data.reajuste_periodicidade,
             "reajuste_valor": data.reajuste_valor,
             "mes_reajuste": data.mes_reajuste,
             "resultados_json": json.dumps(data.resultados_json),

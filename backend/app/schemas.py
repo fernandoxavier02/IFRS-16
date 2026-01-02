@@ -449,3 +449,68 @@ class EconomicIndexSyncResponse(BaseModel):
     synced_count: int
     index_type: str
 
+
+# ============================================================
+# Schemas de Notificações
+# ============================================================
+
+class NotificationTypeEnum(str, Enum):
+    """Tipos de notificação"""
+    CONTRACT_EXPIRING = "contract_expiring"
+    CONTRACT_EXPIRED = "contract_expired"
+    REMEASUREMENT_DONE = "remeasurement_done"
+    INDEX_UPDATED = "index_updated"
+    LICENSE_EXPIRING = "license_expiring"
+    SYSTEM_ALERT = "system_alert"
+
+
+class NotificationResponse(BaseModel):
+    """Response de notificação individual"""
+    id: UUID
+    user_id: UUID
+    notification_type: NotificationTypeEnum
+    title: str
+    message: str
+    entity_type: Optional[str] = None
+    entity_id: Optional[UUID] = None
+    metadata: Optional[str] = None
+    read: bool
+    read_at: Optional[datetime] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class NotificationListResponse(BaseModel):
+    """Response de listagem de notificações"""
+    notifications: List[NotificationResponse]
+    total: int
+    unread_count: int
+
+
+class NotificationMarkReadRequest(BaseModel):
+    """Request para marcar notificação como lida"""
+    notification_ids: List[UUID] = Field(..., description="IDs das notificações para marcar como lidas")
+
+
+class NotificationMarkReadResponse(BaseModel):
+    """Response de marcar notificação como lida"""
+    success: bool
+    marked_count: int
+
+
+class NotificationCountResponse(BaseModel):
+    """Response com contagem de notificações não lidas"""
+    unread_count: int
+
+
+class NotificationCreateRequest(BaseModel):
+    """Request para criar notificação (uso interno)"""
+    user_id: UUID
+    notification_type: NotificationTypeEnum
+    title: str
+    message: str
+    entity_type: Optional[str] = None
+    entity_id: Optional[UUID] = None
+    metadata: Optional[str] = None

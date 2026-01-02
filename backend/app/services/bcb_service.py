@@ -209,25 +209,40 @@ class BCBService:
     async def get_latest_value(
         cls,
         db: AsyncSession,
-        index_type: str
+        index_type: str,
+        max_age_days: Optional[int] = None
     ) -> Optional[EconomicIndex]:
         """
         Retorna o valor mais recente de um índice do banco de dados.
+        
+        Se max_age_days for fornecido, verifica se o índice é recente o suficiente.
+        Se o índice for antigo (> max_age_days), retorna None para forçar refresh.
 
         Args:
             db: Sessão do banco de dados
             index_type: Tipo do índice
+            max_age_days: Idade máxima em dias (opcional, para cache agressivo)
 
         Returns:
             EconomicIndex mais recente ou None
         """
+        from datetime import datetime, timedelta
+        
         result = await db.execute(
             select(EconomicIndex)
             .where(EconomicIndex.index_type == index_type.lower())
             .order_by(EconomicIndex.reference_date.desc())
             .limit(1)
         )
-        return result.scalar_one_or_none()
+        index = result.scalar_one_or_none()
+        
+        # Cache agressivo: se max_age_days fornecido e índice é antigo, retornar None
+        if index and max_age_days:
+            age = (datetime.utcnow() - index.reference_date).days
+            if age > max_age_days:
+                return None
+        
+        return index
 
     @classmethod
     async def get_index_history(

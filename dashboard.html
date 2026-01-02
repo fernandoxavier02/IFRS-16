@@ -50,6 +50,60 @@
         .header-actions {
             display: flex;
             gap: 12px;
+            align-items: center;
+        }
+        .notification-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: var(--dark-card);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        .notification-icon:hover {
+            border-color: var(--neon-cyan);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .notification-icon svg {
+            width: 20px;
+            height: 20px;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        .notification-icon:hover svg {
+            color: var(--neon-cyan);
+        }
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-radius: 9px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+            animation: pulse-badge 2s infinite;
+        }
+        .notification-badge.hidden {
+            display: none;
+        }
+        @keyframes pulse-badge {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
         .value-card {
             background: linear-gradient(135deg, var(--dark-card) 0%, rgba(10, 22, 40, 0.9) 100%);
@@ -239,6 +293,13 @@
                 </div>
             </div>
             <div class="header-actions">
+                <a href="notifications.html" class="notification-icon" title="Notificações">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                    </svg>
+                    <span id="notificationBadge" class="notification-badge hidden">0</span>
+                </a>
                 <button type="button" id="btnCalculator" onclick="accessCalculator()" class="btn-neon btn-neon-sm">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M9 9h6v6H9z"/></svg>
                     Calculadora
@@ -434,13 +495,40 @@
             });
         }
 
+        async function loadNotificationCount() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${API_URL}/api/notifications/count`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const badge = document.getElementById('notificationBadge');
+                    if (data.unread_count > 0) {
+                        badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            } catch (error) {
+                console.warn('Erro ao carregar notificações:', error);
+            }
+        }
+
         async function loadDashboard() {
             const token = localStorage.getItem('ifrs16_auth_token');
-            
+
             if (!token) {
                 window.location.href = 'login.html';
                 return;
             }
+
+            // Carregar contador de notificações em paralelo
+            loadNotificationCount();
 
             try {
                 // Carregar perfil do usuário

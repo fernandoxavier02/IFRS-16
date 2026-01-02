@@ -151,7 +151,12 @@ class User(Base):
         back_populates="user",
         cascade="all, delete-orphan"
     )
-    
+    notifications = relationship(
+        "Notification",
+        back_populates="user",
+        cascade="all, delete-orphan"
+    )
+
     def __repr__(self):
         return f"<User(email='{self.email}', name='{self.name}')>"
 
@@ -504,3 +509,69 @@ class EconomicIndex(Base):
 
     def __repr__(self):
         return f"<EconomicIndex(type='{self.index_type}', date='{self.reference_date}', value='{self.value}')>"
+
+
+# =============================================================================
+# NOTIFICATIONS (SISTEMA DE ALERTAS)
+# =============================================================================
+
+class NotificationType(str, enum.Enum):
+    """Tipos de notificação"""
+    CONTRACT_EXPIRING = "contract_expiring"  # Contrato próximo do vencimento
+    CONTRACT_EXPIRED = "contract_expired"  # Contrato vencido
+    REMEASUREMENT_DONE = "remeasurement_done"  # Remensuração automática realizada
+    INDEX_UPDATED = "index_updated"  # Índice econômico atualizado
+    LICENSE_EXPIRING = "license_expiring"  # Licença próxima do vencimento
+    SYSTEM_ALERT = "system_alert"  # Alerta do sistema
+
+
+class Notification(Base):
+    """
+    Notificações para usuários.
+    Armazena alertas de contratos, remensurações, índices, etc.
+    """
+    __tablename__ = "notifications"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Relacionamento com usuário
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    # Tipo e conteúdo
+    notification_type = Column(
+        SQLEnum(NotificationType),
+        nullable=False
+    )
+    title = Column(String(255), nullable=False)
+    message = Column(Text, nullable=False)
+
+    # Referência opcional a entidade (contrato, versão, etc.)
+    entity_type = Column(String(50), nullable=True)  # "contract", "contract_version", "license"
+    entity_id = Column(UUID(as_uuid=True), nullable=True)
+
+    # Metadados adicionais (JSON) - usando extra_data pois metadata é reservado
+    extra_data = Column(Text, nullable=True)  # JSON string
+
+    # Status de leitura
+    read = Column(Boolean, default=False, nullable=False)
+    read_at = Column(DateTime, nullable=True)
+
+    # Datas
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relacionamento
+    user = relationship("User", back_populates="notifications")
+
+    __table_args__ = (
+        Index('idx_notification_user_read', 'user_id', 'read'),
+        Index('idx_notification_user_type', 'user_id', 'notification_type'),
+        Index('idx_notification_created_at', 'created_at'),
+    )
+
+    def __repr__(self):
+        return f"<Notification(user_id='{self.user_id}', type='{self.notification_type}', read={self.read})>"

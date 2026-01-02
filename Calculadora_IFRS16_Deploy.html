@@ -433,6 +433,14 @@
                                 </svg>
                                 Relatórios
                             </a>
+                            <!-- Botão Notificações -->
+                            <a href="notifications.html" title="Notificações"
+                                class="p-2 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-primary-400 relative">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                                </svg>
+                                <span id="calcNotificationBadge" class="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 rounded-full text-[10px] font-bold text-white flex items-center justify-center hidden">0</span>
+                            </a>
                             <!-- Botão Configurações -->
                             <button onclick="abrirConfiguracoes()" title="Configurações"
                                 class="p-2 rounded-lg hover:bg-dark-700 transition-colors text-dark-400 hover:text-white">
@@ -627,6 +635,19 @@
                             <option value="inpc">INPC (Banco Central)</option>
                             <option value="tr">TR (Banco Central)</option>
                         </select>
+                    </div>
+                    <div id="periodicidadeContainer" style="display: none;">
+                        <label class="block text-sm font-medium text-dark-300 mb-2">
+                            Periodicidade do Reajuste
+                            <span class="text-xs text-dark-400 ml-2">(quando usar o indice)</span>
+                        </label>
+                        <select id="reajustePeriodicidade" onchange="handlePeriodicidadeChange()" class="w-full input-dark rounded-lg px-4 py-3">
+                            <option value="anual">Anual (taxa acumulada 12 meses)</option>
+                            <option value="mensal">Mensal (taxa do mes)</option>
+                        </select>
+                        <p id="periodicidadeInfo" class="text-xs text-dark-400 mt-1">
+                            Taxa acumulada dos ultimos 12 meses sera usada no reajuste.
+                        </p>
                     </div>
                     <div id="reajusteManualContainer">
                         <label class="block text-sm font-medium text-dark-300 mb-2">
@@ -899,8 +920,33 @@
     <script src="assets/js/contracts.js"></script>
     
     <script>
+        // Carregar contador de notificações
+        async function loadCalcNotificationCount() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            if (!token) return;
+
+            try {
+                const response = await fetch(`${getApiUrl()}/api/notifications/count`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const badge = document.getElementById('calcNotificationBadge');
+                    if (badge && data.unread_count > 0) {
+                        badge.textContent = data.unread_count > 99 ? '99+' : data.unread_count;
+                        badge.classList.remove('hidden');
+                    } else if (badge) {
+                        badge.classList.add('hidden');
+                    }
+                }
+            } catch (error) {
+                console.warn('Erro ao carregar notificações:', error);
+            }
+        }
+
         // Inicialização principal
-        window.onload = async function() { 
+        window.onload = async function() {
             // Verificar se há sessão salva (usuário ou licença)
             if (typeof checkingSession === 'undefined') {
                  // Pequeno delay para garantir que tudo carregou
@@ -908,6 +954,9 @@
                      const sessaoValida = await verificarSessaoSalva();
                      if (!sessaoValida) {
                          mostrarTelaLogin();
+                     } else {
+                         // Carregar notificações se logado
+                         loadCalcNotificationCount();
                      }
                  }, 100);
             }
@@ -1546,6 +1595,7 @@
             const parcelaInicial = document.getElementById('parcelaInicial');
             const taxaAnual = document.getElementById('taxaAnual');
             const reajusteTipo = document.getElementById('reajusteTipo');
+            const reajustePeriodicidade = document.getElementById('reajustePeriodicidade');
             const reajusteAnual = document.getElementById('reajusteAnual');
             const mesReajuste = document.getElementById('mesReajuste');
 
@@ -1566,10 +1616,14 @@
             }
             if (reajusteTipo && version.reajuste_tipo) {
                 reajusteTipo.value = version.reajuste_tipo;
-                // Disparar evento de change para atualizar UI
-                if (typeof handleReajusteChange === 'function') {
-                    handleReajusteChange();
-                }
+            }
+            // Carregar periodicidade antes de chamar handleReajusteChange
+            if (reajustePeriodicidade && version.reajuste_periodicidade) {
+                reajustePeriodicidade.value = version.reajuste_periodicidade;
+            }
+            // Disparar evento de change para atualizar UI (apos setar tipo e periodicidade)
+            if (reajusteTipo && version.reajuste_tipo && typeof handleReajusteChange === 'function') {
+                handleReajusteChange();
             }
             if (reajusteAnual && version.reajuste_valor !== null) {
                 reajusteAnual.value = version.reajuste_valor;
@@ -1689,34 +1743,101 @@
         async function handleReajusteChange() {
             const tipo = document.getElementById('reajusteTipo')?.value;
             const container = document.getElementById('reajusteManualContainer');
+            const periodicidadeContainer = document.getElementById('periodicidadeContainer');
             const input = document.getElementById('reajusteAnual');
             const info = document.getElementById('reajusteIndicadorInfo');
-            
+
             if (!tipo || !container || !input) return;
+
+            // Mostrar/esconder container de periodicidade (apenas para indices BCB)
+            if (periodicidadeContainer) {
+                periodicidadeContainer.style.display = (tipo !== 'manual') ? 'block' : 'none';
+            }
 
             if (tipo === 'manual') {
                 input.disabled = false;
                 if (info) info.textContent = '';
             } else {
-                const indexes = economicIndexes[tipo];
-                if (indexes && indexes.length > 0) {
-                    const latest = indexes.sort((a, b) => 
-                        new Date(b.reference_date) - new Date(a.reference_date)
-                    )[0];
-                    
-                    input.value = parseFloat(latest.value).toFixed(2);
+                // Atualizar valor baseado na periodicidade selecionada
+                await updateIndexValue(tipo);
+            }
+
+            calcular();
+        }
+
+        // Funcao para atualizar valor do indice baseado na periodicidade
+        async function updateIndexValue(tipo) {
+            const input = document.getElementById('reajusteAnual');
+            const info = document.getElementById('reajusteIndicadorInfo');
+            const periodicidade = document.getElementById('reajustePeriodicidade')?.value || 'anual';
+
+            if (!tipo || tipo === 'manual') return;
+
+            const indexes = economicIndexes[tipo];
+            if (!indexes || indexes.length === 0) {
+                if (input) input.disabled = false;
+                if (info) info.textContent = '(Indice nao disponivel - use manual)';
+                return;
+            }
+
+            // Ordenar por data decrescente
+            const sortedIndexes = [...indexes].sort((a, b) =>
+                new Date(b.reference_date) - new Date(a.reference_date)
+            );
+
+            if (periodicidade === 'mensal') {
+                // Usar taxa do ultimo mes
+                const latest = sortedIndexes[0];
+                if (input) {
+                    input.value = parseFloat(latest.value).toFixed(4);
                     input.disabled = true;
-                    
-                    if (info) {
-                        const refDate = new Date(latest.reference_date);
-                        info.textContent = `(Último: ${refDate.toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})} - ${parseFloat(latest.value).toFixed(2)}%)`;
-                    }
-                } else {
-                    input.disabled = false;
-                    if (info) info.textContent = '(Índice não disponível - use manual)';
+                }
+                if (info) {
+                    const refDate = new Date(latest.reference_date);
+                    info.textContent = `(Mensal: ${refDate.toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})} - ${parseFloat(latest.value).toFixed(4)}%)`;
+                }
+            } else {
+                // Calcular taxa acumulada dos ultimos 12 meses
+                const last12 = sortedIndexes.slice(0, 12).reverse(); // Pegar ultimos 12 em ordem cronologica
+                let accumulated = 1.0;
+                for (const idx of last12) {
+                    const monthlyRate = parseFloat(idx.value) / 100;
+                    accumulated *= (1 + monthlyRate);
+                }
+                const accumulatedPct = (accumulated - 1) * 100;
+
+                if (input) {
+                    input.value = accumulatedPct.toFixed(4);
+                    input.disabled = true;
+                }
+                if (info) {
+                    const latest = sortedIndexes[0];
+                    const refDate = new Date(latest.reference_date);
+                    info.textContent = `(Acum. 12m: ${refDate.toLocaleDateString('pt-BR', {month: 'short', year: 'numeric'})} - ${accumulatedPct.toFixed(4)}%)`;
                 }
             }
-            
+        }
+
+        // Handler para mudanca de periodicidade
+        async function handlePeriodicidadeChange() {
+            const tipo = document.getElementById('reajusteTipo')?.value;
+            const periodicidade = document.getElementById('reajustePeriodicidade')?.value;
+            const infoText = document.getElementById('periodicidadeInfo');
+
+            // Atualizar texto informativo
+            if (infoText) {
+                if (periodicidade === 'mensal') {
+                    infoText.textContent = 'Taxa do ultimo mes sera usada no reajuste. O contrato sera reajustado mensalmente.';
+                } else {
+                    infoText.textContent = 'Taxa acumulada dos ultimos 12 meses sera usada no reajuste.';
+                }
+            }
+
+            // Atualizar valor do indice
+            if (tipo && tipo !== 'manual') {
+                await updateIndexValue(tipo);
+            }
+
             calcular();
         }
 
@@ -1747,6 +1868,7 @@
 
             try {
                 const reajusteTipo = document.getElementById('reajusteTipo')?.value || 'manual';
+                const reajustePeriodicidade = document.getElementById('reajustePeriodicidade')?.value || 'anual';
                 const reajusteValor = reajusteTipo === 'manual' ? parseFloat(document.getElementById('reajusteAnual').value) : null;
 
                 const versionData = {
@@ -1756,6 +1878,7 @@
                     parcela_inicial: dadosCalculados.inputs.parcelaInicial,
                     taxa_desconto_anual: dadosCalculados.inputs.taxaAnual,
                     reajuste_tipo: reajusteTipo,
+                    reajuste_periodicidade: reajustePeriodicidade,
                     reajuste_valor: reajusteValor,
                     mes_reajuste: parseInt(document.getElementById('mesReajuste').value),
                     resultados_json: {
@@ -1815,6 +1938,7 @@
 
             try {
                 const reajusteTipo = document.getElementById('reajusteTipo')?.value || 'manual';
+                const reajustePeriodicidade = document.getElementById('reajustePeriodicidade')?.value || 'anual';
                 const reajusteValor = reajusteTipo === 'manual' ? parseFloat(document.getElementById('reajusteAnual').value) : null;
 
                 const versionData = {
@@ -1824,6 +1948,7 @@
                     parcela_inicial: dadosCalculados.inputs.parcelaInicial,
                     taxa_desconto_anual: dadosCalculados.inputs.taxaAnual,
                     reajuste_tipo: reajusteTipo,
+                    reajuste_periodicidade: reajustePeriodicidade,
                     reajuste_valor: reajusteValor,
                     mes_reajuste: parseInt(document.getElementById('mesReajuste').value),
                     resultados_json: {

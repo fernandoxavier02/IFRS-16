@@ -167,6 +167,81 @@ async def ensure_economic_indexes_table():
     print("[OK] Tabela economic_indexes verificada/criada com sucesso!")
 
 
+async def ensure_reajuste_periodicidade_column():
+    """
+    Garante que a coluna reajuste_periodicidade existe na tabela contract_versions.
+    Adiciona a coluna se não existir.
+    """
+    import sqlalchemy as sa
+    async with engine.begin() as conn:
+        # Verificar se a coluna já existe
+        result = await conn.execute(sa.text("""
+            SELECT column_name
+            FROM information_schema.columns
+            WHERE table_name = 'contract_versions'
+            AND column_name = 'reajuste_periodicidade'
+        """))
+        exists = result.fetchone() is not None
+
+        if not exists:
+            # Adicionar coluna reajuste_periodicidade
+            await conn.execute(sa.text("""
+                ALTER TABLE contract_versions
+                ADD COLUMN reajuste_periodicidade VARCHAR(20) NOT NULL DEFAULT 'anual'
+            """))
+            print("[OK] Coluna reajuste_periodicidade adicionada com sucesso!")
+
+            # Criar índice composto
+            await conn.execute(sa.text("""
+                CREATE INDEX IF NOT EXISTS idx_contract_versions_periodicidade
+                ON contract_versions (reajuste_tipo, reajuste_periodicidade)
+            """))
+            print("[OK] Índice idx_contract_versions_periodicidade criado com sucesso!")
+        else:
+            print("[OK] Coluna reajuste_periodicidade já existe.")
+
+
+async def ensure_notifications_table():
+    """
+    Garante que a tabela notifications existe no banco de dados.
+    Cria a tabela e índices se não existirem.
+    """
+    import sqlalchemy as sa
+    async with engine.begin() as conn:
+        # Criar tabela notifications se não existir
+        # Nota: usando extra_data em vez de metadata pois metadata é reservado no SQLAlchemy
+        await conn.execute(sa.text("""
+            CREATE TABLE IF NOT EXISTS notifications (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                notification_type VARCHAR(50) NOT NULL,
+                title VARCHAR(255) NOT NULL,
+                message TEXT NOT NULL,
+                entity_type VARCHAR(50),
+                entity_id UUID,
+                extra_data TEXT,
+                read BOOLEAN NOT NULL DEFAULT FALSE,
+                read_at TIMESTAMP,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW()
+            )
+        """))
+
+        # Criar índices
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id)
+        """))
+
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_notifications_user_read ON notifications(user_id, read)
+        """))
+
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC)
+        """))
+
+    print("[OK] Tabela notifications verificada/criada com sucesso!")
+
+
 async def close_db():
     """
     Fecha todas as conexões do pool.

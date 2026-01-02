@@ -268,6 +268,147 @@ Equipe IFRS 16
         return await cls.send_email(to_email, subject, html_content, text_content)
 
     @classmethod
+    async def send_email_verification(
+        cls,
+        to_email: str,
+        user_name: str,
+        verification_token: str
+    ) -> bool:
+        """
+        Envia email de verificação de email para novos usuários.
+        
+        Args:
+            to_email: Email do destinatário
+            user_name: Nome do usuário
+            verification_token: Token de verificação
+        
+        Returns:
+            True se enviado com sucesso
+        """
+        subject = "Confirme seu email - Engine IFRS 16"
+        
+        verification_url = f"{settings.FRONTEND_URL}/verify-email.html?token={verification_token}"
+
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7fa;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); padding: 40px 40px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">
+                                IFRS 16
+                            </h1>
+                            <p style="color: #e2e8f0; margin: 10px 0 0 0; font-size: 14px;">
+                                Sistema de Gestão de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 40px 30px 40px;">
+                            <h2 style="color: #2d3748; margin: 0 0 20px 0; font-size: 24px; font-weight: 600;">
+                                Confirme seu Email
+                            </h2>
+                            
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Olá, <strong>{user_name}</strong>!
+                            </p>
+                            
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                                Obrigado por se cadastrar no <strong>Engine IFRS 16</strong>! Para completar seu cadastro e começar a usar o sistema, precisamos confirmar seu endereço de email.
+                            </p>
+                            
+                            <p style="color: #4a5568; font-size: 16px; line-height: 1.6; margin: 0 0 30px 0;">
+                                Clique no botão abaixo para confirmar seu email:
+                            </p>
+
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
+                                <tr>
+                                    <td align="center" style="padding: 10px;">
+                                        <a href="{verification_url}"
+                                           style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(30, 58, 95, 0.3);">
+                                            Confirmar Email
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <div style="background-color: #f7fafc; border-left: 4px solid #4299e1; padding: 16px; border-radius: 4px; margin-bottom: 20px;">
+                                <p style="color: #2d3748; font-size: 14px; margin: 0 0 10px 0; font-weight: 600;">
+                                    ⏰ Link válido por 24 horas
+                                </p>
+                                <p style="color: #4a5568; font-size: 14px; margin: 0; line-height: 1.5;">
+                                    Este link de confirmação expira em 24 horas. Se você não confirmar seu email dentro deste prazo, será necessário solicitar um novo link.
+                                </p>
+                            </div>
+
+                            <p style="color: #718096; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
+                                Se o botão não funcionar, copie e cole o link abaixo no seu navegador:
+                            </p>
+                            <p style="color: #4299e1; font-size: 13px; word-break: break-all; margin: 10px 0 0 0;">
+                                {verification_url}
+                            </p>
+
+                            <div style="border-top: 1px solid #e2e8f0; margin-top: 30px; padding-top: 20px;">
+                                <p style="color: #718096; font-size: 14px; line-height: 1.6; margin: 0;">
+                                    <strong>Não solicitou este cadastro?</strong><br>
+                                    Se você não criou uma conta no Engine IFRS 16, pode ignorar este email com segurança.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td style="background-color: #f8fafc; padding: 30px 40px; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="color: #718096; font-size: 14px; margin: 0 0 10px 0;">
+                                Precisa de ajuda? Entre em contato conosco.
+                            </p>
+                            <p style="color: #a0aec0; font-size: 12px; margin: 0;">
+                                © 2025 IFRS 16 - Sistema de Gestão de Arrendamentos
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
+        """
+
+        text_content = f"""
+Confirme seu Email - Engine IFRS 16
+
+Olá, {user_name}!
+
+Obrigado por se cadastrar no Engine IFRS 16! Para completar seu cadastro e começar a usar o sistema, precisamos confirmar seu endereço de email.
+
+Clique no link abaixo para confirmar seu email:
+{verification_url}
+
+⏰ IMPORTANTE: Este link é válido por 24 horas.
+
+Se você não solicitou este cadastro, pode ignorar este email com segurança.
+
+Atenciosamente,
+Equipe IFRS 16
+        """
+
+        return await cls.send_email(to_email, subject, html_content, text_content)
+
+    @classmethod
     async def send_registration_email(
         cls,
         to_email: str,
@@ -515,17 +656,38 @@ Equipe IFRS 16
                                 </tr>
                             </table>
                             
+                            <!-- Instructions -->
+                            <div style="background-color: #e0f2fe; border-left: 4px solid #0284c7; border-radius: 0 8px 8px 0; padding: 20px; margin-bottom: 30px;">
+                                <h3 style="color: #0c4a6e; margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
+                                    📋 Como acessar:
+                                </h3>
+                                <ol style="color: #0c4a6e; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                    <li>Clique no botão abaixo para fazer login</li>
+                                    <li>Use o email e senha temporária fornecidos</li>
+                                    <li>Você será direcionado para validar sua licença</li>
+                                    <li>Insira a chave de licença e confirme</li>
+                                    <li>Pronto! Você terá acesso à calculadora IFRS 16</li>
+                                </ol>
+                            </div>
+                            
                             <!-- CTA Button -->
-                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                            <table role="presentation" style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
                                 <tr>
                                     <td align="center">
-                                        <a href="{settings.FRONTEND_URL}/login.html" 
+                                        <a href="{settings.FRONTEND_URL}/login.html?license={license_key}" 
                                            style="display: inline-block; background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 6px rgba(30, 58, 95, 0.3);">
-                                            Acessar o Sistema →
+                                            🚀 Fazer Login e Ativar Licença
                                         </a>
                                     </td>
                                 </tr>
                             </table>
+                            
+                            <p style="color: #718096; font-size: 13px; text-align: center; margin: 0;">
+                                Ou copie e cole o link abaixo no seu navegador:
+                            </p>
+                            <p style="color: #0284c7; font-size: 12px; text-align: center; word-break: break-all; margin: 10px 0 0 0;">
+                                {settings.FRONTEND_URL}/login.html?license={license_key}
+                            </p>
                         </td>
                     </tr>
                     
@@ -599,18 +761,31 @@ Equipe IFRS 16
         <p style=\"margin:0 0 16px 0;color:#374151;font-size:15px;line-height:1.6;\">
           Sua assinatura do plano <strong>{plan_name}</strong> foi ativada com sucesso.
         </p>
-        <div style=\"background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:16px;\">
-          <p style=\"margin:0 0 6px 0;color:#6b7280;font-size:13px;\">Chave de Licença</p>
-          <p style=\"margin:0;font-family:Courier New, monospace;font-size:15px;color:#111827;\">{license_key}</p>
+        <div style=\"background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:16px;margin-bottom:20px;\">
+          <p style=\"margin:0 0 6px 0;color:#6b7280;font-size:13px;\">🎫 Chave de Licença</p>
+          <p style=\"margin:0;font-family:Courier New, monospace;font-size:15px;color:#111827;font-weight:600;\">{license_key}</p>
         </div>
-        <p style=\"margin:16px 0 0 0;color:#6b7280;font-size:13px;line-height:1.6;\">
-          Para acessar o sistema, utilize seu email e sua senha já cadastrada.
-        </p>
-        <div style=\"margin-top:22px;\">
-          <a href=\"{login_url}\" style=\"display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:12px 18px;border-radius:10px;font-weight:600;\">
-            Acessar o sistema
+        
+        <div style=\"background:#e0f2fe;border-left:4px solid #0284c7;border-radius:0 8px 8px 0;padding:16px;margin-bottom:20px;\">
+          <p style=\"margin:0 0 10px 0;color:#0c4a6e;font-size:14px;font-weight:600;\">📋 Como acessar:</p>
+          <ol style=\"margin:0;padding-left:20px;color:#0c4a6e;font-size:13px;line-height:1.7;\">
+            <li>Clique no botão abaixo para fazer login</li>
+            <li>Use seu email e senha cadastrados</li>
+            <li>Você será direcionado para validar sua licença</li>
+            <li>Insira a chave de licença e confirme</li>
+            <li>Pronto! Acesse a calculadora IFRS 16</li>
+          </ol>
+        </div>
+        
+        <div style=\"text-align:center;margin-bottom:16px;\">
+          <a href=\"{login_url}?license={license_key}\" style=\"display:inline-block;background:#111827;color:#fff;text-decoration:none;padding:14px 32px;border-radius:10px;font-weight:600;font-size:15px;\">
+            🚀 Fazer Login e Ativar Licença
           </a>
         </div>
+        
+        <p style=\"margin:0;color:#9ca3af;font-size:12px;text-align:center;word-break:break-all;\">
+          Ou acesse: {login_url}?license={license_key}
+        </p>
       </div>
       <div style=\"padding:18px 28px;background:#f8fafc;color:#9ca3af;font-size:12px;text-align:center;\">
         © 2025 FX Studio AI

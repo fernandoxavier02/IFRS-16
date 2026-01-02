@@ -3,6 +3,7 @@ Serviço de integração com Stripe para pagamentos
 """
 
 import stripe
+import stripe.error
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, List
 from uuid import UUID
@@ -218,7 +219,8 @@ class StripeService:
         if line_items:
             price_id = line_items[0].get("price", {}).get("id")
         
-        # Se não veio nos line_items, tentar buscar da subscription
+        # Se não veio nos line_items, tentar buscar da subscription via API
+        # NOTA: Esta busca é opcional - se falhar, usamos fallback baseado em plan_type_str ou basic_monthly
         if not price_id and session.get("subscription"):
             try:
                 stripe_sub = stripe.Subscription.retrieve(session.get("subscription"))
@@ -226,8 +228,18 @@ class StripeService:
                 if stripe_sub.items and stripe_sub.items.data:
                     price_id = stripe_sub.items.data[0].price.id
                 print(f"[OK] Price ID obtido da subscription: {price_id}")
+            except stripe.error.AuthenticationError as e:
+                # API Key expirada ou inválida - não é crítico, temos fallback
+                print(f"[WARN] Erro de autenticação Stripe ao buscar subscription: {e}")
+                print(f"[INFO] Continuando com fallback (plan_type_str ou basic_monthly)")
+            except stripe.error.InvalidRequestError as e:
+                # Subscription não encontrada ou outro erro de requisição
+                print(f"[WARN] Erro ao buscar subscription do Stripe: {e}")
+                print(f"[INFO] Continuando com fallback (plan_type_str ou basic_monthly)")
             except Exception as e:
-                print(f"[WARN] Erro ao buscar subscription: {e}")
+                # Outros erros (rede, timeout, etc)
+                print(f"[WARN] Erro inesperado ao buscar subscription: {e}")
+                print(f"[INFO] Continuando com fallback (plan_type_str ou basic_monthly)")
         
         user = None
         

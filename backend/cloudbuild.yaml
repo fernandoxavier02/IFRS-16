@@ -1,0 +1,18 @@
+steps:
+  # Build com Kaniko (suporta cache de camadas)
+  - name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      - --destination=gcr.io/$PROJECT_ID/ifrs16-backend:$SHORT_SHA
+      - --destination=gcr.io/$PROJECT_ID/ifrs16-backend:latest
+      - --cache=true
+      - --cache-ttl=168h  # Cache válido por 7 dias
+      - --snapshot-mode=redo
+      - --use-new-run
+
+# Opcional: usar máquina mais rápida
+options:
+  machineType: 'E2_HIGHCPU_8'  # Mais rápido que o padrão
+  logging: CLOUD_LOGGING_ONLY
+
+# Timeout de 20 minutos
+timeout: '1200s'

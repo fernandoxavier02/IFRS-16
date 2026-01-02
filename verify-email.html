@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar Email | Engine IFRS 16</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/theme-neon.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: #0a0e17;
+            min-height: 100vh;
+        }
+        
+        .verify-container {
+            width: 100%;
+            max-width: 540px;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .logo-section {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo-section img {
+            height: 100px;
+            width: auto;
+            margin: 0 auto 20px;
+            filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.6));
+        }
+        
+        .logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00fff7, #b829dd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-top: 12px;
+            letter-spacing: 2px;
+        }
+        
+        .verify-card {
+            background: rgba(13, 19, 33, 0.8);
+            border: 1px solid rgba(0, 212, 255, 0.2);
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(0, 212, 255, 0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .verify-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                600px circle at var(--mouse-x) var(--mouse-y),
+                rgba(0, 255, 247, 0.15),
+                rgba(184, 41, 221, 0.1),
+                transparent 40%
+            );
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .verify-card:hover::before {
+            opacity: 1;
+        }
+        
+        .verify-card > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .status-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-icon.success {
+            background: linear-gradient(135deg, #00ff88, #00fff7);
+            box-shadow: 0 0 40px rgba(0, 255, 136, 0.5);
+        }
+        
+        .status-icon.error {
+            background: linear-gradient(135deg, #ff4466, #ff6b9d);
+            box-shadow: 0 0 40px rgba(255, 68, 102, 0.5);
+        }
+        
+        .status-icon.loading {
+            background: linear-gradient(135deg, #00fff7, #b829dd);
+            box-shadow: 0 0 40px rgba(0, 255, 247, 0.5);
+            animation: spin 1s linear infinite;
+        }
+        
+        .status-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .status-title.success {
+            background: linear-gradient(135deg, #00fff7, #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status-title.error {
+            color: #ff4466;
+        }
+        
+        .status-title.loading {
+            background: linear-gradient(135deg, #00fff7, #b829dd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .status-message {
+            color: #8892a4;
+            font-size: 1rem;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+        
+        .btn-primary {
+            padding: 16px 32px;
+            background: linear-gradient(135deg, #00fff7, #b829dd);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px rgba(0, 255, 247, 0.4);
+        }
+        
+        .footer-text {
+            text-align: center;
+            color: #5a6478;
+            font-size: 0.85rem;
+            margin-top: 32px;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 40px rgba(0, 255, 247, 0.5);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 60px rgba(0, 255, 247, 0.8);
+            }
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .error-details {
+            background: rgba(255, 68, 102, 0.1);
+            border-left: 3px solid #ff4466;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .error-details p {
+            color: #ff4466;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <!-- Logo -->
+        <div class="logo-section">
+            <img src="assets/images/logo.png" alt="FX Studio AI" style="height: 80px; width: auto; filter: drop-shadow(0 0 30px rgba(0, 212, 255, 0.6));" onerror="this.style.display='none'">
+            <div class="logo-text">FX STUDIO AI</div>
+        </div>
+
+        <!-- Card de Verificação -->
+        <div class="verify-card" id="verifyCard">
+            <!-- Loading State -->
+            <div id="loadingState">
+                <div class="status-icon loading">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                    </svg>
+                </div>
+                <h1 class="status-title loading">Verificando Email...</h1>
+                <p class="status-message">Aguarde enquanto confirmamos seu email.</p>
+            </div>
+
+            <!-- Success State -->
+            <div id="successState" style="display: none;">
+                <div class="status-icon success">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                        <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </div>
+                <h1 class="status-title success">Email Confirmado!</h1>
+                <p class="status-message">
+                    Seu email foi confirmado com sucesso. Agora você pode fazer login e começar a usar o Engine IFRS 16.
+                </p>
+                <a href="login.html" class="btn-primary">Fazer Login</a>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" style="display: none;">
+                <div class="status-icon error">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3">
+                        <circle cx="12" cy="12" r="10"/>
+                        <path d="M12 8v4M12 16h.01" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h1 class="status-title error">Erro na Confirmação</h1>
+                <p class="status-message" id="errorMessage">
+                    Ocorreu um erro ao confirmar seu email.
+                </p>
+                <div class="error-details" id="errorDetails" style="display: none;">
+                    <p id="errorDetailsText"></p>
+                </div>
+                <div style="margin-top: 24px;">
+                    <a href="register.html" class="btn-primary" style="background: rgba(0, 255, 247, 0.2); border: 1px solid #00fff7; margin-right: 12px;">Tentar Novamente</a>
+                    <a href="login.html" class="btn-primary">Ir para Login</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-text">
+            <p>© 2025 FX Studio AI - Todos os direitos reservados</p>
+        </div>
+    </div>
+
+    <script src="assets/js/config.js"></script>
+    <script>
+        // Efeito luminoso que segue o mouse
+        const verifyCard = document.getElementById('verifyCard');
+        if (verifyCard) {
+            verifyCard.addEventListener('mousemove', (e) => {
+                const rect = verifyCard.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                verifyCard.style.setProperty('--mouse-x', x + 'px');
+                verifyCard.style.setProperty('--mouse-y', y + 'px');
+            });
+        }
+
+        // Obter token da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+
+        if (!token) {
+            // Sem token na URL
+            showError('Token de verificação não encontrado na URL.', 'Por favor, clique no link completo que foi enviado no seu email.');
+        } else {
+            // Verificar email
+            verifyEmail(token);
+        }
+
+        async function verifyEmail(token) {
+            try {
+                console.log('📧 Verificando email com token:', token);
+                
+                const response = await fetch(`${getApiUrl()}/api/auth/verify-email`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+
+                const result = await response.json();
+                
+                console.log('📊 Status:', response.status);
+                console.log('📊 Resultado:', result);
+
+                if (response.ok && result.success) {
+                    showSuccess(result.message || 'Email confirmado com sucesso!');
+                } else {
+                    showError(
+                        result.detail || 'Erro ao confirmar email',
+                        'Por favor, verifique se o link não expirou ou solicite um novo email de confirmação.'
+                    );
+                }
+            } catch (error) {
+                console.error('❌ Erro na requisição:', error);
+                showError(
+                    'Erro ao conectar com o servidor',
+                    'Verifique sua conexão com a internet e tente novamente.'
+                );
+            }
+        }
+
+        function showSuccess(message) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('successState').style.display = 'block';
+            
+            if (message && message !== 'Email confirmado com sucesso!') {
+                const statusMessage = document.querySelector('#successState .status-message');
+                if (statusMessage) {
+                    statusMessage.textContent = message;
+                }
+            }
+        }
+
+        function showError(title, details) {
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('successState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            
+            document.getElementById('errorMessage').textContent = title;
+            
+            if (details) {
+                document.getElementById('errorDetails').style.display = 'block';
+                document.getElementById('errorDetailsText').textContent = details;
+            }
+        }
+    </script>
+</body>
+</html>

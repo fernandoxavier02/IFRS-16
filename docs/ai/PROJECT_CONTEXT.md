@@ -13,7 +13,7 @@ The system provides lease contract management, automated IFRS 16 calculations, l
 
 | Layer | Technology | Hosting |
 |-------|------------|---------|
-| **Frontend** | Static HTML/JS/CSS | Firebase Hosting (fxstudioai.com) |
+| **Frontend** | Static HTML/JS/CSS | Firebase Hosting (**fxstudioai.com**) |
 | **Backend** | Python 3.11 + FastAPI | Google Cloud Run |
 | **Database** | PostgreSQL 15 | **Supabase** (migração concluída 2026-01-02) |
 | **Payments** | Stripe (webhooks) | — |
@@ -314,8 +314,8 @@ IFRS 16/
 
 | Service | URL |
 |---------|-----|
-| Frontend | https://fxstudioai.com (Firebase Hosting) |
-| Frontend (fallback) | https://ifrs16-app.web.app |
+| Frontend (Produção) | **https://fxstudioai.com** (Firebase Hosting) |
+| Frontend (Firebase) | https://ifrs16-app.web.app (fallback) |
 | Backend API | https://ifrs16-backend-1051753255664.us-central1.run.app |
 | API Docs | https://ifrs16-backend-1051753255664.us-central1.run.app/docs |
 

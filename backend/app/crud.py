@@ -11,7 +11,7 @@ from uuid import UUID
 from sqlalchemy import select, update, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from .models import License, ValidationLog, LicenseStatus, LicenseType
+from .models import License, ValidationLog, LicenseStatus, LicenseType, EmailVerificationToken
 from .schemas import LicenseCreateRequest
 
 
@@ -407,4 +407,112 @@ async def get_recent_validations(
         .limit(limit)
     )
     return list(result.scalars().all())
+
+
+# ============================================================
+# Operações de Email Verification
+# ============================================================
+
+async def create_verification_token(
+    db: AsyncSession,
+    user_id: UUID
+) -> EmailVerificationToken:
+    """
+    Cria um novo token de verificação de email.
+    
+    Args:
+        db: Sessão do banco de dados
+        user_id: ID do usuário
+    
+    Returns:
+        Token criado
+    """
+    import uuid
+    
+    # Gerar token único
+    token = str(uuid.uuid4())
+    
+    # Expiração: 24 horas
+    expires_at = datetime.utcnow() + timedelta(hours=24)
+    
+    # Criar token
+    verification_token = EmailVerificationToken(
+        user_id=user_id,
+        token=token,
+        expires_at=expires_at
+    )
+    
+    db.add(verification_token)
+    await db.flush()
+    
+    return verification_token
+
+
+async def get_verification_token(
+    db: AsyncSession,
+    token: str
+) -> Optional[EmailVerificationToken]:
+    """
+    Busca um token de verificação.
+    
+    Args:
+        db: Sessão do banco de dados
+        token: Token de verificação
+    
+    Returns:
+        Token encontrado ou None
+    """
+    result = await db.execute(
+        select(EmailVerificationToken).where(EmailVerificationToken.token == token)
+    )
+    return result.scalar_one_or_none()
+
+
+async def mark_token_as_used(
+    db: AsyncSession,
+    token: str
+) -> bool:
+    """
+    Marca um token como usado.
+    
+    Args:
+        db: Sessão do banco de dados
+        token: Token de verificação
+    
+    Returns:
+        True se marcado com sucesso
+    """
+    result = await db.execute(
+        update(EmailVerificationToken)
+        .where(EmailVerificationToken.token == token)
+        .values(used_at=datetime.utcnow())
+    )
+    await db.flush()
+    return result.rowcount > 0
+
+
+async def invalidate_old_tokens(
+    db: AsyncSession,
+    user_id: UUID
+) -> int:
+    """
+    Invalida todos os tokens antigos de um usuário.
+    
+    Args:
+        db: Sessão do banco de dados
+        user_id: ID do usuário
+    
+    Returns:
+        Número de tokens invalidados
+    """
+    result = await db.execute(
+        update(EmailVerificationToken)
+        .where(
+            EmailVerificationToken.user_id == user_id,
+            EmailVerificationToken.used_at.is_(None)
+        )
+        .values(used_at=datetime.utcnow())
+    )
+    await db.flush()
+    return result.rowcount
 

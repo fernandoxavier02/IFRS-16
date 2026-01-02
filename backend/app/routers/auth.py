@@ -21,6 +21,9 @@ from ..schemas import (
     ChangePasswordRequest,
     ForgotPasswordRequest,
     ResetPasswordRequest,
+    VerifyEmailRequest,
+    ResendVerificationRequest,
+    VerifyEmailResponse,
     AdminUserResponse,
     UserResponse,
     UserLicenseResponse,
@@ -233,16 +236,23 @@ async def register_user(
     await db.commit()
     await db.refresh(user)
 
-    # Enviar email de confirmação de cadastro
+    # Criar token de verificação de email
+    from .. import crud
     from ..services.email_service import EmailService
+    
     try:
-        await EmailService.send_registration_confirmation_email(
+        verification_token = await crud.create_verification_token(db, user.id)
+        await db.commit()
+        
+        # Enviar email de verificação
+        await EmailService.send_email_verification(
             to_email=user.email,
-            user_name=user.name
+            user_name=user.name,
+            verification_token=verification_token.token
         )
-        print(f"[OK] Email de confirmação de cadastro enviado para: {user.email}")
+        print(f"[OK] Email de verificação enviado para: {user.email}")
     except Exception as e:
-        print(f"[WARN] Erro ao enviar email de confirmação: {e}")
+        print(f"[WARN] Erro ao enviar email de verificação: {e}")
         # Não falha o registro se email falhar
 
     return UserResponse.model_validate(user)
@@ -282,6 +292,13 @@ async def user_login(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Conta desativada. Entre em contato com o suporte."
+        )
+    
+    # Verificar se email foi confirmado
+    if not user.email_verified:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Por favor, confirme seu email antes de fazer login. Verifique sua caixa de entrada."
         )
     
     # Verificar senha
@@ -405,6 +422,144 @@ async def user_login(
     )
 
 
+@router.post(
+    "/verify-email",
+    response_model=VerifyEmailResponse,
+    summary="Verificar Email",
+    description="Confirma o email do usuário usando o token enviado por email"
+)
+@limiter.limit("10/hour")
+async def verify_email(
+    request: Request,
+    body: VerifyEmailRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Verifica o email do usuário usando o token de verificação.
+    
+    - **token**: Token de verificação enviado por email
+    """
+    from .. import crud
+    
+    # Buscar token
+    verification_token = await crud.get_verification_token(db, body.token)
+    
+    if not verification_token:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Token de verificação inválido"
+        )
+    
+    # Verificar se já foi usado
+    if verification_token.is_used:
+        return VerifyEmailResponse(
+            success=True,
+            message="Seu email já foi confirmado anteriormente. Você já pode fazer login."
+        )
+    
+    # Verificar se expirou
+    if verification_token.is_expired:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Token de verificação expirado. Solicite um novo email de confirmação."
+        )
+    
+    # Buscar usuário
+    result = await db.execute(
+        select(User).where(User.id == verification_token.user_id)
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuário não encontrado"
+        )
+    
+    # Marcar email como verificado
+    user.email_verified = True
+    
+    # Marcar token como usado
+    await crud.mark_token_as_used(db, body.token)
+    
+    await db.commit()
+    
+    print(f"[OK] Email verificado para usuário: {user.email}")
+    
+    return VerifyEmailResponse(
+        success=True,
+        message="Email confirmado com sucesso! Você já pode fazer login."
+    )
+
+
+@router.post(
+    "/resend-verification",
+    response_model=VerifyEmailResponse,
+    summary="Reenviar Email de Verificação",
+    description="Reenvia o email de verificação para o usuário"
+)
+@limiter.limit("3/hour")
+async def resend_verification(
+    request: Request,
+    body: ResendVerificationRequest,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Reenvia o email de verificação para o usuário.
+    
+    - **email**: Email do usuário
+    """
+    from .. import crud
+    from ..services.email_service import EmailService
+    
+    # Buscar usuário
+    result = await db.execute(
+        select(User).where(User.email == body.email.lower())
+    )
+    user = result.scalar_one_or_none()
+    
+    if not user:
+        # Não revelar se o email existe ou não (segurança)
+        return VerifyEmailResponse(
+            success=True,
+            message="Se o email estiver cadastrado, você receberá um novo link de confirmação."
+        )
+    
+    # Verificar se já está verificado
+    if user.email_verified:
+        return VerifyEmailResponse(
+            success=True,
+            message="Seu email já está confirmado. Você já pode fazer login."
+        )
+    
+    # Invalidar tokens antigos
+    await crud.invalidate_old_tokens(db, user.id)
+    
+    # Criar novo token
+    verification_token = await crud.create_verification_token(db, user.id)
+    await db.commit()
+    
+    # Enviar email
+    try:
+        await EmailService.send_email_verification(
+            to_email=user.email,
+            user_name=user.name,
+            verification_token=verification_token.token
+        )
+        print(f"[OK] Email de verificação reenviado para: {user.email}")
+    except Exception as e:
+        print(f"[ERROR] Erro ao reenviar email de verificação: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao enviar email. Tente novamente mais tarde."
+        )
+    
+    return VerifyEmailResponse(
+        success=True,
+        message="Novo email de confirmação enviado! Verifique sua caixa de entrada."
+    )
+
+
 @router.get(
     "/me",
     response_model=UserResponse,
@@ -499,6 +654,7 @@ async def user_license(
     description="Valida a licença usando o token de autenticação do usuário"
 )
 async def validate_license_by_user_token(
+    request: Request,
     user_data: dict = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -509,10 +665,15 @@ async def validate_license_by_user_token(
     de um token JWT separado da licença. A licença é vinculada exclusivamente
     ao usuário e só muda quando o plano é alterado.
 
+    IMPORTANTE: Realiza validação anexa apenas na primeira vez (quando last_validation é NULL).
+    Isso garante que a licença seja ativada corretamente no primeiro acesso após a compra.
+
     Requer: Bearer Token de usuário
 
     Retorna os dados da licença válida ou erro se não houver licença ativa.
     """
+    from ..crud import update_license_validation, log_validation
+    
     user = user_data["user"]
 
     # Buscar licença ativa do usuário
@@ -537,6 +698,49 @@ async def validate_license_by_user_token(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Licença expirada. Renove sua assinatura para continuar."
         )
+
+    # VALIDAÇÃO ANEXA: Realizar apenas na primeira vez (quando last_validation é NULL)
+    # Isso garante que a licença seja ativada corretamente no primeiro acesso após compra
+    if not license.last_validation:
+        # Obter informações do cliente
+        ip_address = None
+        if request.client:
+            ip_address = request.client.host
+        # Verificar X-Forwarded-For para proxies
+        forwarded = request.headers.get("X-Forwarded-For")
+        if forwarded:
+            ip_address = forwarded.split(",")[0].strip()
+        
+        user_agent = request.headers.get("User-Agent", "")[:500]
+        machine_id = request.headers.get("X-Machine-ID")  # Opcional, pode ser None
+        
+        try:
+            # Atualizar informações de validação (marca como validada pela primeira vez)
+            await update_license_validation(
+                db,
+                key=license.key,
+                machine_id=machine_id,
+                ip_address=ip_address
+            )
+            
+            # Criar log de validação
+            await log_validation(
+                db,
+                license_key=license.key,
+                success=True,
+                message="Validação anexa inicial após compra (via validate-license-token)",
+                machine_id=machine_id,
+                ip_address=ip_address,
+                user_agent=user_agent,
+                app_version=None
+            )
+            
+            await db.commit()
+            print(f"[OK] Validação anexa realizada para licença {license.key} (primeiro acesso)")
+        except Exception as e:
+            # Não bloquear o fluxo se houver erro na validação anexa
+            print(f"[WARN] Erro ao realizar validação anexa: {e}")
+            await db.rollback()
 
     # Gerar token JWT para a licença (para compatibilidade com código existente)
     token_data = {

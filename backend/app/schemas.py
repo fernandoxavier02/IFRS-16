@@ -108,6 +108,22 @@ class ResetPasswordRequest(BaseModel):
     new_password: str = Field(..., min_length=8, description="Nova senha")
 
 
+class VerifyEmailRequest(BaseModel):
+    """Request de verificação de email"""
+    token: str = Field(..., description="Token de verificação de email")
+
+
+class ResendVerificationRequest(BaseModel):
+    """Request de reenvio de email de verificação"""
+    email: EmailStr = Field(..., description="Email do usuário")
+
+
+class VerifyEmailResponse(BaseModel):
+    """Response de verificação de email"""
+    success: bool = Field(..., description="Se a verificação foi bem-sucedida")
+    message: str = Field(..., description="Mensagem de retorno")
+
+
 # ============================================================
 # Schemas de Admin User
 # ============================================================

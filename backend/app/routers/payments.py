@@ -199,6 +199,23 @@ async def stripe_webhook(
     print(f"📥 Webhook recebido: {event_type}")
     print(f"📦 Dados: customer={data.get('customer')}, email={data.get('customer_details', {}).get('email')}")
     
+    # Para checkout.session.completed, expandir line_items se não vierem
+    if event_type == "checkout.session.completed" and not data.get("line_items"):
+        try:
+            # Buscar sessão completa com line_items expandidos
+            session_id = data.get("id")
+            if session_id:
+                expanded_session = stripe.checkout.Session.retrieve(
+                    session_id,
+                    expand=["line_items"]
+                )
+                # Substituir data com versão expandida
+                data = expanded_session.to_dict()
+                print(f"✅ Line items expandidos da sessão")
+        except Exception as e:
+            print(f"[WARN] Não foi possível expandir line_items: {e}")
+            print(f"[INFO] Continuando com dados do webhook (pode usar fallback)")
+    
     # Criar nova sessão de DB para cada webhook (evita problemas de conexão)
     from ..database import AsyncSessionLocal
     import asyncio

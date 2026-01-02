@@ -162,6 +162,59 @@ class User(Base):
 
 
 # =============================================================================
+# EMAIL VERIFICATION
+# =============================================================================
+
+class EmailVerificationToken(Base):
+    """
+    Modelo de Token de Verificação de Email
+    Usado para confirmar email de novos usuários
+    """
+    __tablename__ = "email_verification_tokens"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    
+    # Relacionamento
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+    
+    # Token
+    token = Column(String(255), unique=True, nullable=False, index=True)
+    
+    # Status
+    expires_at = Column(DateTime, nullable=False)
+    used_at = Column(DateTime, nullable=True)
+    
+    # Datas
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    
+    # Relacionamento
+    user = relationship("User", foreign_keys=[user_id])
+
+    def __repr__(self):
+        return f"<EmailVerificationToken(user_id='{self.user_id}', used={'Yes' if self.used_at else 'No'})>"
+    
+    @property
+    def is_expired(self) -> bool:
+        """Verifica se o token está expirado"""
+        return datetime.utcnow() > self.expires_at
+    
+    @property
+    def is_used(self) -> bool:
+        """Verifica se o token já foi usado"""
+        return self.used_at is not None
+    
+    @property
+    def is_valid(self) -> bool:
+        """Verifica se o token é válido (não expirado e não usado)"""
+        return not self.is_expired and not self.is_used
+
+
+# =============================================================================
 # SUBSCRIPTIONS
 # =============================================================================
 

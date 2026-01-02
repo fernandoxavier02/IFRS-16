@@ -172,42 +172,83 @@ async def validate_license(
             )
     
     # Atualizar informações de validação
-    await crud.update_license_validation(
-        db,
-        key=key,
-        machine_id=body.machine_id,
-        ip_address=ip_address
-    )
-    
-    # Log de sucesso
-    await crud.log_validation(
-        db,
-        license_key=key,
-        success=True,
-        message="Validação bem-sucedida",
-        machine_id=body.machine_id,
-        ip_address=ip_address,
-        user_agent=user_agent,
-        app_version=body.app_version
-    )
+    try:
+        await crud.update_license_validation(
+            db,
+            key=key,
+            machine_id=body.machine_id,
+            ip_address=ip_address
+        )
+        
+        # Log de sucesso
+        await crud.log_validation(
+            db,
+            license_key=key,
+            success=True,
+            message="Validação bem-sucedida",
+            machine_id=body.machine_id,
+            ip_address=ip_address,
+            user_agent=user_agent,
+            app_version=body.app_version
+        )
+        
+        # Flush para garantir que as alterações estão na sessão
+        # O commit será feito automaticamente pelo get_db no final
+        await db.flush()
+        # Recarregar licença do banco para ter dados atualizados
+        await db.refresh(license)
+    except Exception as e:
+        await db.rollback()
+        print(f"[ERROR] Erro ao atualizar validação/licença: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao processar validação: {str(e)}"
+        )
     
     # Gerar token JWT
-    token_data = {
-        "key": license.key,
-        "customer_name": license.customer_name,
-        "license_type": license.license_type.value,
-    }
-    token = create_access_token(token_data)
+    try:
+        token_data = {
+            "key": license.key,
+            "customer_name": license.customer_name,
+            "license_type": license.license_type.value,
+        }
+        token = create_access_token(token_data)
+    except Exception as e:
+        print(f"[ERROR] Erro ao gerar token JWT: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Erro ao gerar token de autenticação"
+        )
     
     # Preparar features
-    features = license.features
-    license_features = LicenseFeatures(
-        max_contracts=features["max_contracts"],
-        export_excel=features["export_excel"],
-        export_csv=features["export_csv"],
-        support=features["support"],
-        multi_user=features["multi_user"]
-    )
+    try:
+        features = license.features
+        # Garantir que features é um dict válido
+        if not isinstance(features, dict):
+            print(f"[WARN] Features não é um dict: {type(features)}, usando fallback")
+            from ..config import LICENSE_LIMITS
+            license_key = license.license_type.value if license.license_type else "trial"
+            features = LICENSE_LIMITS.get(license_key, LICENSE_LIMITS["trial"])
+        
+        license_features = LicenseFeatures(
+            max_contracts=features.get("max_contracts", 1),
+            export_excel=features.get("export_excel", False),
+            export_csv=features.get("export_csv", False),
+            support=features.get("support", False),
+            multi_user=features.get("multi_user", False)
+        )
+    except Exception as e:
+        print(f"[ERROR] Erro ao preparar features: {e}")
+        # Usar features padrão em caso de erro
+        license_features = LicenseFeatures(
+            max_contracts=1,
+            export_excel=False,
+            export_csv=False,
+            support=False,
+            multi_user=False
+        )
     
     # Preparar resposta
     license_data = LicenseData(

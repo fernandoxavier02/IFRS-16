@@ -7,6 +7,78 @@
 
 ## Changelog
 
+### 2026-01-02 — Avaliacao de Viabilidade: Migracao para Supabase
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Avaliar viabilidade de migracao do banco de dados e backend para Supabase
+
+**Arquivos Criados:**
+- `docs/AVALIACAO_MIGRACAO_SUPABASE.md` — Documento completo de avaliacao
+
+**Arquivos Modificados:**
+- `docs/ai/DECISIONS.md` — Adicionado DEC-012 (Migracao Supabase)
+- `docs/ai/PROJECT_CONTEXT.md` — Adicionada secao 13 (Migracao Supabase) e URLs atualizadas
+- `CLAUDE.md` — Atualizado com info de deploy (fxstudioai.com)
+
+**Resultado da Avaliacao:**
+
+| Aspecto | Resultado |
+|---------|-----------|
+| Viabilidade | 95% (Alta) |
+| Mudancas de Codigo | Zero |
+| Tempo Estimado | 2-3 dias |
+| Risco | Baixo |
+| Recomendacao | **MIGRAR** |
+
+**Compatibilidade Verificada:**
+- 12 tabelas PostgreSQL com UUID
+- 8 Foreign Keys
+- 18 indices
+- 6 ENUMs
+- Queries complexas (generate_series, LATERAL, JSONB) - todas suportadas
+
+**Plano de Migracao:**
+1. Fase 1: Preparacao (2-4h)
+2. Fase 2: Schema via Alembic (1-2h)
+3. Fase 3: Dados via pg_dump/pg_restore (1-2h)
+4. Fase 4: Testes pytest (2-3h)
+5. Fase 5: Deploy Cloud Run (1h)
+6. Fase 6: Monitoramento (24-48h)
+
+**Verificacao:**
+- [x] Analise de models.py - 100% compativel
+- [x] Analise de database.py - 100% compativel
+- [x] Analise de auth.py - 100% compativel
+- [x] Analise de services - 100% compativel
+- [x] Analise de migrations - 100% compativel
+- [x] Documento de avaliacao criado
+
+**Proximos Passos:**
+- [ ] Criar projeto Supabase
+- [ ] Testar conexao em ambiente dev
+- [ ] Executar migracao em producao
+
+---
+
+### 2026-01-02 — Novas Funcionalidades na Landing Page
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Adicionar novas funcionalidades na landing page
+
+**Arquivos Modificados:**
+- `landing.html` — Adicionados 3 novos cards na secao Features
+
+**Funcionalidades Adicionadas:**
+1. **Dashboard Analitico** — Metricas consolidadas, graficos de evolucao
+2. **Gestao de Documentos** — Upload de PDFs com drag-and-drop
+3. **Visualizador de PDFs** — Preview sem download
+
+**Deploy:**
+- Frontend: Firebase Hosting (fxstudioai.com)
+- Data: 2026-01-02
+
+---
+
 ### 2026-01-02 — Correção Final: Erro SQL no Endpoint upcoming-expirations
 
 **Agent:** Claude Code

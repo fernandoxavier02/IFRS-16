@@ -15,7 +15,7 @@ The system provides lease contract management, automated IFRS 16 calculations, l
 |-------|------------|---------|
 | **Frontend** | Static HTML/JS/CSS | Firebase Hosting (fxstudioai.com) |
 | **Backend** | Python 3.11 + FastAPI | Google Cloud Run |
-| **Database** | PostgreSQL 14+ | Cloud SQL (migracao para Supabase aprovada - ver DEC-012) |
+| **Database** | PostgreSQL 15 | **Supabase** (migração concluída 2026-01-02) |
 | **Payments** | Stripe (webhooks) | — |
 | **Auth** | JWT (python-jose) | — |
 | **Storage** | Firebase Storage | — |
@@ -321,31 +321,72 @@ IFRS 16/
 
 ---
 
-## 13. Migracao para Supabase (Pendente)
+## 13. Supabase - Migração Concluída
 
-**Status:** Aprovado (DEC-012) - Aguardando execucao
+**Status:** ✅ CONCLUÍDA (2026-01-02)
 
-**Documentacao:** `docs/AVALIACAO_MIGRACAO_SUPABASE.md`
+**Documentação:**
+- `docs/AVALIACAO_MIGRACAO_SUPABASE.md` — Análise de viabilidade
+- `docs/GUIA_MIGRACAO_SUPABASE.md` — Guia completo de migração
 
-**Resumo:**
-- Viabilidade: 95% (Alta)
-- Mudancas de codigo: Zero
-- Apenas alterar DATABASE_URL
+### Projeto Supabase
+| Item | Valor |
+|------|-------|
+| Nome | IFRS 16 |
+| Reference ID | `jafdinvixrfxtvoagrsf` |
+| Região | South America (São Paulo) - `sa-east-1` |
+| Pooler URL | `aws-0-sa-east-1.pooler.supabase.com:6543` |
 
-**Comando para migrar:**
-```bash
-# 1. Criar projeto Supabase e obter URL
-# 2. Executar migrations
-cd backend && alembic upgrade head
-
-# 3. Migrar dados
-pg_dump $OLD_DATABASE_URL --data-only > backup.sql
-psql $SUPABASE_URL < backup.sql
-
-# 4. Atualizar Cloud Run
-gcloud run services update ifrs16-backend \
-  --set-env-vars DATABASE_URL="postgresql+asyncpg://postgres:[PWD]@db.[REF].supabase.co:5432/postgres"
+### Connection String (Pooler)
 ```
+postgresql+asyncpg://postgres.[REF]:[PASSWORD]@aws-0-sa-east-1.pooler.supabase.com:6543/postgres
+```
+
+### Fixes Críticos Aplicados
+
+**1. PgBouncer (statement_cache_size=0)**
+```python
+# backend/app/database.py
+connect_args={
+    "ssl": "require",
+    "command_timeout": 60,
+    "statement_cache_size": 0,  # CRÍTICO para PgBouncer
+}
+```
+
+**2. ENUMs SQLAlchemy (values_callable)**
+```python
+# backend/app/models.py - em TODOS os campos ENUM
+status = Column(
+    SQLEnum(EnumClass, values_callable=lambda obj: [e.value for e in obj]),
+    ...
+)
+```
+
+**3. Cast JSONB em queries**
+```sql
+-- backend/app/services/dashboard_service.py
+resultados_json::jsonb->>'campo'  -- Cast explícito necessário
+```
+
+### Tabelas Migradas (12)
+`admin_users`, `users`, `licenses`, `subscriptions`, `contracts`,
+`contract_versions`, `documents`, `economic_indexes`, `notifications`,
+`user_sessions`, `validation_logs`, `alembic_version`
+
+### ENUMs Criados (7)
+`licensestatus`, `licensetype`, `adminrole`, `subscriptionstatus`,
+`plantype`, `contractstatus`, `notificationtype`
+
+### Índices Econômicos Sincronizados
+| Índice | Registros | Status |
+|--------|-----------|--------|
+| SELIC | 473 | ✅ |
+| IGPM | 438 | ✅ |
+| IPCA | 550 | ✅ |
+| CDI | 473 | ✅ |
+| INPC | 559 | ✅ |
+| TR | - | ❌ API BCB (406) |
 
 ---
 

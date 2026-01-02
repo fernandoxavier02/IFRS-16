@@ -464,3 +464,43 @@ class UserSession(Base):
 
     def __repr__(self):
         return f"<UserSession(user_id='{self.user_id}', device='{self.device_name}', active={self.is_active})>"
+
+
+# =============================================================================
+# ECONOMIC INDEXES (ÍNDICES ECONÔMICOS DO BCB)
+# =============================================================================
+
+class EconomicIndex(Base):
+    """
+    Índices econômicos do Banco Central do Brasil.
+    Armazena valores históricos de SELIC, IGPM, IPCA, CDI, INPC, TR.
+    Usado para remensuração automática de contratos IFRS 16.
+    """
+    __tablename__ = "economic_indexes"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Tipo do índice (selic, igpm, ipca, cdi, inpc, tr)
+    index_type = Column(String(20), nullable=False)
+
+    # Data de referência do índice
+    reference_date = Column(DateTime, nullable=False)
+
+    # Valor do índice (percentual)
+    value = Column(String(50), nullable=False)  # String para preservar precisão
+
+    # Fonte dos dados
+    source = Column(String(50), nullable=False, default="BCB")
+
+    # Metadados
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        # Índice único para evitar duplicatas
+        Index('uq_economic_index_type_date', 'index_type', 'reference_date', unique=True),
+        # Índice para consultas por tipo e data
+        Index('idx_economic_index_type_date', 'index_type', 'reference_date'),
+    )
+
+    def __repr__(self):
+        return f"<EconomicIndex(type='{self.index_type}', date='{self.reference_date}', value='{self.value}')>"

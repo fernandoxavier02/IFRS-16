@@ -400,3 +400,52 @@ class ValidationError(BaseModel):
     msg: str
     type: str
 
+
+# ============================================================
+# Schemas de Índices Econômicos (BCB)
+# ============================================================
+
+class EconomicIndexTypeEnum(str, Enum):
+    """Tipos de índices econômicos suportados"""
+    SELIC = "selic"
+    IGPM = "igpm"
+    IPCA = "ipca"
+    CDI = "cdi"
+    INPC = "inpc"
+    TR = "tr"
+
+
+class EconomicIndexResponse(BaseModel):
+    """Response de índice econômico individual"""
+    id: UUID
+    index_type: str
+    reference_date: datetime
+    value: str  # String para preservar precisão decimal
+    source: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class EconomicIndexListResponse(BaseModel):
+    """Response de listagem de índices econômicos"""
+    indexes: List[EconomicIndexResponse]
+    total: int
+
+
+class EconomicIndexLatestResponse(BaseModel):
+    """Response do último valor de um índice"""
+    index_type: str
+    reference_date: datetime
+    value: str
+    source: str
+
+
+class EconomicIndexSyncResponse(BaseModel):
+    """Response de sincronização com BCB"""
+    success: bool
+    message: str
+    synced_count: int
+    index_type: str
+

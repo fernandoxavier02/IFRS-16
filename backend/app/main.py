@@ -21,6 +21,7 @@ from .routers import (
     auth_router,
     payments_router,
     user_dashboard_router,
+    economic_indexes_router,
 )
 from .routers.contracts import router as contracts_router
 
@@ -270,6 +271,7 @@ app.include_router(admin_router)
 app.include_router(payments_router)
 app.include_router(user_dashboard_router)
 app.include_router(contracts_router)
+app.include_router(economic_indexes_router)
 # stripe_router removido - funcionalidade consolidada em payments_router
 
 

@@ -98,6 +98,28 @@ IFRS 16/
 | **Install deps** | `pip install -r requirements.txt` |
 | **Run dev server** | `uvicorn app.main:app --reload --port 8000` |
 | **Run prod server** | `uvicorn app.main:app --host 0.0.0.0 --port 8000` |
+| **Build (Kaniko)** | `gcloud builds submit --config=cloudbuild.yaml` |
+| **Deploy Cloud Run** | `gcloud run deploy ifrs16-backend --image gcr.io/ifrs16-app/ifrs16-backend:latest --region southamerica-east1 --project ifrs16-app` |
+| **Update env vars** | `gcloud run services update ifrs16-backend --region southamerica-east1 --project ifrs16-app --env-vars-file=cloud_run_env_deploy.yaml` |
+
+**⚠️ IMPORTANTE - Deploy do Backend:**
+1. **SEMPRE use Kaniko** para builds (mais rápido com cache):
+   ```bash
+   cd "IFRS 16-20251217T150830Z-1-001/IFRS 16/backend"
+   gcloud builds submit --config=cloudbuild.yaml
+   ```
+
+2. **Depois faça o deploy**:
+   ```bash
+   gcloud run deploy ifrs16-backend --image gcr.io/ifrs16-app/ifrs16-backend:latest --region southamerica-east1 --project ifrs16-app
+   ```
+
+3. **Se der erro de variáveis de ambiente**, aplique o arquivo de config:
+   ```bash
+   gcloud run services update ifrs16-backend --region southamerica-east1 --project ifrs16-app --env-vars-file=cloud_run_env_deploy.yaml
+   ```
+
+**❌ NUNCA use** `gcloud builds submit .` diretamente - sempre use `--config=cloudbuild.yaml` para aproveitar o cache do Kaniko.
 | **Run tests** | `pytest -v` |
 | **Run tests + coverage** | `pytest -v --cov=app --cov-report=html` |
 | **Run specific test** | `pytest tests/test_licenses.py -v` |

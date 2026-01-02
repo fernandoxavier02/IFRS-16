@@ -25,6 +25,14 @@ from ..schemas import (
     LicenseTypeEnum,
 )
 from ..services.stripe_service import StripeService
+from ..services.dashboard_service import DashboardService
+from ..schemas import (
+    DashboardMetricsResponse,
+    DashboardEvolutionResponse,
+    DashboardDistributionResponse,
+    DashboardMonthlyExpensesResponse,
+    DashboardUpcomingExpirationsResponse,
+)
 
 router = APIRouter(prefix="/api/user", tags=["Painel do Usuário"])
 
@@ -368,4 +376,119 @@ async def get_dashboard_summary(
             "total_validations": validations_count
         }
     }
+
+
+@router.get(
+    "/dashboard/metrics",
+    response_model=DashboardMetricsResponse,
+    summary="Métricas Gerais",
+    description="Retorna métricas agregadas dos contratos do usuário"
+)
+async def get_dashboard_metrics(
+    user_data: dict = Depends(get_current_user_with_session),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retorna métricas gerais do dashboard:
+    - Total de contratos
+    - Valor total de passivos
+    - Valor total de ativos
+    - Despesas mensais totais
+    """
+    user = user_data["user"]
+    service = DashboardService(db)
+    metrics = await service.get_metrics(str(user.id))
+    return DashboardMetricsResponse(**metrics)
+
+
+@router.get(
+    "/dashboard/evolution",
+    response_model=DashboardEvolutionResponse,
+    summary="Evolução Temporal",
+    description="Retorna evolução do passivo ao longo do tempo (últimos 12 meses)"
+)
+async def get_dashboard_evolution(
+    months: int = 12,
+    user_data: dict = Depends(get_current_user_with_session),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retorna evolução do passivo ao longo do tempo.
+    
+    - **months**: Número de meses para retornar (padrão: 12, máximo: 24)
+    """
+    if months > 24:
+        months = 24
+    if months < 1:
+        months = 1
+    
+    user = user_data["user"]
+    service = DashboardService(db)
+    evolution = await service.get_evolution(str(user.id), months)
+    return DashboardEvolutionResponse(evolution=evolution)
+
+
+@router.get(
+    "/dashboard/distribution",
+    response_model=DashboardDistributionResponse,
+    summary="Distribuição por Categoria",
+    description="Retorna distribuição de contratos por categoria"
+)
+async def get_dashboard_distribution(
+    user_data: dict = Depends(get_current_user_with_session),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retorna distribuição de contratos por categoria.
+    """
+    user = user_data["user"]
+    service = DashboardService(db)
+    distribution = await service.get_distribution(str(user.id))
+    return DashboardDistributionResponse(distribution=distribution)
+
+
+@router.get(
+    "/dashboard/monthly-expenses",
+    response_model=DashboardMonthlyExpensesResponse,
+    summary="Despesas Mensais",
+    description="Retorna despesas mensais por contrato"
+)
+async def get_dashboard_monthly_expenses(
+    user_data: dict = Depends(get_current_user_with_session),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retorna despesas mensais por contrato (top 20).
+    """
+    user = user_data["user"]
+    service = DashboardService(db)
+    expenses = await service.get_monthly_expenses(str(user.id))
+    return DashboardMonthlyExpensesResponse(monthly_expenses=expenses)
+
+
+@router.get(
+    "/dashboard/upcoming-expirations",
+    response_model=DashboardUpcomingExpirationsResponse,
+    summary="Próximos Vencimentos",
+    description="Retorna contratos próximos do vencimento"
+)
+async def get_dashboard_upcoming_expirations(
+    days: int = 90,
+    user_data: dict = Depends(get_current_user_with_session),
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Retorna contratos próximos do vencimento.
+    
+    - **days**: Número de dias para buscar (padrão: 90, máximo: 365)
+    """
+    if days > 365:
+        days = 365
+    if days < 1:
+        days = 90
+    
+    user = user_data["user"]
+    service = DashboardService(db)
+    expirations = await service.get_upcoming_expirations(str(user.id), days)
+    return DashboardUpcomingExpirationsResponse(upcoming_expirations=expirations)
 

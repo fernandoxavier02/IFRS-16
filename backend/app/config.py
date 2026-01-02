@@ -53,6 +53,19 @@ class Settings(BaseSettings):
     CLOUD_SQL_PASSWORD: Optional[str] = None
     DATABASE_URL_PROD: Optional[str] = None
     
+    # Firebase Storage
+    FIREBASE_STORAGE_BUCKET: str = "ifrs16-app.firebasestorage.app"
+    FIREBASE_CREDENTIALS_PATH: Optional[str] = None  # Caminho para service account JSON
+
+    # Limites de upload
+    MAX_FILE_SIZE_MB: int = 10  # Tamanho máximo de arquivo em MB
+    ALLOWED_MIME_TYPES: str = "application/pdf,image/jpeg,image/png,image/gif"
+
+    @property
+    def allowed_mime_types_list(self) -> List[str]:
+        """Retorna lista de tipos MIME permitidos"""
+        return [mt.strip() for mt in self.ALLOWED_MIME_TYPES.split(",")]
+
     # Email SMTP
     SMTP_HOST: str = "smtp.zoho.com"
     SMTP_PORT: int = 587

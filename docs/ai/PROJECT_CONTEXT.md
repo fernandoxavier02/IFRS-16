@@ -13,11 +13,12 @@ The system provides lease contract management, automated IFRS 16 calculations, l
 
 | Layer | Technology | Hosting |
 |-------|------------|---------|
-| **Frontend** | Static HTML/JS/CSS | Firebase Hosting |
+| **Frontend** | Static HTML/JS/CSS | Firebase Hosting (fxstudioai.com) |
 | **Backend** | Python 3.11 + FastAPI | Google Cloud Run |
-| **Database** | PostgreSQL 14+ | Render (external) |
+| **Database** | PostgreSQL 14+ | Cloud SQL (migracao para Supabase aprovada - ver DEC-012) |
 | **Payments** | Stripe (webhooks) | — |
 | **Auth** | JWT (python-jose) | — |
+| **Storage** | Firebase Storage | — |
 
 ---
 
@@ -313,13 +314,42 @@ IFRS 16/
 
 | Service | URL |
 |---------|-----|
-| Frontend | https://ifrs16-app.web.app |
+| Frontend | https://fxstudioai.com (Firebase Hosting) |
+| Frontend (fallback) | https://ifrs16-app.web.app |
 | Backend API | https://ifrs16-backend-1051753255664.us-central1.run.app |
 | API Docs | https://ifrs16-backend-1051753255664.us-central1.run.app/docs |
 
 ---
 
-## 13. Session Start Checklist
+## 13. Migracao para Supabase (Pendente)
+
+**Status:** Aprovado (DEC-012) - Aguardando execucao
+
+**Documentacao:** `docs/AVALIACAO_MIGRACAO_SUPABASE.md`
+
+**Resumo:**
+- Viabilidade: 95% (Alta)
+- Mudancas de codigo: Zero
+- Apenas alterar DATABASE_URL
+
+**Comando para migrar:**
+```bash
+# 1. Criar projeto Supabase e obter URL
+# 2. Executar migrations
+cd backend && alembic upgrade head
+
+# 3. Migrar dados
+pg_dump $OLD_DATABASE_URL --data-only > backup.sql
+psql $SUPABASE_URL < backup.sql
+
+# 4. Atualizar Cloud Run
+gcloud run services update ifrs16-backend \
+  --set-env-vars DATABASE_URL="postgresql+asyncpg://postgres:[PWD]@db.[REF].supabase.co:5432/postgres"
+```
+
+---
+
+## 14. Session Start Checklist
 
 Before making any changes, AI agents MUST:
 
@@ -335,7 +365,7 @@ Before making any changes, AI agents MUST:
 
 ---
 
-## 14. File Modification Protocol
+## 15. File Modification Protocol
 
 1. **Read first** — Always read the file before editing
 2. **Minimal edits** — Prefer small, focused changes

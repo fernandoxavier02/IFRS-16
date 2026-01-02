@@ -575,3 +575,72 @@ class Notification(Base):
 
     def __repr__(self):
         return f"<Notification(user_id='{self.user_id}', type='{self.notification_type}', read={self.read})>"
+
+
+# =============================================================================
+# DOCUMENTS (UPLOAD DE ARQUIVOS)
+# =============================================================================
+
+class Document(Base):
+    """
+    Documentos anexados a contratos.
+    Armazena metadados de PDFs e outros arquivos relacionados a contratos IFRS 16.
+    Os arquivos são armazenados no Firebase Storage.
+    """
+    __tablename__ = "documents"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+
+    # Relacionamento com contrato
+    contract_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("contracts.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    # Relacionamento com usuário (dono do documento)
+    user_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True
+    )
+
+    # Informações do arquivo
+    filename = Column(String(255), nullable=False)  # Nome original do arquivo
+    storage_path = Column(String(500), nullable=False)  # Caminho no Firebase Storage
+    file_size = Column(Integer, nullable=False)  # Tamanho em bytes
+    mime_type = Column(String(100), nullable=False)  # Tipo MIME (application/pdf, etc.)
+
+    # Descrição opcional
+    description = Column(String(500), nullable=True)
+
+    # Versionamento
+    version = Column(Integer, nullable=False, default=1)
+
+    # Datas
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, nullable=True)
+
+    # Soft delete
+    is_deleted = Column(Boolean, nullable=False, default=False)
+    deleted_at = Column(DateTime, nullable=True)
+
+    # Relacionamentos
+    contract = relationship("Contract", backref="documents")
+    user = relationship("User", backref="documents")
+
+    __table_args__ = (
+        Index('idx_document_contract', 'contract_id'),
+        Index('idx_document_user', 'user_id'),
+        Index('idx_document_deleted', 'is_deleted'),
+    )
+
+    def mark_deleted(self):
+        """Marca o documento como deletado (soft delete)"""
+        self.is_deleted = True
+        self.deleted_at = datetime.now(timezone.utc)
+
+    def __repr__(self):
+        return f"<Document(filename='{self.filename}', contract_id='{self.contract_id}')>"

@@ -227,6 +227,58 @@ Plus tool-specific wiring:
 
 ---
 
+### DEC-012: Migracao do Banco de Dados para Supabase (2026-01-02)
+
+**Context:** Avaliacao de viabilidade para migrar o banco de dados PostgreSQL de Cloud SQL/Render para Supabase.
+
+**Decision:** APROVADO - Migrar para Supabase
+
+**Analise de Viabilidade:**
+- Viabilidade: 95% (Alta)
+- Mudancas de codigo: Zero
+- Tempo estimado: 2-3 dias
+- Risco: Baixo
+
+**Razoes para Migracao:**
+1. Zero mudancas de codigo - Backend 100% compativel (SQLAlchemy + asyncpg)
+2. Todas as funcoes PostgreSQL suportadas (generate_series, LATERAL, JSONB)
+3. Menor custo operacional - Backups, logs, dashboard incluidos
+4. Escalabilidade simples - Upgrade de plano sem downtime
+5. Recursos extras - REST API, Realtime, Auth (opcional futuro)
+
+**Compatibilidade Verificada:**
+- 12 tabelas com UUID primary keys
+- 8 Foreign Keys com CASCADE/SET NULL
+- 18 indices (3 UNIQUE, 15 regulares)
+- 6 ENUMs PostgreSQL
+- Queries complexas com generate_series(), LATERAL, jsonb_array_elements()
+
+**Mudancas Necessarias:**
+- Apenas variavel de ambiente DATABASE_URL
+- Formato: `postgresql+asyncpg://postgres:[PASSWORD]@db.[PROJECT].supabase.co:5432/postgres`
+
+**Plano de Migracao:**
+1. Fase 1: Preparacao (2-4h) - Criar projeto Supabase, obter credenciais
+2. Fase 2: Schema (1-2h) - Executar migrations Alembic
+3. Fase 3: Dados (1-2h) - pg_dump/pg_restore
+4. Fase 4: Testes (2-3h) - pytest completo
+5. Fase 5: Deploy (1h) - Atualizar Cloud Run
+6. Fase 6: Monitoramento (24-48h)
+
+**Riscos e Mitigacoes:**
+- Limite de conexoes (100 free): Pool atual usa 3 max - OK
+- Latencia PgBouncer: pool_pre_ping=True ja configurado - OK
+- Migracao de dados: pg_dump/pg_restore padrao - OK
+
+**Documentacao:**
+- `docs/AVALIACAO_MIGRACAO_SUPABASE.md` - Documento completo de avaliacao
+
+**Trade-offs:**
+- Dependencia de vendor (Supabase) vs flexibilidade (Cloud SQL)
+- Custo fixo ($25/mes Pro) vs pay-per-use (Cloud SQL)
+
+---
+
 *Add new decisions below this line. Use format: DEC-XXX: Title (YYYY-MM-DD)*
 
 ---

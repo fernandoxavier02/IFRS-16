@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/theme-neon.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         .dashboard-container {
             max-width: 1200px;
@@ -138,6 +139,10 @@
             --card-accent: linear-gradient(90deg, #f59e0b, #fbbf24); 
             border: 1px solid rgba(245, 158, 11, 0.2);
         }
+        .value-card.emerald {
+            --card-accent: linear-gradient(90deg, #10b981, #34d399);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
         .value-card .label {
             color: var(--text-secondary);
             font-size: 0.85rem;
@@ -151,10 +156,37 @@
         .value-card.cyan .value { color: var(--neon-cyan); }
         .value-card.purple .value { color: var(--neon-purple); }
         .value-card.amber .value { color: #fbbf24; }
+        .value-card.emerald .value { color: #34d399; }
         .value-card .sub {
             color: var(--text-muted);
             font-size: 0.8rem;
             margin-top: 8px;
+        }
+        .table-dark {
+            width: 100%;
+            border-collapse: collapse;
+            background: rgba(10, 14, 23, 0.6);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .table-dark thead {
+            background: rgba(0, 212, 255, 0.1);
+        }
+        .table-dark th {
+            padding: 12px;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .table-dark td {
+            padding: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .table-dark tbody tr:hover {
+            background: rgba(0, 212, 255, 0.05);
         }
         .license-key {
             font-family: 'JetBrains Mono', monospace;
@@ -418,6 +450,72 @@
                 </div>
             </div>
 
+            <!-- Dashboard Analítico -->
+            <div id="analyticsDashboard" class="glass-card" style="padding: 24px; margin-bottom: 24px; display: block !important;">
+                <h2 class="section-title">📊 Dashboard Analítico</h2>
+                
+                <!-- Métricas Principais -->
+                <div class="cards-grid" style="margin-bottom: 32px;">
+                    <div class="value-card cyan">
+                        <p class="label">Total de Contratos</p>
+                        <p id="metricTotalContracts" class="value">-</p>
+                    </div>
+                    <div class="value-card purple">
+                        <p class="label">Valor Total de Passivos</p>
+                        <p id="metricTotalPassivos" class="value">-</p>
+                    </div>
+                    <div class="value-card amber">
+                        <p class="label">Valor Total de Ativos</p>
+                        <p id="metricTotalAtivos" class="value">-</p>
+                    </div>
+                    <div class="value-card emerald">
+                        <p class="label">Despesas Mensais Totais</p>
+                        <p id="metricDespesasMensais" class="value">-</p>
+                    </div>
+                </div>
+
+                <!-- Gráficos -->
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 24px; margin-bottom: 24px;">
+                    <!-- Evolução Temporal -->
+                    <div class="glass-card-light" style="padding: 20px;">
+                        <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 16px;">📈 Evolução do Passivo</h3>
+                        <canvas id="evolutionChart" style="max-height: 300px;"></canvas>
+                    </div>
+
+                    <!-- Distribuição por Categoria -->
+                    <div class="glass-card-light" style="padding: 20px;">
+                        <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 16px;">🥧 Distribuição por Categoria</h3>
+                        <canvas id="distributionChart" style="max-height: 300px;"></canvas>
+                    </div>
+                </div>
+
+                <!-- Despesas Mensais -->
+                <div class="glass-card-light" style="padding: 20px; margin-bottom: 24px;">
+                    <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 16px;">📊 Despesas Mensais por Contrato</h3>
+                    <canvas id="expensesChart" style="max-height: 300px;"></canvas>
+                </div>
+
+                <!-- Próximos Vencimentos -->
+                <div class="glass-card-light" style="padding: 20px;">
+                    <h3 style="color: var(--text-primary); font-size: 1rem; margin-bottom: 16px;">⚠️ Próximos Vencimentos</h3>
+                    <div id="expirationsTable" style="overflow-x: auto;">
+                        <table class="table-dark" style="width: 100%;">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Contrato</th>
+                                    <th style="text-align: center;">Vencimento</th>
+                                    <th style="text-align: center;">Dias Restantes</th>
+                                    <th style="text-align: center;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expirationsTableBody">
+                                <tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Carregando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <!-- Actions -->
             <div class="glass-card" style="padding: 24px;">
                 <h2 class="section-title">Gerenciar Assinatura</h2>
@@ -520,6 +618,7 @@
         }
 
         async function loadDashboard() {
+            console.log('🚀 Iniciando loadDashboard()...');
             const token = localStorage.getItem('ifrs16_auth_token');
 
             if (!token) {
@@ -571,22 +670,65 @@
                 };
 
                 console.log('📋 Dashboard data final:', dashboardData);
+                if (!dashboardData) {
+                    console.error('❌ dashboardData é null ou undefined!');
+                    document.getElementById('loading').innerHTML = '<p style="color: var(--error);">Erro: Dados do dashboard não carregados.</p>';
+                    return;
+                }
                 renderDashboard();
             } catch (error) {
-                console.error('Erro:', error);
+                console.error('❌ Erro ao carregar dashboard:', error);
                 document.getElementById('loading').innerHTML = `
                     <p style="color: var(--error);">Erro ao carregar dados. <button onclick="loadDashboard()" class="btn-neon-outline btn-neon-sm">Tentar novamente</button></p>
                 `;
             }
         }
 
+        // Helper function para acessar elementos com segurança
+        function safeGetElement(id) {
+            const el = document.getElementById(id);
+            if (!el) {
+                console.warn(`⚠️ Elemento #${id} não encontrado`);
+            }
+            return el;
+        }
+
         function renderDashboard() {
-            document.getElementById('loading').style.display = 'none';
-            document.getElementById('content').style.display = 'block';
+            const loadingEl = safeGetElement('loading');
+            if (loadingEl) loadingEl.style.display = 'none';
+            
+            const contentDiv = safeGetElement('content');
+            if (contentDiv) {
+                contentDiv.style.display = 'block';
+                console.log('✅ Conteúdo do dashboard exibido');
+                
+                // Verificar se analyticsDashboard existe dentro de content
+                const analyticsSection = contentDiv.querySelector('#analyticsDashboard');
+                if (analyticsSection) {
+                    console.log('✅ Seção analyticsDashboard encontrada dentro de #content');
+                    analyticsSection.style.display = 'block';
+                } else {
+                    console.warn('⚠️ analyticsDashboard não encontrado dentro de #content');
+                    // Tentar encontrar por texto
+                    const allDivs = contentDiv.querySelectorAll('div');
+                    allDivs.forEach((div, index) => {
+                        if (div.textContent.includes('Dashboard Analítico')) {
+                            console.log(`✅ Encontrado Dashboard Analítico no div ${index}`);
+                            div.id = 'analyticsDashboard';
+                            div.style.display = 'block';
+                        }
+                    });
+                }
+            } else {
+                console.error('❌ Elemento #content não encontrado!');
+                return; // Não continuar se o conteúdo não existir
+            }
 
             // User info
-            document.getElementById('userName').textContent = dashboardData.user.name;
-            document.getElementById('userEmail').textContent = dashboardData.user.email;
+            const userNameEl = safeGetElement('userName');
+            const userEmailEl = safeGetElement('userEmail');
+            if (userNameEl) userNameEl.textContent = dashboardData.user.name;
+            if (userEmailEl) userEmailEl.textContent = dashboardData.user.email;
 
             // Adicionar empresa se existir
             if (dashboardData.user.company_name) {
@@ -616,101 +758,154 @@
                 console.log('✅ Assinatura ativa detectada, renderizando dados...');
 
                 // Status Badge
-                const badge = document.getElementById('statusBadge');
-                badge.style.display = 'inline-block';
-                badge.className = 'badge badge-success';
-                badge.textContent = 'Ativa';
+                const badge = safeGetElement('statusBadge');
+                if (badge) {
+                    badge.style.display = 'inline-block';
+                    badge.className = 'badge badge-success';
+                    badge.textContent = 'Ativa';
+                }
 
-                document.getElementById('subStatus').textContent = 'Ativa';
-                document.getElementById('subPlan').textContent = formatPlanName(sub.plan_type);
+                const subStatusEl = safeGetElement('subStatus');
+                const subPlanEl = safeGetElement('subPlan');
+                if (subStatusEl) subStatusEl.textContent = 'Ativa';
+                if (subPlanEl) subPlanEl.textContent = formatPlanName(sub.plan_type);
 
                 // Renovação
-                if (sub.current_period_end) {
+                const subRenewalEl = safeGetElement('subRenewal');
+                if (sub.current_period_end && subRenewalEl) {
                     const endDate = new Date(sub.current_period_end);
-                    document.getElementById('subRenewal').textContent = endDate.toLocaleDateString('pt-BR');
+                    subRenewalEl.textContent = endDate.toLocaleDateString('pt-BR');
 
                     // Aviso se cancelar ao fim do período
                     if (sub.cancel_at_period_end) {
-                        document.getElementById('subCancelNote').style.display = 'block';
+                        const cancelNoteEl = safeGetElement('subCancelNote');
+                        if (cancelNoteEl) cancelNoteEl.style.display = 'block';
                     }
-                } else {
-                    document.getElementById('subRenewal').textContent = 'Vitalício';
+                } else if (subRenewalEl) {
+                    subRenewalEl.textContent = 'Vitalício';
                 }
 
                 // Limites do plano
                 const planLimits = getPlanLimits(sub.plan_type);
                 const contractsUsed = dashboardData.stats.contracts_count || 0;
-                document.getElementById('contractsLimit').textContent = `${contractsUsed}/${planLimits.max_contracts === -1 ? '∞' : planLimits.max_contracts}`;
+                const contractsLimitEl = safeGetElement('contractsLimit');
+                if (contractsLimitEl) {
+                    contractsLimitEl.textContent = `${contractsUsed}/${planLimits.max_contracts === -1 ? '∞' : planLimits.max_contracts}`;
+                }
 
                 // Barra de progresso
                 if (planLimits.max_contracts > 0) {
                     const usagePercent = (contractsUsed / planLimits.max_contracts) * 100;
-                    document.getElementById('usageBar').style.display = 'block';
-                    document.getElementById('usageProgress').style.width = `${Math.min(usagePercent, 100)}%`;
+                    const usageBarEl = safeGetElement('usageBar');
+                    const usageProgressEl = safeGetElement('usageProgress');
+                    if (usageBarEl) usageBarEl.style.display = 'block';
+                    if (usageProgressEl) {
+                        usageProgressEl.style.width = `${Math.min(usagePercent, 100)}%`;
 
-                    // Mudar cor se próximo do limite
-                    if (usagePercent >= 90) {
-                        document.getElementById('usageProgress').style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
-                    } else if (usagePercent >= 70) {
-                        document.getElementById('usageProgress').style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                        // Mudar cor se próximo do limite
+                        if (usagePercent >= 90) {
+                            usageProgressEl.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+                        } else if (usagePercent >= 70) {
+                            usageProgressEl.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                        }
                     }
                 }
 
                 // Detalhes da assinatura
-                document.getElementById('subscriptionDetails').style.display = 'block';
-                document.getElementById('planName').textContent = formatPlanName(sub.plan_type);
+                const subscriptionDetailsEl = safeGetElement('subscriptionDetails');
+                const planNameEl = safeGetElement('planName');
+                if (subscriptionDetailsEl) subscriptionDetailsEl.style.display = 'block';
+                if (planNameEl) planNameEl.textContent = formatPlanName(sub.plan_type);
 
                 if (sub.current_period_start && sub.current_period_end) {
                     const start = new Date(sub.current_period_start).toLocaleDateString('pt-BR');
                     const end = new Date(sub.current_period_end).toLocaleDateString('pt-BR');
-                    document.getElementById('currentPeriod').textContent = `${start} - ${end}`;
+                    const currentPeriodEl = safeGetElement('currentPeriod');
+                    if (currentPeriodEl) currentPeriodEl.textContent = `${start} - ${end}`;
                 }
 
-                document.getElementById('stripeSubId').textContent = sub.stripe_subscription_id || '-';
+                const stripeSubIdEl = safeGetElement('stripeSubId');
+                if (stripeSubIdEl) stripeSubIdEl.textContent = sub.stripe_subscription_id || '-';
 
                 if (sub.created_at) {
-                    document.getElementById('createdAt').textContent = new Date(sub.created_at).toLocaleDateString('pt-BR');
+                    const createdAtEl = safeGetElement('createdAt');
+                    if (createdAtEl) createdAtEl.textContent = new Date(sub.created_at).toLocaleDateString('pt-BR');
                 }
 
                 // Features do plano
                 renderPlanFeatures(planLimits);
 
-                document.getElementById('portalBtn').style.display = 'inline-flex';
+                const portalBtnEl = safeGetElement('portalBtn');
+                if (portalBtnEl) portalBtnEl.style.display = 'inline-flex';
             } else {
                 // Sem assinatura ativa
-                const badge = document.getElementById('statusBadge');
-                badge.style.display = 'inline-block';
-                badge.className = 'badge badge-error';
-                badge.textContent = 'Inativa';
+                const badge = safeGetElement('statusBadge');
+                if (badge) {
+                    badge.style.display = 'inline-block';
+                    badge.className = 'badge badge-error';
+                    badge.textContent = 'Inativa';
+                }
 
-                document.getElementById('subStatus').textContent = 'Inativa';
-                document.getElementById('subPlan').textContent = 'Sem assinatura';
-                document.getElementById('subRenewal').textContent = '-';
-                document.getElementById('contractsLimit').textContent = '0/0';
-                document.getElementById('upgradeBtn').style.display = 'inline-flex';
-                document.getElementById('portalBtn').style.display = 'none';
-                document.getElementById('subscriptionDetails').style.display = 'none';
+                const subStatusEl = safeGetElement('subStatus');
+                const subPlanEl = safeGetElement('subPlan');
+                const subRenewalEl = safeGetElement('subRenewal');
+                const contractsLimitEl = safeGetElement('contractsLimit');
+                const upgradeBtnEl = safeGetElement('upgradeBtn');
+                const portalBtnEl = safeGetElement('portalBtn');
+                const subscriptionDetailsEl = safeGetElement('subscriptionDetails');
+                
+                if (subStatusEl) subStatusEl.textContent = 'Inativa';
+                if (subPlanEl) subPlanEl.textContent = 'Sem assinatura';
+                if (subRenewalEl) subRenewalEl.textContent = '-';
+                if (contractsLimitEl) contractsLimitEl.textContent = '0/0';
+                if (upgradeBtnEl) upgradeBtnEl.style.display = 'inline-flex';
+                if (portalBtnEl) portalBtnEl.style.display = 'none';
+                if (subscriptionDetailsEl) subscriptionDetailsEl.style.display = 'none';
             }
 
             // License
             if (dashboardData.license) {
                 const lic = dashboardData.license;
-                document.getElementById('licenseKey').textContent = lic.key;
-                document.getElementById('licenseType').textContent = `Licença ${lic.type.toUpperCase()}`;
+                const licenseKeyEl = safeGetElement('licenseKey');
+                const licenseTypeEl = safeGetElement('licenseType');
+                const licenseExpiresEl = safeGetElement('licenseExpires');
+                const licenseAreaEl = safeGetElement('licenseArea');
+                const noLicenseEl = safeGetElement('noLicense');
                 
-                if (lic.expires_at) {
+                if (licenseKeyEl) licenseKeyEl.textContent = lic.key;
+                if (licenseTypeEl) licenseTypeEl.textContent = `Licença ${lic.type.toUpperCase()}`;
+                
+                if (lic.expires_at && licenseExpiresEl) {
                     const expDate = new Date(lic.expires_at);
-                    document.getElementById('licenseExpires').textContent = `Válida até ${expDate.toLocaleDateString('pt-BR')}`;
-                } else {
-                    document.getElementById('licenseExpires').textContent = 'Licença vitalícia';
+                    licenseExpiresEl.textContent = `Válida até ${expDate.toLocaleDateString('pt-BR')}`;
+                } else if (licenseExpiresEl) {
+                    licenseExpiresEl.textContent = 'Licença vitalícia';
                 }
 
-                document.getElementById('licenseArea').style.display = 'block';
-                document.getElementById('noLicense').style.display = 'none';
+                if (licenseAreaEl) licenseAreaEl.style.display = 'block';
+                if (noLicenseEl) noLicenseEl.style.display = 'none';
             } else {
-                document.getElementById('licenseArea').style.display = 'none';
-                document.getElementById('noLicense').style.display = 'block';
+                const licenseAreaEl = safeGetElement('licenseArea');
+                const noLicenseEl = safeGetElement('noLicense');
+                if (licenseAreaEl) licenseAreaEl.style.display = 'none';
+                if (noLicenseEl) noLicenseEl.style.display = 'block';
             }
+
+            // Garantir que a seção do dashboard analítico está visível
+            // Aguardar um pouco para garantir que o DOM está pronto
+            setTimeout(() => {
+                const analyticsSection = document.getElementById('analyticsDashboard');
+                if (analyticsSection) {
+                    analyticsSection.style.display = 'block';
+                    console.log('✅ Seção analyticsDashboard garantida como visível');
+                }
+            }, 200);
+
+            // Carregar dashboard analítico após renderizar dashboard principal
+            setTimeout(() => {
+                console.log('Iniciando carregamento do dashboard analítico...');
+                loadAnalyticsDashboard();
+            }, 500);
         }
 
         function copyLicenseKey() {
@@ -825,10 +1020,15 @@
 
         // Mostrar modal de acesso negado
         function showAccessDeniedModal(reason) {
-            const modal = document.getElementById('accessDeniedModal');
-            const title = document.getElementById('modalTitle');
-            const message = document.getElementById('modalMessage');
-            const actionBtn = document.getElementById('modalActionBtn');
+            const modal = safeGetElement('accessDeniedModal');
+            const title = safeGetElement('modalTitle');
+            const message = safeGetElement('modalMessage');
+            const actionBtn = safeGetElement('modalActionBtn');
+            
+            if (!modal || !title || !message || !actionBtn) {
+                console.error('❌ Elementos do modal não encontrados');
+                return;
+            }
 
             let titleText = '';
             let messageText = '';
@@ -868,28 +1068,382 @@
                     break;
             }
 
-            title.textContent = titleText;
-            message.textContent = messageText;
-            actionBtn.textContent = buttonText;
-            actionBtn.onclick = buttonAction;
-
-            modal.style.display = 'flex';
+            if (title) title.textContent = titleText;
+            if (message) message.textContent = messageText;
+            if (actionBtn) {
+                actionBtn.textContent = buttonText;
+                actionBtn.onclick = buttonAction;
+            }
+            if (modal) modal.style.display = 'flex';
         }
 
         // Fechar modal
         function closeAccessDeniedModal() {
-            document.getElementById('accessDeniedModal').style.display = 'none';
+            const modal = safeGetElement('accessDeniedModal');
+            if (modal) modal.style.display = 'none';
         }
 
         // Fechar modal ao clicar fora
         window.onclick = function(event) {
-            const modal = document.getElementById('accessDeniedModal');
-            if (event.target === modal) {
+            const modal = safeGetElement('accessDeniedModal');
+            if (modal && event.target === modal) {
                 closeAccessDeniedModal();
             }
         }
 
         // Inicializar
+        // ============================================================
+        // DASHBOARD ANALÍTICO
+        // ============================================================
+
+        let evolutionChart = null;
+        let distributionChart = null;
+        let expensesChart = null;
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0
+            }).format(value);
+        }
+
+        async function loadAnalyticsDashboard() {
+            const token = localStorage.getItem('ifrs16_auth_token');
+            if (!token) {
+                console.warn('⚠️ Token não encontrado, dashboard analítico não será carregado');
+                return;
+            }
+
+            console.log('📊 Carregando dashboard analítico...', { API_URL, hasToken: !!token });
+
+            try {
+                // Carregar métricas gerais
+                const metricsUrl = `${API_URL}/api/user/dashboard/metrics`;
+                console.log('🔗 Chamando API:', metricsUrl);
+                
+                const metricsResponse = await fetch(metricsUrl, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                console.log('📥 Resposta recebida:', metricsResponse.status, metricsResponse.statusText);
+                
+                if (!metricsResponse.ok) {
+                    console.error('❌ Erro ao carregar métricas:', metricsResponse.status, metricsResponse.statusText);
+                    const errorText = await metricsResponse.text();
+                    console.error('📄 Resposta de erro:', errorText);
+                    
+                    // Mostrar erro na página
+                    const dashboardSection = document.getElementById('analyticsDashboard');
+                    if (dashboardSection) {
+                        const errorDiv = document.createElement('div');
+                        errorDiv.style.cssText = 'padding: 16px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: var(--text-primary); margin: 20px 0;';
+                        errorDiv.innerHTML = `<strong>Erro ao carregar métricas:</strong> ${metricsResponse.status} - ${metricsResponse.statusText}`;
+                        dashboardSection.insertBefore(errorDiv, dashboardSection.firstChild);
+                    }
+                } else {
+                    const metrics = await metricsResponse.json();
+                    console.log('✅ Métricas carregadas:', metrics);
+                    
+                    const metricTotalContractsEl = safeGetElement('metricTotalContracts');
+                    const metricTotalPassivosEl = safeGetElement('metricTotalPassivos');
+                    const metricTotalAtivosEl = safeGetElement('metricTotalAtivos');
+                    const metricDespesasMensaisEl = safeGetElement('metricDespesasMensais');
+                    
+                    console.log('🔍 Elementos encontrados:', {
+                        totalContracts: !!metricTotalContractsEl,
+                        totalPassivos: !!metricTotalPassivosEl,
+                        totalAtivos: !!metricTotalAtivosEl,
+                        despesasMensais: !!metricDespesasMensaisEl
+                    });
+                    
+                    if (metricTotalContractsEl) {
+                        metricTotalContractsEl.textContent = metrics.total_contracts || 0;
+                        console.log('✅ Total de contratos atualizado:', metrics.total_contracts || 0);
+                    } else {
+                        console.warn('⚠️ Elemento metricTotalContracts não encontrado');
+                    }
+                    
+                    if (metricTotalPassivosEl) {
+                        metricTotalPassivosEl.textContent = formatCurrency(metrics.total_passivos || 0);
+                        console.log('✅ Total de passivos atualizado:', metrics.total_passivos || 0);
+                    } else {
+                        console.warn('⚠️ Elemento metricTotalPassivos não encontrado');
+                    }
+                    
+                    if (metricTotalAtivosEl) {
+                        metricTotalAtivosEl.textContent = formatCurrency(metrics.total_ativos || 0);
+                        console.log('✅ Total de ativos atualizado:', metrics.total_ativos || 0);
+                    } else {
+                        console.warn('⚠️ Elemento metricTotalAtivos não encontrado');
+                    }
+                    
+                    if (metricDespesasMensaisEl) {
+                        metricDespesasMensaisEl.textContent = formatCurrency(metrics.total_despesas_mensais || 0);
+                        console.log('✅ Despesas mensais atualizadas:', metrics.total_despesas_mensais || 0);
+                    } else {
+                        console.warn('⚠️ Elemento metricDespesasMensais não encontrado');
+                    }
+                }
+
+                // Carregar evolução temporal
+                const evolutionResponse = await fetch(`${API_URL}/api/user/dashboard/evolution?months=12`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (evolutionResponse.ok) {
+                    const evolution = await evolutionResponse.json();
+                    console.log('✅ Evolução carregada:', evolution);
+                    renderEvolutionChart(evolution.evolution);
+                } else {
+                    console.warn('⚠️ Erro ao carregar evolução:', evolutionResponse.status);
+                }
+
+                // Carregar distribuição
+                const distributionResponse = await fetch(`${API_URL}/api/user/dashboard/distribution`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (distributionResponse.ok) {
+                    const distribution = await distributionResponse.json();
+                    console.log('✅ Distribuição carregada:', distribution);
+                    renderDistributionChart(distribution.distribution);
+                } else {
+                    console.warn('⚠️ Erro ao carregar distribuição:', distributionResponse.status);
+                }
+
+                // Carregar despesas mensais
+                const expensesResponse = await fetch(`${API_URL}/api/user/dashboard/monthly-expenses`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (expensesResponse.ok) {
+                    const expenses = await expensesResponse.json();
+                    console.log('✅ Despesas mensais carregadas:', expenses);
+                    renderExpensesChart(expenses.monthly_expenses);
+                } else {
+                    console.warn('⚠️ Erro ao carregar despesas mensais:', expensesResponse.status);
+                }
+
+                // Carregar próximos vencimentos
+                const expirationsResponse = await fetch(`${API_URL}/api/user/dashboard/upcoming-expirations?days=90`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (expirationsResponse.ok) {
+                    const expirations = await expirationsResponse.json();
+                    console.log('✅ Próximos vencimentos carregados:', expirations);
+                    renderExpirationsTable(expirations.upcoming_expirations);
+                } else {
+                    console.warn('⚠️ Erro ao carregar próximos vencimentos:', expirationsResponse.status);
+                }
+                
+                console.log('✅ Dashboard analítico carregado com sucesso!');
+            } catch (error) {
+                console.error('Erro ao carregar dashboard analítico:', error);
+                // Mostrar mensagem de erro no dashboard
+                const errorMsg = document.createElement('div');
+                errorMsg.style.cssText = 'padding: 20px; background: rgba(255,0,0,0.1); border: 1px solid rgba(255,0,0,0.3); border-radius: 8px; color: var(--text-primary); margin: 20px 0;';
+                errorMsg.textContent = `Erro ao carregar dashboard: ${error.message}`;
+                const dashboardSection = document.querySelector('.glass-card:has(#metricTotalContracts)');
+                if (dashboardSection) {
+                    dashboardSection.appendChild(errorMsg);
+                }
+            }
+        }
+
+        function renderEvolutionChart(data) {
+            const ctx = document.getElementById('evolutionChart');
+            if (!ctx) return;
+
+            if (evolutionChart) {
+                evolutionChart.destroy();
+            }
+
+            const labels = data.map(d => {
+                const [year, month] = d.month.split('-');
+                const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                return `${monthNames[parseInt(month) - 1]}/${year.slice(2)}`;
+            });
+            const values = data.map(d => d.passivo);
+
+            evolutionChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Passivo Total (R$)',
+                        data: values,
+                        borderColor: 'rgb(0, 212, 255)',
+                        backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'rgba(255, 255, 255, 0.8)' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { color: 'rgba(255, 255, 255, 0.6)' },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderDistributionChart(data) {
+            const ctx = document.getElementById('distributionChart');
+            if (!ctx) return;
+
+            if (distributionChart) {
+                distributionChart.destroy();
+            }
+
+            const labels = data.map(d => d.category);
+            const values = data.map(d => d.value);
+            const colors = [
+                'rgba(0, 212, 255, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(245, 158, 11, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(239, 68, 68, 0.8)'
+            ];
+
+            distributionChart = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderColor: 'rgba(255, 255, 255, 0.2)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { color: 'rgba(255, 255, 255, 0.8)' }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.label || '';
+                                    const value = formatCurrency(context.parsed);
+                                    const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return `${label}: ${value} (${percentage}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderExpensesChart(data) {
+            const ctx = document.getElementById('expensesChart');
+            if (!ctx) return;
+
+            if (expensesChart) {
+                expensesChart.destroy();
+            }
+
+            // Limitar a 10 primeiros para melhor visualização
+            const limitedData = data.slice(0, 10);
+            const labels = limitedData.map(d => d.contract_name.length > 20 ? d.contract_name.substring(0, 20) + '...' : d.contract_name);
+            const values = limitedData.map(d => d.despesa_mensal);
+
+            expensesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Despesa Mensal (R$)',
+                        data: values,
+                        backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                        borderColor: 'rgba(245, 158, 11, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: 'rgba(255, 255, 255, 0.8)' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                callback: function(value) {
+                                    return formatCurrency(value);
+                                }
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        },
+                        x: {
+                            ticks: { 
+                                color: 'rgba(255, 255, 255, 0.6)',
+                                maxRotation: 45,
+                                minRotation: 45
+                            },
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderExpirationsTable(data) {
+            const tbody = document.getElementById('expirationsTableBody');
+            if (!tbody) return;
+
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: var(--text-secondary);">Nenhum vencimento próximo</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = data.map(item => {
+                const statusBadge = {
+                    'critical': '<span style="color: #ef4444; font-weight: bold;">🔴 Crítico</span>',
+                    'warning': '<span style="color: #f59e0b; font-weight: bold;">⚠️ Atenção</span>',
+                    'normal': '<span style="color: #10b981;">ℹ️ Normal</span>'
+                }[item.status] || '<span>ℹ️ Normal</span>';
+
+                const expirationDate = item.expiration_date ? new Date(item.expiration_date).toLocaleDateString('pt-BR') : '-';
+
+                return `
+                    <tr>
+                        <td>${item.contract_name}</td>
+                        <td style="text-align: center;">${expirationDate}</td>
+                        <td style="text-align: center;">${item.days_until_expiration} dias</td>
+                        <td style="text-align: center;">${statusBadge}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
         window.onload = loadDashboard;
     </script>
 

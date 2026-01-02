@@ -7,6 +7,406 @@
 
 ## Changelog
 
+### 2026-01-02 — Correção Final: Erro SQL no Endpoint upcoming-expirations
+
+**Agent:** Claude Code
+**Task:** Corrigir último erro SQL no endpoint de próximos vencimentos
+
+**Problema Identificado:**
+- Endpoint `/api/user/dashboard/upcoming-expirations` retornando 500
+- Erro SQL: `syntax error at or near ":"`
+- Função `get_upcoming_expirations()` ainda usava `:user_id::uuid` e `:days::interval`
+
+**Causa:**
+- As correções anteriores foram revertidas pelo usuário
+- A função `get_upcoming_expirations` não foi atualizada
+
+**Ações Realizadas:**
+1. Corrigido `WHERE c.user_id = :user_id::uuid` → `CAST(:user_id AS uuid)`
+2. Corrigido `+ :days::interval` → `+ CAST(:days AS interval)`
+3. Build e deploy do backend
+
+**Verificação:**
+- [x] Query SQL corrigida
+- [x] Build concluído
+- [ ] Deploy em andamento
+
+**Deploy:**
+- Backend: Cloud Run (us-central1)
+- Data: 2026-01-02
+
+---
+
+### 2026-01-02 — Investigação: Dashboard Mostrando Valores Zerados
+
+**Agent:** Claude Code
+**Task:** Investigar por que o dashboard não está mostrando dados reais
+
+**Problema Relatado:**
+- Elementos HTML do dashboard mostram valores "0"
+- Total de Contratos: 0
+- Valor Total de Passivos: R$ 0
+- Valor Total de Ativos: R$ 0
+- Despesas Mensais Totais: R$ 0
+- Gráficos e tabelas vazios
+
+**Investigação Realizada:**
+1. ✅ Estrutura HTML verificada - elementos com IDs corretos existem
+2. ✅ JavaScript verificado - código busca e atualiza elementos corretamente
+3. ✅ Backend verificado - endpoints respondem 200 OK
+4. ❌ **Causa identificada**: Backend retorna valores = 0
+
+**Possíveis Causas:**
+1. Usuário não tem contratos cadastrados no banco
+2. Query SQL não encontra contratos do usuário
+3. Problema com `user_id` na query (conversão de tipo)
+
+**Ações Realizadas:**
+1. Adicionados logs de debug no `DashboardService.get_metrics()`
+2. Build e deploy do backend com logs
+
+**Próximos Passos:**
+- Verificar logs do backend após usuário acessar dashboard
+- Confirmar se há contratos no banco para o usuário
+- Verificar se `user_id` está sendo passado corretamente
+
+**Deploy:**
+- Backend: Cloud Run (us-central1)
+- Data: 2026-01-02
+
+---
+
+### 2026-01-02 — Correção de Erro SQL nos Endpoints do Dashboard
+
+**Agent:** Claude Code
+**Task:** Corrigir erros de sintaxe SQL nos endpoints do dashboard
+
+**Problemas Identificados:**
+- Erros 500 em todos os endpoints do dashboard
+- Erro SQL: `syntax error at or near ":"`
+- Uso incorreto de `::uuid` e `::interval` com parâmetros nomeados no SQLAlchemy
+
+**Ações Realizadas:**
+1. Identificado problema: PostgreSQL não aceita `:param::type` diretamente
+2. Substituído `:user_id::uuid` por `CAST(:user_id AS uuid)` em todas as queries
+3. Substituído `:days::interval` por `CAST(:days AS interval)`
+4. Substituído `:start_date::date` e `:end_date::date` por `CAST(:start_date AS date)` e `CAST(:end_date AS date)`
+5. Arquivo corrigido: `backend/app/services/dashboard_service.py`
+
+**Queries Corrigidas:**
+- `get_metrics()` - linha 53
+- `get_evolution()` - linhas 89-90, 107
+- `get_distribution()` - linha 146
+- `get_monthly_expenses()` - linha 188
+- `get_upcoming_expirations()` - linhas 231, 235
+
+**Verificação:**
+- [x] Todas as queries corrigidas
+- [x] Build da imagem Docker iniciado
+- [ ] Deploy no Cloud Run (em andamento)
+
+**Deploy:**
+- Backend: Cloud Run (us-central1)
+- Data: 2026-01-02
+
+---
+
+### 2026-01-02 — Configuração DATABASE_URL e Cloud SQL
+
+**Agent:** Claude Code
+**Task:** Configurar conexão com Cloud SQL no backend
+
+**Problemas Resolvidos:**
+- Backend não conseguia conectar ao banco de dados (ConnectionRefusedError)
+- DATABASE_URL não estava configurada no Cloud Run
+- Conexão Cloud SQL não estava habilitada no serviço
+
+**Ações Realizadas:**
+1. Verificação da instância Cloud SQL: `ifrs16-database` (POSTGRES_15, us-central1-c)
+2. Configuração da conexão Cloud SQL no Cloud Run:
+   - Adicionado `--add-cloudsql-instances ifrs16-app:us-central1:ifrs16-database`
+3. Configuração da variável DATABASE_URL:
+   - `postgresql+asyncpg://ifrs16_user:bBMOLk2HURjQAvDiPNYE@/ifrs16_licenses?host=/cloudsql/ifrs16-app:us-central1:ifrs16-database`
+4. Deploy da nova revision: `ifrs16-backend-00145-h6m`
+
+**Verificação:**
+- [x] Instância Cloud SQL encontrada e ativa
+- [x] Conexão Cloud SQL configurada no Cloud Run
+- [x] DATABASE_URL configurada com connection string Unix socket
+- [x] Nova revision deployada
+
+**Deploy:**
+- Backend: Cloud Run (us-central1)
+- Revision: ifrs16-backend-00145-h6m
+- Cloud SQL: ifrs16-app:us-central1:ifrs16-database
+- Data: 2026-01-02
+
+---
+
+### 2026-01-02 — Deploy Backend com Endpoints do Dashboard
+
+**Agent:** Claude Code
+**Task:** Deploy do backend com endpoints do Dashboard Analítico
+
+**Problemas Resolvidos:**
+- Endpoints do dashboard retornando 404 (Not Found)
+- Backend falhando ao iniciar por falta de variáveis de ambiente
+- JWT_SECRET_KEY usando valor placeholder
+
+**Ações Realizadas:**
+1. Build da imagem Docker do backend
+2. Configuração de variáveis de ambiente no Cloud Run:
+   - `JWT_SECRET_KEY` (chave forte gerada)
+   - `STRIPE_PRICE_BASIC_MONTHLY`
+   - `STRIPE_PRICE_BASIC_YEARLY`
+   - `STRIPE_PRICE_PRO_MONTHLY`
+   - `STRIPE_PRICE_PRO_YEARLY`
+   - `STRIPE_PRICE_ENTERPRISE_MONTHLY`
+   - `STRIPE_PRICE_ENTERPRISE_YEARLY`
+3. Deploy no Cloud Run (revision: ifrs16-backend-00144-gtb)
+
+**Endpoints Disponíveis:**
+- `GET /api/user/dashboard/metrics` — Métricas gerais
+- `GET /api/user/dashboard/evolution?months=12` — Evolução temporal
+- `GET /api/user/dashboard/distribution` — Distribuição por categoria
+- `GET /api/user/dashboard/monthly-expenses` — Despesas mensais
+- `GET /api/user/dashboard/upcoming-expirations?days=90` — Próximos vencimentos
+
+**Verificação:**
+- [x] Build da imagem concluído
+- [x] Variáveis de ambiente configuradas
+- [x] Deploy no Cloud Run concluído
+- [x] Backend respondendo em: https://ifrs16-backend-1051753255664.us-central1.run.app
+
+**Deploy:**
+- Backend: Cloud Run (us-central1)
+- Revision: ifrs16-backend-00144-gtb
+- URL: https://ifrs16-backend-1051753255664.us-central1.run.app
+- Data: 2026-01-02
+
+---
+
+### 2026-01-02 — Botão Dashboard na Calculadora
+
+**Agent:** Claude Code
+**Task:** Adicionar botão de navegação para o Dashboard na página inicial da calculadora
+
+**Arquivos Modificados:**
+- `Calculadora_IFRS16_Deploy.html` — Adicionado botão "Dashboard" no header (linha ~430)
+
+**Detalhes:**
+- Botão com gradiente roxo (`from-purple-600 to-purple-700`) para destacar
+- Ícone de gráfico de barras (dashboard)
+- Posicionado antes do botão "Relatórios" no header
+- Link direto para `dashboard.html`
+- Tooltip: "Dashboard - Minha Conta"
+- Estilo consistente com outros botões do header
+
+**Verificação:**
+- [x] Botão adicionado no header da calculadora
+- [x] Estilo consistente com outros botões
+- [x] Deploy realizado com sucesso
+- [x] Link funcional para `dashboard.html`
+
+**Deploy:**
+- Frontend: https://ifrs16-app.web.app
+- Data: 2026-01-02
+
+---
+
+### 2026-01-02 — Dashboard Analítico Completo
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Implementar Dashboard Analítico com métricas, gráficos e análises
+
+**Arquivos Criados:**
+- `backend/app/services/dashboard_service.py` — Service para agregar métricas de contratos
+- `backend/tests/test_dashboard.py` — Testes unitários e de endpoints (11 testes)
+
+**Arquivos Modificados:**
+- `backend/app/services/__init__.py` — Exportado `DashboardService`
+- `backend/app/schemas.py` — Adicionados schemas: `DashboardMetricsResponse`, `DashboardEvolutionResponse`, `DashboardDistributionResponse`, `DashboardMonthlyExpensesResponse`, `DashboardUpcomingExpirationsResponse`, `EvolutionDataPoint`, `DistributionDataPoint`, `MonthlyExpenseDataPoint`, `UpcomingExpirationDataPoint`
+- `backend/app/routers/user_dashboard.py` — Adicionados 5 endpoints:
+  - `GET /api/user/dashboard/metrics` — Métricas gerais
+  - `GET /api/user/dashboard/evolution` — Evolução temporal (12 meses)
+  - `GET /api/user/dashboard/distribution` — Distribuição por categoria
+  - `GET /api/user/dashboard/monthly-expenses` — Despesas mensais por contrato
+  - `GET /api/user/dashboard/upcoming-expirations` — Próximos vencimentos
+- `dashboard.html` — Adicionado Chart.js, seção de métricas analíticas e JavaScript para renderizar gráficos
+
+**Funcionalidades Implementadas:**
+
+1. **DashboardService:**
+   - `get_metrics()` — Agrega métricas gerais (total contratos, passivos, ativos, despesas mensais)
+   - `get_evolution()` — Calcula evolução do passivo ao longo do tempo
+   - `get_distribution()` — Distribui contratos por categoria
+   - `get_monthly_expenses()` — Lista despesas mensais por contrato (top 20)
+   - `get_upcoming_expirations()` — Identifica contratos próximos do vencimento
+
+2. **Frontend - Gráficos:**
+   - Gráfico de linha: Evolução do passivo (últimos 12 meses)
+   - Gráfico de pizza: Distribuição por categoria
+   - Gráfico de barras: Despesas mensais por contrato
+   - Tabela: Próximos vencimentos com status (crítico/warning/normal)
+
+3. **Cards de Métricas:**
+   - Total de Contratos
+   - Valor Total de Passivos
+   - Valor Total de Ativos
+   - Despesas Mensais Totais
+
+4. **Integração:**
+   - Chart.js 4.4.0 via CDN
+   - Tema neon cyberpunk consistente
+   - Formatação de moeda brasileira
+   - Responsivo e mobile-friendly
+
+5. **Testes:**
+   - 11 testes criados (5 service, 6 endpoints)
+   - Teste de autenticação passando
+   - Nota: Queries SQL usam funções PostgreSQL (generate_series, etc), então alguns testes requerem PostgreSQL
+
+**Verificação:**
+- [x] Service criado e importado
+- [x] Endpoints criados e documentados (6 endpoints registrados)
+- [x] Schemas Pydantic criados
+- [x] Chart.js adicionado
+- [x] HTML atualizado com seção de métricas
+- [x] JavaScript implementado para carregar e renderizar gráficos
+- [x] Testes criados (1 teste passando, outros requerem PostgreSQL)
+- [x] App importa sem erros
+
+**Observações:**
+- Queries SQL otimizadas com LATERAL JOIN para performance
+- Endpoints requerem autenticação JWT
+- Queries usam funções PostgreSQL específicas (generate_series, TO_CHAR, etc)
+- Testes em SQLite podem falhar - requer PostgreSQL para testes completos
+
+**Próximos Passos:**
+- [x] Deploy do backend no Cloud Run (2026-01-02)
+- [x] Deploy do frontend no Firebase Hosting (2026-01-02)
+- [ ] Testar endpoints com dados reais em produção
+- [ ] Verificar performance das queries com muitos contratos
+- [ ] Adicionar filtros (período, categoria) se necessário
+
+**Deploy:**
+- Frontend: https://ifrs16-app.web.app
+- Backend: Cloud Run (us-central1)
+- Build ID: 6ea5e8f7-2a80-426f-bc91-2e2140e93091 (SUCCESS)
+
+---
+
+### 2026-01-02 — Frontend: Gestao de Documentos (Upload/Download/Delete)
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Implementar interface profissional de upload de documentos no frontend
+
+**Arquivos Criados:**
+- `assets/js/document-manager.js` — Servico completo de gerenciamento de documentos no frontend
+- `assets/css/documents.css` — Estilos para componentes de documentos (drag-and-drop, modal, listagem)
+
+**Arquivos Modificados:**
+- `assets/js/contracts.js` — Adicionado botao de documentos na lista de contratos e funcao `openContractDocuments()`
+- `Calculadora_IFRS16_Deploy.html` — Incluidos CSS e JS de documentos
+
+**Funcionalidades Implementadas:**
+
+1. **DocumentManager (JavaScript):**
+   - `uploadDocument()` — Upload de arquivo com validacao
+   - `getContractDocuments()` — Listar documentos de um contrato
+   - `getDocumentDownloadUrl()` — Obter URL assinada para download
+   - `deleteDocument()` — Deletar documento
+   - `updateDocument()` — Atualizar descricao
+   - `validateFile()` — Validar tamanho e tipo MIME
+   - `createDropZone()` — Componente drag-and-drop profissional
+   - `createDocumentList()` — Componente de listagem de documentos
+   - `openContractDocumentsModal()` — Modal completo para gerenciar documentos
+
+2. **Interface de Usuario:**
+   - Drag-and-drop zone com feedback visual
+   - Modal de descricao antes do upload
+   - Barra de progresso durante upload
+   - Listagem com icones por tipo de arquivo
+   - Botoes de download e exclusao
+   - Notificacoes toast (sucesso/erro)
+   - Design neon cyberpunk consistente com o tema
+
+3. **Integracao com Contratos:**
+   - Botao de documentos na lista de contratos
+   - Modal de documentos acessivel por contrato
+   - Atualizacao automatica da lista apos upload
+
+**Verificacao:**
+- [x] `document-manager.js` carregado na Calculadora
+- [x] `documents.css` carregado na Calculadora
+- [x] Botao de documentos na lista de contratos
+- [x] Design consistente com tema neon
+
+**Proximo Passo:**
+- Fazer deploy do frontend no Firebase Hosting
+
+---
+
+### 2026-01-02 — Upload e Gestao de Documentos (Firebase Storage)
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Implementar Funcionalidade 3 do PLANO_IMPLEMENTACAO_MELHORIAS.md - Upload e Gestão de Documentos
+
+**Arquivos Criados:**
+- `backend/app/services/document_service.py` — Service para upload/download com Firebase Storage
+- `backend/app/routers/documents.py` — Router com endpoints REST para documentos
+
+**Arquivos Modificados:**
+- `backend/app/models.py` — Adicionado modelo `Document` com relacionamentos para Contract e User
+- `backend/app/schemas.py` — Adicionados schemas: `DocumentUploadResponse`, `DocumentResponse`, `DocumentListResponse`, `DocumentDownloadResponse`, `DocumentUpdateRequest`, `DocumentDeleteResponse`
+- `backend/app/config.py` — Adicionadas configurações: `FIREBASE_STORAGE_BUCKET`, `FIREBASE_CREDENTIALS_PATH`, `MAX_FILE_SIZE_MB`, `ALLOWED_MIME_TYPES`
+- `backend/app/routers/__init__.py` — Exportado `documents_router`
+- `backend/app/services/__init__.py` — Exportado `DocumentService` e `document_service`
+- `backend/app/main.py` — Registrado router e chamada para `ensure_documents_table()`
+- `backend/app/database.py` — Adicionada função `ensure_documents_table()`
+- `backend/requirements.txt` — Adicionadas dependências: `firebase-admin==6.6.0`, `google-cloud-storage==2.19.0`
+
+**Funcionalidades Implementadas:**
+
+1. **API de Documentos:**
+   - `POST /api/documents/contracts/{contract_id}/upload` — Upload de documento para contrato
+   - `GET /api/documents/contracts/{contract_id}` — Listar documentos de um contrato
+   - `GET /api/documents/my-documents` — Listar todos os documentos do usuário
+   - `GET /api/documents/{document_id}` — Obter metadados de um documento
+   - `GET /api/documents/{document_id}/download` — Gerar URL assinada para download
+   - `PATCH /api/documents/{document_id}` — Atualizar metadados (descrição)
+   - `DELETE /api/documents/{document_id}` — Deletar documento (soft delete)
+
+2. **Modelo Document:**
+   - `id`, `contract_id`, `user_id` — Identificadores
+   - `filename`, `storage_path`, `file_size`, `mime_type` — Metadados do arquivo
+   - `description`, `version` — Informações adicionais
+   - `created_at`, `updated_at`, `deleted_at`, `is_deleted` — Controle de datas e soft delete
+
+3. **Configurações:**
+   - `FIREBASE_STORAGE_BUCKET`: Bucket do Firebase Storage (padrão: ifrs16-app.firebasestorage.app)
+   - `MAX_FILE_SIZE_MB`: Tamanho máximo de arquivo (padrão: 10MB)
+   - `ALLOWED_MIME_TYPES`: Tipos permitidos (PDF, JPG, PNG, GIF)
+
+4. **Segurança:**
+   - Validação de propriedade: Usuário só acessa documentos de seus contratos
+   - URLs assinadas com expiração configurável (1min - 24h)
+   - Validação de tipo MIME e tamanho de arquivo
+   - Soft delete para preservar histórico
+
+**Verificação:**
+- [x] `from app.main import app` — Importação OK
+- [x] `from app.services.document_service import DocumentService` — OK
+- [x] `from app.routers.documents import router` — OK
+- [ ] Deploy pendente para Cloud Run
+
+**Próximos Passos:**
+- Configurar Firebase Storage CORS rules
+- Criar service account para Cloud Run
+- Testar upload em produção
+
+---
+
 ### 2026-01-02 — API de Índices Econômicos + Job de Sync Mensal
 
 **Agent:** Claude Code (Opus 4.5)

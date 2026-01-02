@@ -85,7 +85,7 @@ O mercado de soluções para cálculo e gestão de arrendamentos conforme IFRS 1
 | **Versionamento** | ✅ Manual | ✅ Automático | ⚠️ Variável | ❌ Limitado |
 | **Índices Econômicos** | ⬜ Em desenvolvimento | ✅ Integrado | ⚠️ Variável | ❌ Manual |
 | **Remensuração Automática** | ⬜ Planejado | ✅ Sim | ⚠️ Variável | ❌ Não |
-| **Upload de Documentos** | ⬜ Planejado | ✅ Sim | ⚠️ Variável | ❌ Não |
+| **Upload de Documentos** | ✅ Sim (Firebase) | ✅ Sim | ⚠️ Variável | ❌ Não |
 | **Notas Explicativas** | ⬜ Planejado | ✅ Automatizado | ✅ Automatizado | ❌ Manual |
 | **Simulação de Cenários** | ⬜ Planejado | ✅ Avançado | ⚠️ Básico | ⚠️ Manual |
 | **Workflow de Aprovação** | ❌ Não | ✅ Sim | ⚠️ Variável | ❌ Não |
@@ -215,7 +215,7 @@ As funcionalidades foram priorizadas considerando:
 ### Fase 1 - Alta Prioridade (MVP de Melhorias)
 1. ✅ **API de Índices Econômicos** (Concluído 2026-01-02 - Job mensal configurado)
 2. ✅ **Sistema de Alertas e Notificações** (Concluído 2026-01-02)
-3. ⬜ **Upload e Gestão de Documentos**
+3. ✅ **Upload e Gestão de Documentos** (Concluído 2026-01-02 - Backend Firebase Storage + Frontend profissional)
 4. ⬜ **Dashboard Analítico Melhorado**
 
 ### Fase 2 - Média Prioridade (Diferenciação)
@@ -1020,10 +1020,18 @@ Melhorar dashboard com métricas visuais, gráficos e análises dos contratos.
 
 ### 📊 Resumo Funcionalidade 4
 
-**Status:** ⬜ Não iniciado
+**Status:** ✅ **IMPLEMENTADO** (2026-01-02)
 
 **Dependências:**
 - Contratos e versões (já existem)
+
+**Implementação:**
+- ✅ Service `DashboardService` criado
+- ✅ 5 endpoints REST criados
+- ✅ Schemas Pydantic criados
+- ✅ Frontend com Chart.js implementado
+- ✅ 11 testes criados
+- ⚠️ Testes requerem PostgreSQL (queries usam funções específicas)
 
 ---
 

@@ -10,6 +10,7 @@ from .user_dashboard import router as user_dashboard_router
 from .economic_indexes import router as economic_indexes_router
 from .notifications import router as notifications_router
 from .jobs import router as jobs_router
+from .documents import router as documents_router
 
 __all__ = [
     "licenses_router",
@@ -20,5 +21,6 @@ __all__ = [
     "economic_indexes_router",
     "notifications_router",
     "jobs_router",
+    "documents_router",
 ]
 

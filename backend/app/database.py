@@ -242,6 +242,48 @@ async def ensure_notifications_table():
     print("[OK] Tabela notifications verificada/criada com sucesso!")
 
 
+async def ensure_documents_table():
+    """
+    Garante que a tabela documents existe no banco de dados.
+    Cria a tabela e índices se não existirem.
+    """
+    import sqlalchemy as sa
+    async with engine.begin() as conn:
+        # Criar tabela documents se não existir
+        await conn.execute(sa.text("""
+            CREATE TABLE IF NOT EXISTS documents (
+                id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                contract_id UUID NOT NULL REFERENCES contracts(id) ON DELETE CASCADE,
+                user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                filename VARCHAR(255) NOT NULL,
+                storage_path VARCHAR(500) NOT NULL,
+                file_size INTEGER NOT NULL,
+                mime_type VARCHAR(100) NOT NULL,
+                description VARCHAR(500),
+                version INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+                updated_at TIMESTAMP,
+                is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+                deleted_at TIMESTAMP
+            )
+        """))
+
+        # Criar índices
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_documents_contract_id ON documents(contract_id)
+        """))
+
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_documents_user_id ON documents(user_id)
+        """))
+
+        await conn.execute(sa.text("""
+            CREATE INDEX IF NOT EXISTS idx_documents_deleted ON documents(is_deleted)
+        """))
+
+    print("[OK] Tabela documents verificada/criada com sucesso!")
+
+
 async def close_db():
     """
     Fecha todas as conexões do pool.

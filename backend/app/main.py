@@ -21,6 +21,7 @@ from .database import (
     ensure_economic_indexes_table,
     ensure_reajuste_periodicidade_column,
     ensure_notifications_table,
+    ensure_documents_table,
 )
 from .routers import (
     licenses_router,
@@ -31,8 +32,10 @@ from .routers import (
     economic_indexes_router,
     notifications_router,
     jobs_router,
+    documents_router,
 )
 from .routers.contracts import router as contracts_router
+from .routers.debug import router as debug_router
 
 settings = get_settings()
 
@@ -170,6 +173,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
         await ensure_user_sessions_table()
         await ensure_economic_indexes_table()
         await ensure_notifications_table()
+        await ensure_documents_table()
         await ensure_reajuste_periodicidade_column()
     except Exception as e:
         print(f"[WARN] Erro ao criar tabelas/colunas: {e}")
@@ -293,6 +297,8 @@ app.include_router(contracts_router)
 app.include_router(economic_indexes_router)
 app.include_router(notifications_router)
 app.include_router(jobs_router)
+app.include_router(documents_router)
+app.include_router(debug_router)  # DEBUG - REMOVER EM PRODUÇÃO
 # stripe_router removido - funcionalidade consolidada em payments_router
 
 

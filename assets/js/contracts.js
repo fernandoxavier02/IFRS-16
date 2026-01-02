@@ -149,7 +149,12 @@ function renderContracts() {
                         <p class="text-dark-500 text-xs mt-1">Criado em ${createdDate}</p>
                     </div>
                     <div class="flex gap-1 ml-3">
-                        <button onclick="verHistoricoVersoes('${contract.id}')" class="text-amber-400 hover:text-amber-300 p-1.5" title="Histórico de Versões">
+                        <button onclick="openContractDocuments('${contract.id}', '${contract.name.replace(/'/g, "\\'")}')" class="text-cyan-400 hover:text-cyan-300 p-1.5" title="Documentos">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            </svg>
+                        </button>
+                        <button onclick="verHistoricoVersoes('${contract.id}')" class="text-amber-400 hover:text-amber-300 p-1.5" title="Historico de Versoes">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
@@ -759,3 +764,21 @@ async function gravarContratoComVersao() {
         alert(`❌ Erro ao gravar contrato:\n${error.message || 'Erro desconhecido'}`);
     }
 }
+
+// ============================================================
+// FUNCAO PARA ABRIR MODAL DE DOCUMENTOS
+// ============================================================
+
+function openContractDocuments(contractId, contractName) {
+    // Verificar se DocumentManager esta disponivel
+    if (typeof DocumentManager === 'undefined') {
+        console.error('DocumentManager nao carregado');
+        alert('Erro: Modulo de documentos nao carregado. Recarregue a pagina.');
+        return;
+    }
+
+    DocumentManager.openContractDocumentsModal(contractId, contractName);
+}
+
+// Expor funcao globalmente para uso em onclick inline
+window.openContractDocuments = openContractDocuments;

@@ -1,0 +1,589 @@
+/* ============================================================
+   ESTILOS PARA GERENCIAMENTO DE DOCUMENTOS - IFRS 16
+   ============================================================ */
+
+/* Drop Zone */
+.document-drop-zone {
+    border: 2px dashed rgba(0, 212, 255, 0.3);
+    border-radius: 16px;
+    background: rgba(0, 212, 255, 0.03);
+    padding: 32px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.document-drop-zone:hover {
+    border-color: rgba(0, 212, 255, 0.5);
+    background: rgba(0, 212, 255, 0.06);
+}
+
+.document-drop-zone.drag-over {
+    border-color: var(--neon-cyan, #00fff7);
+    background: rgba(0, 255, 247, 0.1);
+    box-shadow: 0 0 30px rgba(0, 212, 255, 0.2);
+}
+
+.document-drop-zone.drag-over .drop-zone-icon {
+    transform: scale(1.1);
+    color: var(--neon-cyan, #00fff7);
+}
+
+.drop-zone-content {
+    transition: all 0.3s ease;
+}
+
+.drop-zone-content.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.drop-zone-icon {
+    color: rgba(0, 212, 255, 0.5);
+    margin: 0 auto 16px;
+    transition: all 0.3s ease;
+}
+
+.drop-zone-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+}
+
+.drop-zone-subtitle {
+    font-size: 0.875rem;
+    color: #8892a4;
+    margin-bottom: 12px;
+}
+
+.drop-zone-info {
+    font-size: 0.75rem;
+    color: #5a6478;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    display: inline-block;
+}
+
+/* Upload Progress */
+.upload-progress {
+    padding: 20px;
+}
+
+.upload-progress.hidden {
+    display: none;
+}
+
+.upload-progress-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.upload-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--neon-blue, #00d4ff), var(--neon-cyan, #00fff7));
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+}
+
+.upload-progress-text {
+    font-size: 0.875rem;
+    color: var(--neon-cyan, #00fff7);
+    text-align: center;
+}
+
+/* Document Modal */
+.document-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    padding: 16px;
+}
+
+.document-modal.hidden {
+    display: none;
+}
+
+.document-modal-content {
+    background: linear-gradient(135deg, rgba(13, 19, 33, 0.98), rgba(10, 14, 23, 0.98));
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    border-radius: 16px;
+    padding: 24px;
+    max-width: 400px;
+    width: 100%;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.document-modal-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #ffffff;
+    margin-bottom: 8px;
+}
+
+.document-modal-filename {
+    font-size: 0.875rem;
+    color: var(--neon-cyan, #00fff7);
+    margin-bottom: 16px;
+    word-break: break-all;
+}
+
+.document-modal-textarea {
+    width: 100%;
+    background: rgba(10, 14, 23, 0.8);
+    border: 1px solid rgba(26, 35, 50, 0.8);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: #e2e8f0;
+    font-size: 0.875rem;
+    resize: vertical;
+    min-height: 80px;
+    transition: all 0.2s ease;
+}
+
+.document-modal-textarea:focus {
+    outline: none;
+    border-color: var(--neon-blue, #00d4ff);
+    box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15);
+}
+
+.document-modal-textarea::placeholder {
+    color: #5a6478;
+}
+
+.document-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+/* Document List */
+.documents-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.documents-empty {
+    text-align: center;
+    padding: 32px 16px;
+}
+
+.document-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(26, 35, 50, 0.6);
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.document-item:hover {
+    background: rgba(0, 212, 255, 0.04);
+    border-color: rgba(0, 212, 255, 0.2);
+}
+
+.document-item.fade-out {
+    opacity: 0;
+    transform: translateX(20px);
+    transition: all 0.3s ease;
+}
+
+.document-icon {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.document-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.document-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #e2e8f0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.document-meta {
+    font-size: 0.75rem;
+    color: #5a6478;
+}
+
+.document-description {
+    font-size: 0.8rem;
+    color: #8892a4;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+.document-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.doc-action-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.doc-download-btn {
+    color: var(--neon-cyan, #00fff7);
+}
+
+.doc-download-btn:hover {
+    background: rgba(0, 255, 247, 0.15);
+    box-shadow: 0 0 12px rgba(0, 255, 247, 0.3);
+}
+
+.doc-delete-btn {
+    color: #f87171;
+}
+
+.doc-delete-btn:hover {
+    background: rgba(248, 113, 113, 0.15);
+    box-shadow: 0 0 12px rgba(248, 113, 113, 0.3);
+}
+
+/* Buttons */
+.btn-primary-doc {
+    flex: 1;
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, var(--neon-blue, #00d4ff), var(--neon-purple, #b829dd));
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-primary-doc:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+}
+
+.btn-secondary-doc {
+    padding: 10px 20px;
+    border-radius: 10px;
+    font-weight: 500;
+    font-size: 0.875rem;
+    cursor: pointer;
+    background: transparent;
+    color: #8892a4;
+    border: 1px solid rgba(26, 35, 50, 0.8);
+    transition: all 0.2s ease;
+}
+
+.btn-secondary-doc:hover {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+/* Document Button in Contract Card */
+.btn-doc-contract {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--neon-cyan, #00fff7);
+    background: rgba(0, 212, 255, 0.08);
+    border: 1px solid rgba(0, 212, 255, 0.2);
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btn-doc-contract:hover {
+    background: rgba(0, 212, 255, 0.15);
+    border-color: rgba(0, 212, 255, 0.4);
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+}
+
+.btn-doc-contract svg {
+    width: 14px;
+    height: 14px;
+}
+
+.doc-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    background: rgba(0, 212, 255, 0.2);
+    border-radius: 9px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--neon-cyan, #00fff7);
+}
+
+/* Notifications */
+.doc-notification {
+    animation: slideIn 0.3s ease forwards;
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease forwards;
+}
+
+.animate-slide-out {
+    animation: slideOut 0.3s ease forwards;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        opacity: 1;
+        transform: translateX(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .document-drop-zone {
+        padding: 24px 16px;
+    }
+
+    .drop-zone-icon svg {
+        width: 40px;
+        height: 40px;
+    }
+
+    .drop-zone-title {
+        font-size: 0.9rem;
+    }
+
+    .document-item {
+        padding: 12px;
+    }
+
+    .document-icon {
+        width: 36px;
+        height: 36px;
+    }
+
+    .document-name {
+        font-size: 0.85rem;
+    }
+
+    .document-modal-content {
+        padding: 20px;
+    }
+
+    .document-modal-actions {
+        flex-direction: column;
+    }
+
+    .btn-secondary-doc {
+        order: 2;
+    }
+}
+
+/* ============================================================
+   VISUALIZADOR DE DOCUMENTOS (PDF/IMAGENS)
+   ============================================================ */
+
+/* Botao de visualizar */
+.doc-view-btn {
+    color: #a78bfa;
+}
+
+.doc-view-btn:hover {
+    background: rgba(167, 139, 250, 0.15);
+    box-shadow: 0 0 12px rgba(167, 139, 250, 0.3);
+}
+
+/* Modal de Preview */
+#documentPreviewModal {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Header do Preview */
+.preview-header {
+    flex-shrink: 0;
+}
+
+.preview-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+}
+
+/* Botoes de acao do preview */
+.preview-action-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(255, 255, 255, 0.05);
+    color: #94a3b8;
+}
+
+.preview-action-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.preview-close-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: rgba(248, 113, 113, 0.1);
+    color: #f87171;
+}
+
+.preview-close-btn:hover {
+    background: rgba(248, 113, 113, 0.2);
+    color: #fca5a5;
+    transform: translateY(-1px);
+}
+
+/* Conteudo do Preview */
+.preview-content {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.preview-content iframe {
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+}
+
+.preview-image-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.preview-image-container img {
+    cursor: zoom-in;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Loading state para imagens */
+.preview-image-container img[loading] {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.03) 25%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200% 0;
+    }
+    100% {
+        background-position: 200% 0;
+    }
+}
+
+/* Responsivo para Preview */
+@media (max-width: 768px) {
+    .preview-header {
+        padding: 12px !important;
+    }
+
+    .preview-header h3 {
+        max-width: 200px;
+    }
+
+    .preview-action-btn,
+    .preview-close-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    .preview-action-btn svg,
+    .preview-close-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .preview-content {
+        padding: 8px !important;
+    }
+
+    .preview-content iframe {
+        border-radius: 8px;
+    }
+}

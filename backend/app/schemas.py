@@ -514,3 +514,127 @@ class NotificationCreateRequest(BaseModel):
     entity_type: Optional[str] = None
     entity_id: Optional[UUID] = None
     metadata: Optional[str] = None
+
+
+# ============================================================
+# Schemas de Documentos (Upload/Download)
+# ============================================================
+
+class DocumentUploadResponse(BaseModel):
+    """Response após upload de documento"""
+    id: UUID
+    contract_id: UUID
+    filename: str
+    file_size: int
+    mime_type: str
+    description: Optional[str] = None
+    version: int
+    created_at: datetime
+    download_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DocumentResponse(BaseModel):
+    """Response de documento individual"""
+    id: UUID
+    contract_id: UUID
+    user_id: UUID
+    filename: str
+    storage_path: str
+    file_size: int
+    mime_type: str
+    description: Optional[str] = None
+    version: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+
+class DocumentListResponse(BaseModel):
+    """Response de listagem de documentos"""
+    documents: List[DocumentResponse]
+    total: int
+
+
+class DocumentDownloadResponse(BaseModel):
+    """Response com URL de download assinada"""
+    id: UUID
+    filename: str
+    download_url: str
+    expires_in: int = Field(description="Tempo de expiração da URL em segundos")
+
+
+class DocumentUpdateRequest(BaseModel):
+    """Request para atualizar metadados do documento"""
+    description: Optional[str] = Field(None, max_length=500)
+
+
+class DocumentDeleteResponse(BaseModel):
+    """Response após deletar documento"""
+    success: bool
+    message: str
+    id: UUID
+
+
+# ============================================================
+# Schemas de Dashboard Analítico
+# ============================================================
+
+class DashboardMetricsResponse(BaseModel):
+    """Response com métricas gerais do dashboard"""
+    total_contracts: int
+    total_passivos: float
+    total_ativos: float
+    total_despesas_mensais: float
+
+
+class EvolutionDataPoint(BaseModel):
+    """Ponto de dados da evolução temporal"""
+    month: str
+    passivo: float
+
+
+class DashboardEvolutionResponse(BaseModel):
+    """Response com evolução temporal do passivo"""
+    evolution: List[EvolutionDataPoint]
+
+
+class DistributionDataPoint(BaseModel):
+    """Ponto de dados da distribuição por categoria"""
+    category: str
+    count: int
+    value: float
+
+
+class DashboardDistributionResponse(BaseModel):
+    """Response com distribuição por categoria"""
+    distribution: List[DistributionDataPoint]
+
+
+class MonthlyExpenseDataPoint(BaseModel):
+    """Ponto de dados de despesas mensais"""
+    contract_name: str
+    despesa_mensal: float
+
+
+class DashboardMonthlyExpensesResponse(BaseModel):
+    """Response com despesas mensais por contrato"""
+    monthly_expenses: List[MonthlyExpenseDataPoint]
+
+
+class UpcomingExpirationDataPoint(BaseModel):
+    """Ponto de dados de próximos vencimentos"""
+    contract_id: str
+    contract_name: str
+    expiration_date: Optional[str]
+    days_until_expiration: int
+    status: str  # "normal", "warning", "critical"
+
+
+class DashboardUpcomingExpirationsResponse(BaseModel):
+    """Response com próximos vencimentos"""
+    upcoming_expirations: List[UpcomingExpirationDataPoint]

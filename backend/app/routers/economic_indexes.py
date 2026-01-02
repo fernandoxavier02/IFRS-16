@@ -17,7 +17,7 @@ from ..schemas import (
     EconomicIndexTypeEnum,
 )
 from ..services.bcb_service import BCBService
-from ..auth import get_current_admin, get_current_user
+from ..auth import verify_admin_token
 
 router = APIRouter(
     prefix="/api/economic-indexes",
@@ -142,7 +142,7 @@ async def get_latest_index(
 async def sync_index(
     index_type: str,
     last_n: int = Query(12, ge=1, le=120, description="Últimos N registros"),
-    admin_data: dict = Depends(get_current_admin),
+    _: bool = Depends(verify_admin_token),
     db: AsyncSession = Depends(get_db)
 ):
     """
@@ -196,7 +196,7 @@ async def sync_index(
 )
 async def sync_all_indexes(
     last_n: int = Query(12, ge=1, le=120, description="Últimos N registros por índice"),
-    admin_data: dict = Depends(get_current_admin),
+    _: bool = Depends(verify_admin_token),
     db: AsyncSession = Depends(get_db)
 ):
     """

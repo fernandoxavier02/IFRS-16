@@ -21,7 +21,7 @@ class SessionManager {
             hostname.includes('web.app') ||
             hostname.includes('firebaseapp.com')
         ) {
-            return 'https://ifrs16-backend-1051753255664.us-central1.run.app';
+            return 'https://ifrs16-backend-ox4zylcs5a-rj.a.run.app';
         }
 
         return 'http://localhost:8000';

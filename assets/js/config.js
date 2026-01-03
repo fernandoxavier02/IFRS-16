@@ -12,7 +12,7 @@ const getApiUrl = () => {
         hostname.includes('web.app') ||
         hostname.includes('firebaseapp.com')
     ) {
-        return 'https://ifrs16-backend-ox4zylcs5a-uc.a.run.app';
+        return 'https://ifrs16-backend-ox4zylcs5a-rj.a.run.app';
     }
     
     // Desenvolvimento local

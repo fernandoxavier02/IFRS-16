@@ -325,9 +325,9 @@
                 hostname.includes('web.app') ||
                 hostname.includes('firebaseapp.com')
             ) {
-                return 'https://ifrs16-backend-ox4zylcs5a-uc.a.run.app';
+                return 'https://ifrs16-backend-ox4zylcs5a-rj.a.run.app';
             }
-            
+
             // Desenvolvimento local
             return 'http://localhost:8000';
         };
@@ -409,12 +409,21 @@
                         console.warn('[Auth] AVISO: session_token nao retornado pelo backend!');
                     }
 
+                    // Verificar se há licença pendente para validação
+                    const pendingLicense = sessionStorage.getItem('pending_license_validation');
+                    
                     // Redirecionar
                     if (data.user_type === 'admin') {
                         window.location.href = 'Calculadora_IFRS16_Deploy.html';
                     } else {
-                        // Usuário vai para o dashboard
-                        window.location.href = 'dashboard.html';
+                        // Se há licença pendente, redirecionar para dashboard com parâmetro de validação
+                        if (pendingLicense) {
+                            sessionStorage.removeItem('pending_license_validation'); // Limpar após usar
+                            window.location.href = `dashboard.html?validate_license=${pendingLicense}`;
+                        } else {
+                            // Usuário vai para o dashboard normalmente
+                            window.location.href = 'dashboard.html';
+                        }
                     }
                 } else {
                     errorMsg.textContent = data.detail || 'Erro ao fazer login';
@@ -498,18 +507,60 @@
             }
         });
 
+        // Detectar parâmetro license na URL e armazenar
+        function detectLicenseFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const licenseKey = urlParams.get('license');
+            
+            if (licenseKey) {
+                // Armazenar licença no sessionStorage para usar após login
+                sessionStorage.setItem('pending_license_validation', licenseKey);
+                console.log('📋 Licença detectada na URL:', licenseKey);
+                
+                // Mostrar mensagem informativa ao usuário
+                const errorMsg = document.getElementById('errorMsg');
+                if (errorMsg) {
+                    errorMsg.textContent = '✅ Licença detectada! Após o login, você será direcionado para validar sua licença.';
+                    errorMsg.style.display = 'block';
+                    errorMsg.style.color = '#10b981'; // Verde
+                    errorMsg.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                    errorMsg.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                    errorMsg.style.padding = '12px';
+                    errorMsg.style.borderRadius = '8px';
+                    errorMsg.style.marginTop = '16px';
+                }
+                
+                // Limpar parâmetro da URL para não aparecer na barra de endereço
+                const newUrl = window.location.pathname;
+                window.history.replaceState({}, document.title, newUrl);
+            }
+        }
+
         // Verificar se já está logado
         window.onload = function() {
+            // Primeiro, detectar licença na URL
+            detectLicenseFromUrl();
+
             const token = localStorage.getItem('ifrs16_auth_token') || localStorage.getItem('ifrs16_user_token');
             const userType = localStorage.getItem('ifrs16_user_type');
 
             if (token && userType) {
+                // Verificar se há licença pendente para validação
+                const pendingLicense = sessionStorage.getItem('pending_license_validation');
+
                 // Redirecionar baseado no tipo de usuário
                 if (userType === 'admin') {
                     window.location.href = 'Calculadora_IFRS16_Deploy.html';
                 } else {
-                    // Usuário regular vai para o dashboard (que verificará se tem licença)
-                    window.location.href = 'dashboard.html';
+                    // Se há licença pendente, redirecionar para dashboard com parâmetro
+                    if (pendingLicense) {
+                        // IMPORTANTE: Limpar ANTES de redirecionar para evitar loop
+                        sessionStorage.removeItem('pending_license_validation');
+                        window.location.href = `dashboard.html?validate_license=${pendingLicense}`;
+                    } else {
+                        // Usuário regular vai para o dashboard (que verificará se tem licença)
+                        window.location.href = 'dashboard.html';
+                    }
                 }
             }
         };

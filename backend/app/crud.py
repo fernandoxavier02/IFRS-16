@@ -288,7 +288,7 @@ async def update_license_validation(
     if not license:
         return None
     
-    license.last_validation = datetime.now(timezone.utc)
+    license.last_validation = datetime.utcnow()
     license.last_validation_ip = ip_address
     
     # Controle de ativações por dispositivo

@@ -540,7 +540,7 @@
                 hostname.includes('web.app') ||
                 hostname.includes('firebaseapp.com')
             ) {
-                return 'https://ifrs16-backend-ox4zylcs5a-uc.a.run.app';
+                return 'https://ifrs16-backend-ox4zylcs5a-rj.a.run.app';
             }
 
             return 'http://localhost:8000';
@@ -617,13 +617,52 @@
             }
         }
 
+        // Flag para evitar loops de redirecionamento
+        let isRedirecting = false;
+
         async function loadDashboard() {
             console.log('🚀 Iniciando loadDashboard()...');
+
+            // Evitar chamadas múltiplas
+            if (isRedirecting) {
+                console.log('⚠️ Já está redirecionando, ignorando...');
+                return;
+            }
+
             const token = localStorage.getItem('ifrs16_auth_token');
 
             if (!token) {
-                window.location.href = 'login.html';
+                console.log('❌ Token não encontrado, redirecionando para login...');
+                isRedirecting = true;
+                window.location.replace('login.html');
                 return;
+            }
+
+            // Verificar se há parâmetro validate_license na URL (vindo do email)
+            const urlParams = new URLSearchParams(window.location.search);
+            const licenseToValidate = urlParams.get('validate_license');
+
+            // Armazenar licença para validar depois e limpar URL imediatamente
+            let pendingLicenseValidation = null;
+
+            if (licenseToValidate) {
+                console.log('📋 Licença detectada na URL para validação:', licenseToValidate);
+                pendingLicenseValidation = licenseToValidate;
+
+                // Limpar parâmetro da URL IMEDIATAMENTE para evitar loops
+                window.history.replaceState({}, document.title, window.location.pathname);
+
+                // Mostrar mensagem de carregamento
+                const loadingEl = safeGetElement('loading');
+                if (loadingEl) {
+                    loadingEl.innerHTML = `
+                        <div style="text-align: center; padding: 40px;">
+                            <div class="spinner" style="width: 48px; height: 48px; margin: 0 auto 20px;"></div>
+                            <p style="color: var(--text-primary); font-size: 1.1rem; margin-bottom: 8px;">Validando sua licença...</p>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem;">Aguarde enquanto processamos sua licença.</p>
+                        </div>
+                    `;
+                }
             }
 
             // Carregar contador de notificações em paralelo
@@ -675,7 +714,19 @@
                     document.getElementById('loading').innerHTML = '<p style="color: var(--error);">Erro: Dados do dashboard não carregados.</p>';
                     return;
                 }
+
+                // Renderizar dashboard
                 renderDashboard();
+
+                // Se há licença para validar, validar automaticamente após renderizar dashboard
+                if (pendingLicenseValidation) {
+                    console.log('✅ Dashboard renderizado, iniciando validação automática da licença...');
+                    // Aguardar um pouco para garantir que o dashboard foi renderizado
+                    setTimeout(async () => {
+                        // Validar diretamente sem depender de dashboardData.license
+                        await validateLicenseDirectly();
+                    }, 500);
+                }
             } catch (error) {
                 console.error('❌ Erro ao carregar dashboard:', error);
                 document.getElementById('loading').innerHTML = `
@@ -952,6 +1003,94 @@
             window.location.href = 'login.html';
         }
 
+        // Validar licença diretamente (usado quando vem do link do email)
+        async function validateLicenseDirectly() {
+            const authToken = localStorage.getItem('ifrs16_auth_token');
+            
+            if (!authToken) {
+                console.error('❌ Token de autenticação não encontrado');
+                showAccessDeniedModal('sem_assinatura');
+                return;
+            }
+
+            console.log('🔍 Validando licença diretamente...');
+            console.log('   API URL:', API_URL);
+            console.log('   Token presente:', !!authToken);
+
+            try {
+                const response = await fetch(`${API_URL}/api/auth/me/validate-license-token`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('📥 Resposta recebida:', {
+                    status: response.status,
+                    ok: response.ok,
+                    statusText: response.statusText
+                });
+
+                if (!response.ok) {
+                    let errorDetail = 'Erro desconhecido';
+                    try {
+                        const error = await response.json();
+                        errorDetail = error.detail || error.message || JSON.stringify(error);
+                        console.error('❌ Erro detalhado:', error);
+                    } catch (e) {
+                        const text = await response.text();
+                        errorDetail = text || `Status ${response.status}`;
+                        console.error('❌ Erro (texto):', text);
+                    }
+                    
+                    console.error('❌ Falha na validação:', {
+                        status: response.status,
+                        detail: errorDetail
+                    });
+                    
+                    showAccessDeniedModal('erro_validacao');
+                    
+                    // Atualizar mensagem do modal com detalhes do erro
+                    const modalMessage = document.getElementById('modalMessage');
+                    if (modalMessage) {
+                        modalMessage.textContent = `Não foi possível validar sua licença: ${errorDetail}. Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.`;
+                    }
+                    
+                    return;
+                }
+
+                const licenseData = await response.json();
+                console.log('✅ Dados da licença recebidos:', licenseData);
+
+                // Salvar dados da licença no localStorage
+                localStorage.setItem('ifrs16_license', licenseData.key);
+                localStorage.setItem('ifrs16_customer_name', licenseData.customer_name);
+                localStorage.setItem('ifrs16_token', licenseData.token);
+                localStorage.setItem('ifrs16_user_token', authToken);
+
+                console.log('✅ Licença validada e salva. Redirecionando para calculadora...');
+
+                // Redirecionar para calculadora (usando replace para não permitir voltar)
+                isRedirecting = true;
+                window.location.replace('Calculadora_IFRS16_Deploy.html');
+
+            } catch (error) {
+                console.error('❌ Erro ao validar licença:', error);
+                console.error('   Tipo:', error.constructor.name);
+                console.error('   Mensagem:', error.message);
+                console.error('   Stack:', error.stack);
+                
+                showAccessDeniedModal('erro_conexao');
+                
+                // Atualizar mensagem do modal com detalhes do erro
+                const modalMessage = document.getElementById('modalMessage');
+                if (modalMessage) {
+                    modalMessage.textContent = `Erro de conexão ao validar licença: ${error.message}. Verifique sua conexão com a internet e tente novamente.`;
+                }
+            }
+        }
+
         // Verificar acesso à calculadora
         async function accessCalculator() {
             // Verificar se tem assinatura ativa
@@ -983,6 +1122,10 @@
             const authToken = localStorage.getItem('ifrs16_auth_token');
 
             try {
+                console.log('🔍 Iniciando validação de licença...');
+                console.log('   API URL:', API_URL);
+                console.log('   Token presente:', !!authToken);
+                
                 const response = await fetch(`${API_URL}/api/auth/me/validate-license-token`, {
                     method: 'POST',
                     headers: {
@@ -991,10 +1134,38 @@
                     }
                 });
 
+                console.log('📥 Resposta recebida:', {
+                    status: response.status,
+                    ok: response.ok,
+                    statusText: response.statusText
+                });
+
                 if (!response.ok) {
-                    const error = await response.json();
+                    let errorDetail = 'Erro desconhecido';
+                    try {
+                        const error = await response.json();
+                        errorDetail = error.detail || error.message || JSON.stringify(error);
+                        console.error('❌ Erro detalhado:', error);
+                    } catch (e) {
+                        const text = await response.text();
+                        errorDetail = text || `Status ${response.status}`;
+                        console.error('❌ Erro (texto):', text);
+                    }
+                    
+                    // Mostrar erro específico no console
+                    console.error('❌ Falha na validação:', {
+                        status: response.status,
+                        detail: errorDetail
+                    });
+                    
                     showAccessDeniedModal('erro_validacao');
-                    console.error('Erro ao validar licença:', error);
+                    
+                    // Atualizar mensagem do modal com detalhes do erro
+                    const modalMessage = document.getElementById('modalMessage');
+                    if (modalMessage) {
+                        modalMessage.textContent = `Não foi possível validar sua licença: ${errorDetail}. Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.`;
+                    }
+                    
                     return;
                 }
 
@@ -1009,12 +1180,23 @@
 
                 console.log('✅ Licença validada e salva. Acesso liberado à calculadora.');
 
-                // Tudo OK, redirecionar para calculadora
-                window.location.href = 'Calculadora_IFRS16_Deploy.html';
+                // Tudo OK, redirecionar para calculadora (usando replace para não permitir voltar)
+                isRedirecting = true;
+                window.location.replace('Calculadora_IFRS16_Deploy.html');
 
             } catch (error) {
-                console.error('Erro ao acessar calculadora:', error);
+                console.error('❌ Erro ao acessar calculadora:', error);
+                console.error('   Tipo:', error.constructor.name);
+                console.error('   Mensagem:', error.message);
+                console.error('   Stack:', error.stack);
+                
                 showAccessDeniedModal('erro_conexao');
+                
+                // Atualizar mensagem do modal com detalhes do erro
+                const modalMessage = document.getElementById('modalMessage');
+                if (modalMessage) {
+                    modalMessage.textContent = `Erro de conexão ao validar licença: ${error.message}. Verifique sua conexão com a internet e tente novamente.`;
+                }
             }
         }
 

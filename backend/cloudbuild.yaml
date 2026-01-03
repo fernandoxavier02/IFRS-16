@@ -2,12 +2,15 @@ steps:
   # Build com Kaniko (suporta cache de camadas)
   - name: 'gcr.io/kaniko-project/executor:latest'
     args:
+      - --dockerfile=Dockerfile
+      - --context=.
       - --destination=gcr.io/$PROJECT_ID/ifrs16-backend:$SHORT_SHA
       - --destination=gcr.io/$PROJECT_ID/ifrs16-backend:latest
       - --cache=true
       - --cache-ttl=168h  # Cache válido por 7 dias
       - --snapshot-mode=redo
       - --use-new-run
+      - --verbosity=info
 
 # Opcional: usar máquina mais rápida
 options:

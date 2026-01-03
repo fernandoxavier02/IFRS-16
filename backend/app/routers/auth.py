@@ -672,21 +672,41 @@ async def validate_license_by_user_token(
 
     Retorna os dados da licença válida ou erro se não houver licença ativa.
     """
+    import traceback
     from ..crud import update_license_validation, log_validation
     
-    user = user_data["user"]
+    try:
+        user = user_data["user"]
+        print(f"[INFO] Validando licença para usuário: {user.email} (ID: {user.id})")
+    except Exception as e:
+        print(f"[ERROR] Erro ao obter dados do usuário: {e}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token de autenticação inválido ou expirado"
+        )
 
     # Buscar licença ativa do usuário
-    result = await db.execute(
-        select(License).where(
-            License.user_id == user.id,
-            License.status == LicenseStatus.ACTIVE,
-            License.revoked == False
-        ).order_by(License.created_at.desc())
-    )
-    license = result.scalar_one_or_none()
+    try:
+        result = await db.execute(
+            select(License).where(
+                License.user_id == user.id,
+                License.status == LicenseStatus.ACTIVE,
+                License.revoked == False
+            ).order_by(License.created_at.desc())
+        )
+        license = result.scalar_one_or_none()
+        print(f"[INFO] Licença encontrada: {license.key if license else 'Nenhuma'}")
+    except Exception as e:
+        print(f"[ERROR] Erro ao buscar licença: {e}")
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao buscar licença: {str(e)}"
+        )
 
     if not license:
+        print(f"[WARN] Nenhuma licença ativa encontrada para usuário {user.email}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Nenhuma licença ativa encontrada para este usuário"
@@ -737,30 +757,73 @@ async def validate_license_by_user_token(
             
             await db.commit()
             print(f"[OK] Validação anexa realizada para licença {license.key} (primeiro acesso)")
+            
+            # Buscar licença novamente após commit para garantir dados atualizados
+            result = await db.execute(
+                select(License).where(License.key == license.key)
+            )
+            license = result.scalar_one_or_none()
+            if not license:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Licença não encontrada após validação"
+                )
+            
+            # CRÍTICO: Refresh para garantir que features seja carregado corretamente
+            await db.refresh(license)
         except Exception as e:
             # Não bloquear o fluxo se houver erro na validação anexa
             print(f"[WARN] Erro ao realizar validação anexa: {e}")
+            import traceback
+            traceback.print_exc()
             await db.rollback()
 
     # Gerar token JWT para a licença (para compatibilidade com código existente)
-    token_data = {
-        "key": license.key,
-        "customer_name": license.customer_name,
-        "license_type": license.license_type.value,
-    }
-    license_token = create_access_token(token_data)
+    try:
+        token_data = {
+            "key": license.key,
+            "customer_name": license.customer_name,
+            "license_type": license.license_type.value,
+        }
+        license_token = create_access_token(token_data)
+    except Exception as e:
+        print(f"[ERROR] Erro ao gerar token JWT: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao gerar token de licença: {str(e)}"
+        )
 
-    return {
-        "valid": True,
-        "key": license.key,
-        "customer_name": license.customer_name,
-        "license_type": license.license_type.value,
-        "status": license.status.value,
-        "expires_at": license.expires_at.isoformat() if license.expires_at else None,
-        "features": license.features,
-        "token": license_token,
-        "message": "Licença válida e vinculada ao usuário"
-    }
+    # Preparar features com tratamento de erro
+    try:
+        features = license.features
+    except Exception as e:
+        print(f"[WARN] Erro ao obter features da licença: {e}")
+        # Fallback para features básicas
+        from ..config import LICENSE_LIMITS
+        features = LICENSE_LIMITS.get("basic", LICENSE_LIMITS.get("trial", {}))
+
+    try:
+        return {
+            "valid": True,
+            "key": license.key,
+            "customer_name": license.customer_name,
+            "license_type": license.license_type.value,
+            "status": license.status.value,
+            "expires_at": license.expires_at.isoformat() if license.expires_at else None,
+            "features": features,
+            "token": license_token,
+            "message": "Licença válida e vinculada ao usuário"
+        }
+    except Exception as e:
+        print(f"[ERROR] Erro ao preparar resposta: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Erro ao processar validação: {str(e)}"
+        )
 
 
 @router.post(

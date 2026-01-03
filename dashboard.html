@@ -715,17 +715,18 @@
                     return;
                 }
 
-                // Renderizar dashboard
-                renderDashboard();
-
-                // Se há licença para validar, validar automaticamente após renderizar dashboard
+                // Se há licença para validar, validar ANTES de renderizar dashboard
+                // Isso mantém a tela de "Validando licença..." visível
                 if (pendingLicenseValidation) {
-                    console.log('✅ Dashboard renderizado, iniciando validação automática da licença...');
-                    // Aguardar um pouco para garantir que o dashboard foi renderizado
-                    setTimeout(async () => {
-                        // Validar diretamente sem depender de dashboardData.license
-                        await validateLicenseDirectly();
-                    }, 500);
+                    console.log('✅ Dados carregados, iniciando validação automática da licença...');
+                    // Validar diretamente - isso vai redirecionar para calculadora se bem-sucedido
+                    await validateLicenseDirectly();
+                    // Se chegou aqui, a validação falhou (não redirecionou)
+                    // Renderizar dashboard para mostrar erro ou permitir ação manual
+                    renderDashboard();
+                } else {
+                    // Fluxo normal sem licença pendente
+                    renderDashboard();
                 }
             } catch (error) {
                 console.error('❌ Erro ao carregar dashboard:', error);

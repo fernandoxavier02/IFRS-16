@@ -170,7 +170,7 @@ async function verificarSessaoSalva() {
         }
     }
 
-    // 2. PRIMEIRO: Verificar se tem licença já ativada (chave + token de licença)
+    // 2. PRIMEIRO: Verificar se tem licença já ativada no localStorage
     const savedLicense = localStorage.getItem('ifrs16_license');
     const savedToken = localStorage.getItem('ifrs16_token');
 
@@ -198,9 +198,8 @@ async function verificarSessaoSalva() {
                 console.log('✅ Licença já ativada - sistema liberado');
                 return true;
             } else {
-                // Licença inválida - limpar e pedir login novamente
-                console.warn('⚠️ Licença inválida ou expirada');
-                limparDadosSessao();
+                // Licença inválida - limpar apenas dados de licença, não sessão
+                console.warn('⚠️ Licença local inválida, tentando buscar do servidor...');
             }
         } catch (error) {
             // Modo offline - ativar mesmo assim se tem licença salva
@@ -213,12 +212,11 @@ async function verificarSessaoSalva() {
         }
     }
 
-    // 3. DEPOIS: Usuário logado (token existe), mas ainda não ativou licença
-    // Não deve voltar para a tela de login novamente após o redirect do login.html.
+    // 3. Usuário logado - buscar licença do backend (pode já estar associada)
     const userTokenStored = localStorage.getItem('ifrs16_user_token') || localStorage.getItem('ifrs16_auth_token');
     if (userTokenStored && userType !== 'admin') {
         try {
-            // Validar token rapidamente para não manter sessão inválida
+            // Validar token e buscar dados do usuário
             const meResponse = await fetch(`${CONFIG.API_URL}/api/auth/me`, {
                 headers: { 'Authorization': `Bearer ${userTokenStored}` }
             });
@@ -228,7 +226,42 @@ async function verificarSessaoSalva() {
                 localStorage.setItem('ifrs16_user_data', JSON.stringify(userData));
                 userToken = userTokenStored;
 
-                // Direcionar para ativação de licença
+                // NOVO: Tentar buscar licença já associada ao usuário no backend
+                console.log('🔍 Buscando licença do usuário no backend...');
+                const licenseResponse = await fetch(`${CONFIG.API_URL}/api/auth/me/license`, {
+                    headers: { 'Authorization': `Bearer ${userTokenStored}` }
+                });
+
+                if (licenseResponse.ok) {
+                    const licenseData = await licenseResponse.json();
+                    console.log('📋 Dados da licença do backend:', licenseData);
+
+                    // Se o usuário tem licença ativa no backend, usar ela
+                    // Backend retorna: has_license, license_key, token, customer_name, etc.
+                    if (licenseData && licenseData.has_license && licenseData.license_key && licenseData.token) {
+                        console.log('✅ Licença encontrada no backend! Ativando automaticamente...');
+
+                        // Salvar no localStorage para próximas sessões
+                        localStorage.setItem('ifrs16_license', licenseData.license_key);
+                        localStorage.setItem('ifrs16_token', licenseData.token);
+                        localStorage.setItem('ifrs16_customer_name', licenseData.customer_name || userData.name);
+
+                        // Ativar sistema com a licença do backend
+                        licenseToken = licenseData.token;
+                        ativarSistema(licenseData.license_key, {
+                            nome: licenseData.customer_name || userData.name,
+                            expira: licenseData.expires_at,
+                            tipo: licenseData.license_type,
+                            features: licenseData.features
+                        });
+                        iniciarMonitoramento();
+                        return true;
+                    } else if (licenseData && !licenseData.has_license) {
+                        console.log('⚠️ Usuário não tem licença ativa no backend');
+                    }
+                }
+
+                // Usuário não tem licença ativa - direcionar para ativação
                 mostrarTelaLicenca();
                 const licenseError = document.getElementById('licenseError');
                 if (licenseError) {
@@ -298,7 +331,8 @@ function iniciarMonitoramento() {
 }
 
 function bloquearSistema(mensagem) {
-    limparDadosSessao();
+    // Quando sistema é bloqueado, limpar TUDO incluindo licença
+    limparDadosSessao(true);
     mostrarTelaLogin();
 
     const errorEl = document.getElementById('loginError');
@@ -309,18 +343,27 @@ function bloquearSistema(mensagem) {
     console.error('🚫 Sistema bloqueado:', mensagem);
 }
 
-function limparDadosSessao() {
-    localStorage.removeItem('ifrs16_license');
-    localStorage.removeItem('ifrs16_token');
-    localStorage.removeItem('ifrs16_customer_name');
+function limparDadosSessao(limparLicencaTambem = false) {
+    // Sempre limpar dados de sessão do usuário
     localStorage.removeItem('ifrs16_user_token');
+    localStorage.removeItem('ifrs16_auth_token');
     localStorage.removeItem('ifrs16_user_data');
+    localStorage.removeItem('ifrs16_user_type');
+    localStorage.removeItem('ifrs16_session_token');
 
-    licenseToken = null;
+    // Licença só é limpa em casos específicos (bloqueio, revogação)
+    // No logout normal, a licença permanece associada ao usuário no backend
+    if (limparLicencaTambem) {
+        localStorage.removeItem('ifrs16_license');
+        localStorage.removeItem('ifrs16_token');
+        localStorage.removeItem('ifrs16_customer_name');
+        licenseToken = null;
+        licencaAtiva = null;
+        dadosLicenca = null;
+    }
+
     userToken = null;
     userData = null;
-    licencaAtiva = null;
-    dadosLicenca = null;
     if (checkInterval) { clearInterval(checkInterval); checkInterval = null; }
 }
 
@@ -349,10 +392,8 @@ function ativarSistema(chave, dados) {
 function fazerLogout() {
     if (confirm('Tem certeza que deseja sair?')) {
         limparDadosSessao();
-        mostrarTelaLogin();
-        document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('loginError').classList.add('hidden');
+        // Redirecionar para login.html
+        window.location.replace('login.html');
     }
 }
 

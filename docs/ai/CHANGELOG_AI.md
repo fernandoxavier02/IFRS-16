@@ -1,11 +1,99 @@
 # CHANGELOG_AI.md
 
-> **Purpose:** Log all changes made by AI agents for traceability and verification.  
+> **Purpose:** Log all changes made by AI agents for traceability and verification.
 > **Format:** Reverse chronological order. Each entry includes date, agent, files changed, and verification status.
 
 ---
 
 ## Changelog
+
+### 2026-01-03 — Redirecionamento: Calculadora Redireciona para Login
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Remover telas de login/licença embutidas na calculadora e redirecionar para login.html
+
+**Problema Identificado:**
+- A URL `https://fxstudioai.com/Calculadora_IFRS16_Deploy` mostrava tela de "Ativar Licença" embutida
+- Quando sessão não era válida, a calculadora mostrava formulários de login/licença em vez de redirecionar
+- Experiência de usuário confusa com múltiplos pontos de entrada para autenticação
+
+**Correções Aplicadas:**
+
+1. **ui.js - mostrarTelaLogin()** ✅
+   - Agora redireciona para `login.html` em vez de mostrar overlay embutido
+   - `window.location.replace('login.html')`
+
+2. **ui.js - mostrarTelaLicenca()** ✅
+   - Agora redireciona para `dashboard.html` para ativação de licença
+   - `window.location.replace('dashboard.html')`
+
+3. **auth.js - fazerLogout()** ✅
+   - Simplificado para apenas limpar sessão e redirecionar para `login.html`
+   - Não mais tenta manipular elementos de formulário
+
+**Arquivos Modificados:**
+- `assets/js/ui.js` — Funções mostrarTelaLogin e mostrarTelaLicenca
+- `assets/js/auth.js` — Função fazerLogout
+
+**Deploy:**
+- [x] Frontend: Firebase Hosting (192 arquivos)
+- [x] URL: https://fxstudioai.com
+- [x] URL Firebase: https://ifrs16-app.web.app
+
+**Fluxo Corrigido:**
+1. ✅ Acesso direto à calculadora sem sessão → redireciona para `login.html`
+2. ✅ Logout da calculadora → redireciona para `login.html`
+3. ✅ Usuário logado sem licença → redireciona para `dashboard.html`
+
+**Status:** ✅ **CORREÇÃO IMPLEMENTADA E DEPLOYADA**
+
+---
+
+### 2026-01-03 — Correção: Persistência de Licença Após Logout/Login
+
+**Agent:** Claude Code (Opus 4.5)
+**Task:** Corrigir problema onde a licença era solicitada novamente após logout e novo login
+
+**Problema Identificado:**
+- Após logout da calculadora e novo login, a licença era solicitada novamente
+- O `limparDadosSessao()` estava limpando TODOS os dados, incluindo a licença
+- O endpoint `/api/auth/me/license` retorna `license_key`, mas o frontend verificava `key`
+
+**Correções Aplicadas:**
+
+1. **auth.js - Preservar Licença no Logout** ✅
+   - Função `limparDadosSessao(limparLicencaTambem = false)` agora aceita parâmetro opcional
+   - Logout normal (`fazerLogout()`) chama sem parâmetro, preservando a licença
+   - Bloqueio (`bloquearSistema()`) chama com `true`, limpando tudo
+
+2. **auth.js - Correção do Campo license_key** ✅
+   - Backend retorna `license_key`, não `key`
+   - Corrigido de `licenseData.key` para `licenseData.license_key`
+   - Também verifica `licenseData.has_license` para maior robustez
+
+3. **auth.js - Buscar Licença do Backend Após Login** ✅
+   - `verificarSessaoSalva()` agora busca licença via `/api/auth/me/license`
+   - Se usuário tem licença ativa no backend, ela é automaticamente recuperada
+   - Dados da licença salvos no localStorage para persistência
+
+**Arquivos Modificados:**
+- `assets/js/auth.js` — Função limparDadosSessao, verificarSessaoSalva, correção do campo license_key
+
+**Deploy:**
+- [x] Frontend: Firebase Hosting (192 arquivos)
+- [x] URL: https://fxstudioai.com
+- [x] URL Firebase: https://ifrs16-app.web.app
+
+**Fluxo Corrigido:**
+1. ✅ Usuário faz logout da calculadora
+2. ✅ Dados de sessão limpos, mas licença preservada no localStorage
+3. ✅ Usuário faz novo login
+4. ✅ Sistema busca licença no backend via `/api/auth/me/license`
+5. ✅ Se licença encontrada, sistema ativa automaticamente sem pedir novamente
+
+**Status:** ✅ **CORREÇÃO IMPLEMENTADA E DEPLOYADA**
+
+---
 
 ### 2026-01-02 — Correção: Loop Infinito no Fluxo de Validação de Licença
 

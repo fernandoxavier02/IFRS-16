@@ -32,17 +32,14 @@ function formatPercent(valor, decimals = 2) { return valor.toLocaleString('pt-BR
 function formatDataMes(data) { return data.toLocaleDateString('pt-BR', { month: '2-digit', year: 'numeric' }); }
 
 function mostrarTelaLogin() {
-    document.getElementById('loginOverlay').classList.remove('hidden');
-    document.getElementById('licenseOverlay').classList.add('hidden');
-    document.getElementById('mainContent').classList.add('hidden');
-    document.getElementById('settingsModal').classList.add('hidden');
+    // Redirecionar para login.html em vez de mostrar overlay embutido
+    window.location.replace('login.html');
 }
 
 function mostrarTelaLicenca() {
-    document.getElementById('loginOverlay').classList.add('hidden');
-    document.getElementById('licenseOverlay').classList.remove('hidden');
-    document.getElementById('mainContent').classList.add('hidden');
-    document.getElementById('settingsModal').classList.add('hidden');
+    // Redirecionar para dashboard.html para ativação de licença
+    // O dashboard permite ativar licença ou acessar a calculadora
+    window.location.replace('dashboard.html');
 }
 
 function mostrarConteudoPrincipal() {
